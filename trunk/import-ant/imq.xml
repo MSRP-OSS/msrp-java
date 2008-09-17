@@ -1,0 +1,81 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the authors at: miguel.pardal@ist.utl.pt
+-->
+<project name="imq">
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.imq" value="true" />
+
+    <property name="imq.dir" location="${env.IMQ_HOME}" />
+
+    <!--       -->
+    <!-- PATHS -->
+    <!--       -->
+    <path id="imq.jars.path">
+        <fileset dir="${imq.dir}/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <target name="-replace-imq-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${replace-tokens.build.rel-dir}" summary="yes">
+            <replacefilter token="@imq.dir@" value="${imq.dir}" />
+        </replace>
+    </target>
+
+<!--
+    ENVIRONMENT IMPLEMENTATIONS ================================================
+-->
+
+<!--
+    BEGIN ENVIRONMENT: jms-env - java message service application environment -
+
+    1 - define jms application environment property:
+-->
+    <property name="import-ant.module.jms-env" value="true" />
+<!--
+    2 - define jms application environment properties
+-->
+    <property name="jms-env.name" value="Sun Message Queue" />
+    <property name="jms-env.version" value="3" />
+<!--
+ 3 - define jar collection for jms applications
+-->
+    <path id="jms.jars.path">
+        <path refid="imq.jars.path" />
+    </path>
+<!--
+    END ENVIRONMENT: jms-env - java message service application environment - -
+-->
+
+</project>

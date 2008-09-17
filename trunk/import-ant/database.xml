@@ -1,0 +1,150 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<!--
+    Module Maintainer: jorge.martins@ist.utl.pt
+-->
+<project name="database">
+    <fail message="MUST INCLUDE core BEFORE database" unless="import-ant.module.core" />
+
+    <fail message="MUST DEFINE database.name PROPERTY" unless="database.name" />
+    <fail message="MUST DEFINE database.username PROPERTY" unless="database.username" />
+    <fail message="MUST DEFINE database.password PROPERTY" unless="database.password" />
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.database" value="true" />
+
+    <property name="database.dir-name" value="database" />
+
+    <property name="config.database.rel-dir" value="${config.rel-dir}/${database.dir-name}" />
+    <property name="build.config.database.rel-dir" value="${build.rel-dir}/${config.database.rel-dir}" />
+
+    <property name="database.sql.rel-dir" value="${etc.rel-dir}/sql" />
+    <property name="database.schema" value="*schema.sql" />
+    <property name="database.data" value="*data.sql" />
+
+    <property name="database.driver" value="com.mysql.jdbc.Driver" />
+    <property name="database.subprotocol" value="mysql" />
+
+    <property name="database.host" value="localhost" />
+    <property name="database.port" value="3306" />
+
+    <property name="database.server" value="${database.host}:${database.port}" />
+    <property name="database.alias" value="//${database.server}/${database.name}" />
+    <property name="database.url" value="jdbc:${database.subprotocol}:${database.alias}" />
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+    <target name="import-db-schema"
+            description="Generate database schema">
+        <antcall target="execute-db-script">
+            <param name="sql.script" value="${database.schema}"/>
+        </antcall>
+    </target>
+
+    <target name="populate-db"
+            description="Populate database with data">
+        <antcall target="execute-db-script">
+            <param name="sql.script" value="${database.data}"/>
+        </antcall>
+    </target>
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="populate-database">
+        <fail message="DEPRECATED. Use 'populate-db' target instead"/>
+    </target>
+
+    <target name="execute-db-script"
+            depends="-database-init">
+       <!-- description="Execute SQL script specified as a parameter" -->
+        <fail message="MUST DEFINE sql.script PROPERTY" unless="sql.script" />
+        <echo level="info" message="Executing SQL scripts: ${sql.script}" />
+        <echo level="info" message="On database: ${database.url}" />
+        <sql driver="${database.driver}" url="${database.url}"
+             userid="${database.username}" password="${database.password}"
+             classpathref="database.classpath">
+            <fileset dir="${database.sql.rel-dir}">
+                <include name="${sql.script}"/>
+            </fileset>
+        </sql>
+    </target>
+
+    <target name="build-database"
+            depends="config,-database-replaces">
+        <!-- copy database to build classes -->
+        <copy todir="${build.classes.rel-dir}" overwrite="true">
+            <fileset dir="${build.config.database.rel-dir}" includes="**/*" />
+        </copy>
+    </target>
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <target name="-database-init" depends="init">
+        <path id="database.classpath">
+            <path refid="compile.classpath" />
+        </path>
+    </target>
+
+    <!-- USER NOTE: override '-database-replaces' to do more or different replaces in configuration files -->
+    <!-- USER NOTE: custom tokens are replaced before regular tokens, allowing for custom substitution -->
+    <target name="-database-replaces">
+        <echo message="Replacing tokens in resource files..." />
+        <property name="database.custom-tokens.target-name" value="-replace-database-custom-tokens(dir)" />
+        <antcall target="${database.custom-tokens.target-name}">
+            <param name="dir" value="${build.config.database.rel-dir}" />
+        </antcall>
+        <antcall target="-replace-database-tokens(dir)">
+            <param name="dir" value="${build.config.database.rel-dir}" />
+        </antcall>
+    </target>
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <target name="-replace-database-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@database.driver@" value="${database.driver}" />
+            <replacefilter token="@database.subprotocol@" value="${database.subprotocol}" />
+
+            <replacefilter token="@database.host@" value="${database.host}" />
+            <replacefilter token="@database.port@" value="${database.port}" />
+
+            <replacefilter token="@database.server@" value="${database.server}" />
+            <replacefilter token="@database.alias@" value="${database.alias}" />
+            <replacefilter token="@database.url@" value="${database.url}" />
+
+            <replacefilter token="@database.username@" value="${database.username}" />
+            <replacefilter token="@database.password@" value="${database.password}" />
+
+            <!-- deprecated replacements, for compatibility purposes only -->
+            <replacefilter token="@sql.driver@" value="${database.driver}" />
+            <replacefilter token="@sql.subprotocol@" value="${database.subprotocol}" />
+        </replace>
+    </target>
+
+    <!-- USER NOTE: override '-replace-database-custom-tokens(dir)' to replace custom tokens -->
+    <target name="-replace-database-custom-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+    </target>
+
+</project>

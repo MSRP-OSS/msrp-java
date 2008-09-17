@@ -1,0 +1,204 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the authors at: miguel.pardal@ist.utl.pt
+-->
+<project name="jax-ws-server">
+    <fail message="MUST INCLUDE core BEFORE jax-ws-server" unless="import-ant.module.core" />
+    <fail message="MUST INCLUDE A web-app-env BEFORE jax-ws-server" unless="import-ant.module.web-app-env" />
+    <fail message="MUST INCLUDE A jax-ws-env BEFORE jax-ws-server" unless="import-ant.module.jax-ws-env" />
+
+    <!-- PARAMETER PROPERTIES (defined in build.xml to customize build) -->
+    <!--
+    <property name="jax-ws-server.wsdl.file-name" value="Hello.wsdl" />
+    <property name="jax-ws-server.wsdl.namespace" value="http://hello" />
+    <property name="jax-ws-server.wsdl.service-name" value="HelloService" />
+    <property name="jax-ws-server.wsdl.port-name" value="HelloPort" />
+
+    <property name="jax-ws-server.ties.package" value="hello.ties" />
+    <property name="jax-ws-server.ties.interface.simple-name" value="HelloPortType" />
+    OR
+    <property name="jax-ws-server.ties.interface.name" value="hello.ties.HelloPortType" />
+
+    <property name="jax-ws-server.impl.package" value="hello" />
+    <property name="jax-ws-server.impl.class.simple-name" value="HelloServiceImpl" />
+    OR
+    <property name="jax-ws-server.impl.class.name" value="hello.HelloServiceImpl" />
+    -->
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.jax-ws-server" value="true" />
+
+    <property name="web-app-env.deploy.context" value="${ant.project.name}" />
+    <property name="web-app-env.deploy.war.file-name" value="${web-app-env.deploy.context}.war" />
+    <property name="web-app-env.deploy.war.rel-file" value="${dist.rel-dir}/${web-app-env.deploy.war.file-name}" />
+
+    <property name="jax-ws-server.dir-name" value="jax-ws-server" />
+
+    <property name="config.jax-ws-server.rel-dir" value="${config.rel-dir}/${jax-ws-server.dir-name}" />
+    <property name="build.config.jax-ws-server.rel-dir" value="${build.rel-dir}/${config.jax-ws-server.rel-dir}" />
+
+    <property name="build.jax-ws-server.rel-dir" value="${build.rel-dir}/${jax-ws-server.dir-name}" />
+
+    <!-- file patterns -->
+    <property name="jax-ws-server.handlers.config.file-pattern" value="*handler*.xml" />
+    <property name="jax-ws-server.security.config.file-pattern" value="server_security_config.xml" />
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+    <target name="build-jax-ws-server-ties"
+            depends="build-jax-ws-server-ties-from-wsdl"
+            description="Build JAX-WS server code">
+    </target>
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="build-jax-ws-server"
+            depends="build-jax-ws-server-from-wsdl">
+    </target>
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="create-jax-ws-server-war"
+            depends="-jax-ws-server-init">
+        <!-- check required files -->
+        <fail message="${build.config.jax-ws-server.rel-dir}/web.xml is missing!" >
+            <condition>
+                <not><available file="${config.jax-ws-server.rel-dir}/web.xml" type="file" /></not>
+            </condition>
+        </fail>
+        <fail message="${build.config.jax-ws-server.rel-dir}/sun-jaxws.xml is missing!" >
+            <condition>
+                <not><available file="${config.jax-ws-server.rel-dir}/sun-jaxws.xml" type="file" /></not>
+            </condition>
+        </fail>
+
+        <!-- prepare libraries -->
+        <antcall target="-build-libs" />
+        <!-- create new war, deleting previous version first -->
+        <delete file="${web-app-env.deploy.war.rel-file}" />
+        <jar destfile="${web-app-env.deploy.war.rel-file}">
+            <zipfileset dir="${build.config.jax-ws-server.rel-dir}"
+                        prefix="WEB-INF"
+                        includes="web.xml, sun-jaxws.xml, ${jax-ws-server.security.config.file-pattern}" />
+            <zipfileset dir="${build.jax.rel-dir}"
+                        prefix="WEB-INF/wsdl"
+                        includes="*.wsdl, *.xsd" />
+            <zipfileset dir="${build.classes.rel-dir}"
+                        prefix="WEB-INF/classes" />
+            <zipfileset dir="${build.lib.rel-dir}"
+                        prefix="WEB-INF/lib" />
+        </jar>
+        <!-- delete lib copies immediately to save space -->
+        <antcall target="-clean-libs" />
+    </target>
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <target name="-jax-ws-server-init"
+            depends="init">
+        <!-- delete previous build directory -->
+        <delete dir="${build.jax-ws-server.rel-dir}" />
+        <!-- create working directories -->
+        <mkdir dir="${build.jax-ws-server.rel-dir}" />
+
+        <!-- make sure build.jax.rel-dir exists (it may not, in Java-first web services)
+             This is required during the WAR file creation (wsdl zipfileset)
+             It also ensures the next copy task doesn't fail because of inexisting dir -->
+        <mkdir dir="${build.jax.rel-dir}" />
+        <!-- copy build xml sources to build config jax-ws-server dir,
+             so configuration file references are valid
+             (it is required that the WSDL file is in same dir and
+             all references use the same file (a file copy in a different dir won't work) -->
+        <copy todir="${build.config.jax-ws-server.rel-dir}" overwrite="true">
+            <fileset dir="${build.jax.rel-dir}" includes="*" />
+        </copy>
+    </target>
+
+    <!-- USER NOTE: override '-jax-ws-server-replaces' to do more or different replaces in configuration files -->
+    <target name="-jax-ws-server-replaces">
+        <echo message="Replacing tokens in resource files..." />
+        <property name="jax-ws-server.custom-tokens.target-name" value="-replace-jax-ws-server-custom-tokens(dir)" />
+        <antcall target="${jax-ws-server.custom-tokens.target-name}">
+            <param name="dir" value="${build.config.jax-ws-server.rel-dir}" />
+        </antcall>
+        <antcall target="-replace-jax-ws-server-tokens(dir)">
+            <param name="dir" value="${build.config.jax-ws-server.rel-dir}" />
+        </antcall>
+    </target>
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <target name="-replace-jax-ws-server-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <!-- define composite properties -->
+        <property name="jax-ws-server.ties.interface.name" value="${jax-ws-server.ties.package}.${jax-ws-server.ties.interface.simple-name}" />
+        <property name="jax-ws-server.impl.class.name" value="${jax-ws-server.impl.package}.${jax-ws-server.impl.class.simple-name}" />
+        <!-- perform simple value token replacements -->
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@jax-ws-server.wsdl.file-name@" value="${jax-ws-server.wsdl.file-name}" />
+            <replacefilter token="@jax-ws-server.wsdl.namespace@" value="${jax-ws-server.wsdl.namespace}" />
+            <replacefilter token="@jax-ws-server.wsdl.service-name@" value="${jax-ws-server.wsdl.service-name}" />
+            <replacefilter token="@jax-ws-server.wsdl.port-name@" value="${jax-ws-server.wsdl.port-name}" />
+            <replacefilter token="@jax-ws-server.ties.package@" value="${jax-ws-server.ties.package}" />
+            <replacefilter token="@jax-ws-server.ties.interface.simple-name@" value="${jax-ws-server.ties.interface.simple-name}" />
+            <replacefilter token="@jax-ws-server.ties.interface.name@" value="${jax-ws-server.ties.interface.name}" />
+            <replacefilter token="@jax-ws-server.impl.package@" value="${jax-ws-server.impl.package}" />
+            <replacefilter token="@jax-ws-server.impl.class.simple-name@" value="${jax-ws-server.impl.class.simple-name}" />
+            <replacefilter token="@jax-ws-server.impl.class.name@" value="${jax-ws-server.impl.class.name}" />
+        </replace>
+        <!-- perform multi-line value token replacements -->
+        <replace dir="${dir}" token="@jax-ws-server.handler-chains@">
+            <replacevalue><![CDATA[]]></replacevalue>
+        </replace>
+    </target>
+
+    <!-- USER NOTE: override '-replace-jax-ws-server-custom-tokens(dir)' to replace custom tokens -->
+    <target name="-replace-jax-ws-server-custom-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <!--
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@token@" value="value" />
+        </replace>
+        -->
+        <!--
+        <replace dir="${dir}" token="@jax-ws-server.handler-chains@">
+            <replacevalue><![CDATA[
+                <jws:handler-chains>
+                    <jws:handler-chain>
+                        <jws:handler>
+                            <jws:handler-class>util.LoggingHandler</jws:handler-class>
+                        </jws:handler>
+                    </jws:handler-chain>
+                </jws:handler-chains>
+            ]]></replacevalue>
+        </replace>
+        -->
+    </target>
+
+    <!--         -->
+    <!-- IMPORTS -->
+    <!--         -->
+    <import file="jax.xml" />
+
+    <import file="jax-ws-server_from-wsdl.xml" />
+    <import file="optional/jax-ws-server_from-java.xml" optional="true"/>
+
+</project>
