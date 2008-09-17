@@ -1,0 +1,113 @@
+From RFC 4975:
+
+-using TLS in peer to peer mode.
+	- use case of allowing TLS certificates to be confirmed with the fingerprint exchanged through SDP
+	- same as above but the fingerprint can be provided for in another way.
+
+- aborting in mid of getting a SEND request (in mid of a message send) has high priority now (allows the file transfer to be stopped by the receiver)
+
+From RFC 4976:
+
+	- Connecting to the relay and getting the msrps uri
+		- TLS connection to the relay (verifyint the relay's identity)
+		- Authentication of the client to the relay AUTH request
+		- Relay provides, upon successfull authentication, the msrps:uri or the msrps:uris to the client, independently of 		receiving a list or a unique URI that USE-PATH header refers to the URI or URIs to use within one unique session.
+		
+		Default:
+
+		-AUTH method without expires!
+
+
+		-AUTH method with expires!
+	
+From draft-8: (remembered from draft-8)
+
+	- Setting the maximum file size (Buffer of the MSRP chunk, that has a default value)
+
+
+--
+
+- Setting up a new session (returns an URI)
+
+	- With relays
+	- W/o relays
+	- Adding an MSRP URI to the To-Path
+
+	- setting the parameters of the session:
+
+
+	- getting the parameters of the session;
+		- Failure-report (Parameter boolean);
+		- Success-report (Parameter boolean);
+
+	- Assigning a connection to a session (session has an URI associated) [returns a connection associated with the URI]
+		- Two cases: the connection exists / a new connection needs to be made.
+		- msrps uri (using TLS)
+		- msrp uri (w/out TLS)
+
+- Altering the default values of the session	
+
+
+	- Closing an existing session
+	- Closing ongoing transactions and requests associated with that session
+
+- [Static class] - Input Validation [Input validation methods]
+	- [Misc validations of the input received]
+	- Classification(
+
+- Connection
+	- newTransaction(transactionCode, transactionManager, Message, Session)
+	- Close [Closes every ongoing transactions and Send reports and notifies with whatever codes neccessary]
+	- SessionClose(session) [Closes every ongoing transactions associated with that Session]
+	- MessageInterrupt(message) [Closes every ongoing transactions associated with that message]
+		- In two "threads" or non blocking single thread of execution:
+				- Read (reads from the stream of the socket)
+					- Validation of what is being read
+					- Misc. Interrupts due to read errors (mem, buffers etc)
+				- Write (writes to the stream of the socket)
+	  
+	- Closing an existing connection
+		- Closes all sessions(?!) associated with that connection.
+	
+- Transaction Manager
+	- (response code parameters ...)
+	- (...)
+	- Creation (connection)
+		- Association with a connection
+		- Returns itself to the message
+
+	- creation of unique transaction identifiers (some sort of randomness 64 bits plus something to ensure that it doesnt collide _ really randomness here and maybe a bit of a counter_)
+
+- Message
+	- Status Report ()
+	- byte[] readData(int size);
+	- interrupt();
+	- pause ();
+		- setting the parameters of the message:
+			- Failure-report (Parameter boolean);
+			- Success-report (Parameter boolean);
+			- Content-Type;
+		- getting the parameters of the message;
+			- Failure-report (Parameter boolean);
+			- Success-report (Parameter boolean);
+			- Content-Type;
+			- Message-ID;	
+
+	- Creation of a message [has to be associated with a session]
+		- with finite byte range associated (Needs Content-Type)
+		- from a stream
+		- Generation of the message-ID
+
+	- SEND of a message
+
+
+	
+
+
+Actors:
+
+Application (External to the stack) - can be of type SIP/SDP if any advantage comes with this specialization (parsing or not of the SDP text probably not a good idea)
+
+Endpoint (External to the stack) - Responsible for Requests | Specialization to response codes
+
+	

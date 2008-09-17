@@ -1,0 +1,181 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the authors at: miguel.pardal@ist.utl.pt
+-->
+<project name="jax-b">
+    <fail message="MUST INCLUDE core BEFORE jax-b" unless="import-ant.module.core" />
+    <fail message="MUST INCLUDE A jax-b-env BEFORE jax-b" unless="import-ant.module.jax-b-env" />
+
+    <!--       -->
+    <!-- PATHS -->
+    <!--       -->
+    <!-- USER NOTE: 'jax-b.jars.path' must be defined by jax-b-env -->
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+
+    <!-- PARAMETER PROPERTIES (defined in build.xml to customize build) -->
+    <!--
+    <property name="jax-b.package" value="example.jaxb.generated" />
+    -->
+
+    <property name="import-ant.module.jax-b" value="true" />
+
+    <property name="jax-b.dir-name" value="jax-b" />
+
+    <property name="config.jax-b.rel-dir" value="${config.rel-dir}/${jax-b.dir-name}" />
+    <property name="build.config.jax-b.rel-dir" value="${build.rel-dir}/${config.jax-b.rel-dir}" />
+
+    <property name="build.jax-b.rel-dir" value="${build.rel-dir}/${jax-b.dir-name}" />
+    <property name="build.jax-b.xjc.rel-dir" value="${build.jax-b.rel-dir}/xjc" />
+    <property name="build.jax-b.javac.rel-dir" value="${build.jax-b.rel-dir}/javac" />
+
+    <property name="jax-b.schema.file-pattern" value="*.xsd" />
+    <property name="jax-b.binding.file-pattern" value="*.xjb" />
+
+    <property name="jax-b.allow-extensions" value="true" />
+
+
+    <!--          -->
+    <!-- TASKDEFS -->
+    <!--          -->
+    <!-- USER NOTE: 'xjc' must be defined by jax-b-env -->
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+    <target name="build-jax-b"
+            depends="config,-jax-b-replaces,jax-init,-begin-execute-jax-b-xjc,-execute-jax-b-xjc,-execute-jax-b-xjc-override,-end-execute-jax-b-xjc"
+            description="Generate Java classes from a XML Schema">
+    </target>
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <target name="-begin-execute-jax-b-xjc" depends="-jax-b-env.taskdef.init">
+         <!-- delete previous build directory -->
+        <delete dir="${build.jax-b.rel-dir}" />
+        <!-- create working directories -->
+        <mkdir dir="${build.jax-b.rel-dir}" />
+        <mkdir dir="${build.jax-b.xjc.rel-dir}" />
+    </target>
+
+    <target name="-execute-jax-b-xjc"
+            unless="jax-b.package">
+        <!-- generate java classes from schema -->
+        <!--
+        <xjc destdir="${build.jax-b.xjc.rel-dir}">
+            <schema dir="${build.config.jax-b.rel-dir}" includes="${jax-b.schema.file-pattern}"/>
+            <binding dir="${build.config.jax-b.rel-dir}" includes="${jax-b.binding.file-pattern}"/>
+        </xjc>
+        -->
+        <antcall target="-xjc-adapter()">
+            <param name="dir" value="${build.jax-b.xjc.rel-dir}" />
+            <param name="extension" value="${jax-b.allow-extensions}" />
+            <param name="schema.dir" value="${build.jax.rel-dir}" />
+            <param name="schema.file-pattern" value="${jax-b.schema.file-pattern}" />
+            <param name="binding.dir" value="${build.config.jax-b.rel-dir}" />
+            <param name="binding.file-pattern" value="${jax-b.binding.file-pattern}" />
+        </antcall>
+    </target>
+
+    <target name="-execute-jax-b-xjc-override"
+            if="jax-b.package">
+        <echo message="Overriding generated classes package to ${jax-b.package}" />
+        <!-- generate java classes from schema -->
+        <antcall target="-xjc-adapter-override()">
+            <param name="dir" value="${build.jax-b.xjc.rel-dir}" />
+            <param name="extension" value="${jax-b.allow-extensions}" />
+            <param name="package" value="${jax-b.package}" />
+            <param name="schema.dir" value="${build.jax.rel-dir}" />
+            <param name="schema.file-pattern" value="${jax-b.schema.file-pattern}" />
+            <param name="binding.dir" value="${build.config.jax-b.rel-dir}" />
+            <param name="binding.file-pattern" value="${jax-b.binding.file-pattern}" />
+        </antcall>
+    </target>
+
+    <target name="-end-execute-jax-b-xjc">
+        <!-- compile data binding classes -->
+        <mkdir dir="${build.jax-b.javac.rel-dir}" />
+        <javac srcdir="${build.jax-b.xjc.rel-dir}"
+            destdir="${build.jax-b.javac.rel-dir}"
+            sourcepath="${compile.sourcepath}"
+            encoding="${compile.encoding}"
+            debug="${compile.debug}"
+            debuglevel="${compile.debuglevel}"
+            optimize="${compile.optimize}"
+            deprecation="${compile.deprecation}"
+            source="${compile.source.version}"
+            target="${compile.target.version}"
+            verbose="${compile.verbose}" >
+            <compilerarg line="${compile.xlint.arg}" />
+            <classpath refid="jax-b.jars.path" />
+            <!-- classpath includes compile.classpath because
+                 JAX-B generated code can extend or implement an existing type -->
+            <classpath refid="compile.classpath" />
+        </javac>
+        <!-- copy generated classes and descriptors to build classes dir -->
+        <copy todir="${build.classes.rel-dir}" overwrite="true">
+            <fileset dir="${build.jax-b.javac.rel-dir}">
+                <include name="**/*.class"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- USER NOTE: override '-jax-b-replaces' to do more or different replaces in configuration files -->
+    <target name="-jax-b-replaces">
+        <echo message="Replacing tokens in resource files..." />
+        <property name="jax-b.custom-tokens.target-name" value="-replace-jax-b-custom-tokens(dir)" />
+        <antcall target="${jax-b.custom-tokens.target-name}">
+            <param name="dir" value="${build.config.jax-b.rel-dir}" />
+        </antcall>
+        <antcall target="-replace-jax-b-tokens(dir)">
+            <param name="dir" value="${build.config.jax-b.rel-dir}" />
+        </antcall>
+    </target>
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <target name="-replace-jax-b-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@jax-b.package@" value="${jax-b.package}" />
+        </replace>
+    </target>
+
+    <!-- USER NOTE: override '-replace-jax-b-custom-tokens(dir)' to replace custom tokens -->
+    <target name="-replace-jax-b-custom-tokens(dir)">
+        <!--
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@token@" value="value" />
+        </replace>
+        -->
+    </target>
+
+    <!--         -->
+    <!-- IMPORTS -->
+    <!--         -->
+    <import file="jax.xml" />
+
+</project>
