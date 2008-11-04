@@ -2,10 +2,9 @@
 	<!-- PROPERTIES before imports (overrides) -->
 	<property name="junit.jar.file-name" value="junit.jar" />
 	<property name="junit.jar.location" value="./lib" />
-	<property name="address" value="192.168.1.64" />
 	<!-- IMPORTS -->
 	<import file="import-ant/core.xml" />
-	<import file="import-ant/junit.xml" /> 
+	<import file="import-ant/junit.xml" />
 	<import file="import-ant/library.xml" />
 
 	<!-- CLASSPATHS -->
@@ -24,6 +23,9 @@
 		<copy file="${jar.rel-file}" todir="../lib" overwrite="true" />
 	</target>
 
+	<!--CRUISE CONTROL BUILD LOOP target-->
+	<target name="cc-buildloop" depends="rebuild,run-tests"
+            description="Comprehensive (paranoid) rebuild and test (used by Cruise Control)."/>
 	<!--
 	<target name="run-test-example" description="test" depends="config,compile" >
 		<junit printsummary="yes" fork="yes" haltonfailure="no">
@@ -34,17 +36,17 @@
 	-->
 	<target name="run-tests" depends="compile,config"
             description="Runs unit tests">
-    <!-- CHECK THAT test.properties is properly defined and fail otherwise! -->
-    <fail message="PLEASE PLACE test.properties IN ${config.junit.rel-dir} please see ${config.junit.rel-dir}/test.properties.example for more information ">
-        <condition>
-            <not>
-                <available file="${config.junit.rel-dir}/test.properties" />
-            </not>
-        </condition>
-    </fail>
+		<!-- CHECK THAT test.properties is properly defined and fail otherwise! -->
+		<fail message="PLEASE PLACE test.properties IN ${config.junit.rel-dir} please see ${config.junit.rel-dir}/test.properties.example for more information ">
+			<condition>
+				<not>
+					<available file="${config.junit.rel-dir}/test.properties" />
+				</not>
+			</condition>
+		</fail>
 
 		<antcall target="-run-tests">
 			<param name="junit.batchtest.include" value="${tests}" />
 		</antcall>
-	</target> 
+	</target>
 </project>

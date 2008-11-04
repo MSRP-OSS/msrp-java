@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
@@ -366,8 +365,8 @@ public class Transaction
      * Method called by the constructors to initialize data structures as
      * needed.
      * 
-     * Currently uses this transaction's TransactionType to assert if there
-     * is need to reserve space for this transaction body
+     * Currently uses this transaction's TransactionType to assert if there is
+     * need to reserve space for this transaction body
      */
     private void initializeDataStructures()
     {
@@ -881,65 +880,197 @@ public class Transaction
      * Used to parse the raw data between the connection and the transaction it
      * identifies the header and fills the body if existing Also it should find
      * eventual errors on the data received and generate an 400 response throw
-     * an (exception or other methods ?!)
+     * an (exception or other methods ?!) This method is also responsible for
+     * accounting for the data received calling the appropriate functions in the
+     * ReportMechanism
      * 
-     * @param toParse
+     * @param incData the data to parse to the transaction
+     * @param offset the starting point to be parsed on the given toParse array
+     * @param length the number of bytes to be considered starting at the offset
+     *            position
+     * @param receivingBinaryData tells the parse method if the data in the
+     *            incData is binary or usascii text
      * @throws InvalidHeaderException if an error was found with the parsing of
      *             the header
      * @throws ImplementationException this is here for debug purposes mainly
+     * @see ReportMechanism#countReceivedBodyBlock(Message, Transaction, long,
+     *      int)
      */
-    public void parse(String toParse)
+    public void parse(byte[] incData, int offset, int length,
+        boolean receivingBinaryData)
         throws InvalidHeaderException,
         ImplementationException
     {
-        // Trims and assembles the received data via the toParse string
-        // so that we get a buffer with the whole headers before we try to
-        // analyze it
-
-        // if the transaction is marked as complete or invalid, calls to this
-        // method will do nothing
-        if (!validTransaction)
-            return;
-        if (completeTransaction)
-            /*
-             * it's rather odd that we have a complete transaction and we are
-             * still parsing data to it, so throw an exception
-             */
-            throw new ImplementationException("Error: trying to parse data to"
-                + "a complete transaction!");
-        int i = 0;
-        while (i < toParse.length())
+        /*
+         * TODO/CLEANUP: remove the extra code when it's not receiving binary
+         * data because there are probably some lines that are unreachable
+         * because now the data part of the message is always treated as binary
+         */
+        if (!receivingBinaryData)
         {
-            if (!headerComplete)
+            String toParse = new String(incData, offset, length, usascii);
+            // Trims and assembles the received data via the toParse string
+            // so that we get a buffer with the whole headers before we try to
+            // analyze it
+
+            // if the transaction is marked as complete or invalid, calls to
+            // this
+            // method will do nothing
+            if (!validTransaction)
+                return;
+            if (completeTransaction)
+                /*
+                 * it's rather odd that we have a complete transaction and we
+                 * are still parsing data to it, so throw an exception
+                 */
+                throw new ImplementationException(
+                    "Error: trying to parse data to"
+                        + "a complete transaction!");
+            int i = 0;
+            while (i < toParse.length())
             {
-                try
+                if (!headerComplete)
                 {
-                    for (; i < toParse.length() && !hasCompleteHeaderBuffer(); i++)
+                    try
                     {
-                        addHeaderBuffer(toParse.charAt(i));
+                        for (; i < toParse.length()
+                            && !hasCompleteHeaderBuffer(); i++)
+                        {
+                            addHeaderBuffer(toParse.charAt(i));
+                        }
+                        if (hasCompleteHeaderBuffer())
+                        {
+                            recognizeHeader();
+                            proccessHeader();
+                            // TODO (?!) implement the recognition of an
+                            // existence
+                            // of a body (by looking at the headers to see if
+                            // content-stuff exists)
+                            // and do the next two calls only in such case (?!)
+                            headerComplete = true;
+                        }
                     }
-                    if (hasCompleteHeaderBuffer())
+                    catch (Exception e)
                     {
-                        recognizeHeader();
-                        proccessHeader();
-                        // TODO (?!) implement the recognition of an existence
-                        // of a body (by looking at the headers to see if
-                        // content-stuff exists)
-                        // and do the next two calls only in such case (?!)
-                        headerComplete = true;
+                        validTransaction = false;
+                        e.printStackTrace();
+                        return;
                     }
-                }
-                catch (Exception e)
+
+                }// if (!headercomplete)
+                if (headerComplete)
                 {
-                    validTransaction = false;
-                    e.printStackTrace();
-                    return;
+                    /*
+                     * if we don't have a valid transaction at this point,
+                     * return
+                     */
+                    if (!isValid())
+                        return;
+                    try
+                    {
+                        /*
+                         * the local variable used to convert the string to
+                         * byte[] FIXME (?!) should we be receiving byte [] at
+                         * this point?
+                         */
+                        byte[] byteData;
+                        if (!isIncomingResponse() && message != null
+                            && transactionType.equals(TransactionType.SEND))
+                        {
+                            long startingIndex = realChunkSize;
+                            while (toParse.length() - i != 0)
+                            {
+
+                                if (message.getReportMechanism()
+                                    .getTriggerGranularity() >= toParse
+                                    .length()
+                                    - i)
+                                {
+                                    /*
+                                     * put all of the remaining data on the data
+                                     * container and update the realchunksize,
+                                     * account the reported bytes (that
+                                     * automatically calls the trigger TODO)
+                                     */
+                                    byteData =
+                                        toParse.substring(i).getBytes(usascii);
+                                    message.getDataContainer().put(
+                                        startingIndex, byteData);
+                                    realChunkSize += byteData.length;
+                                    message.getReportMechanism()
+                                        .countReceivedBodyBlock(message, this,
+                                            startingIndex, byteData.length);
+                                    i += byteData.length;
+                                }
+                                else
+                                {
+                                    byteData =
+                                        toParse.substring(
+                                            i,
+                                            i
+                                                + (message.getReportMechanism()
+                                                    .getTriggerGranularity()))
+                                            .getBytes(usascii);
+                                    message.getDataContainer().put(
+                                        startingIndex, byteData);
+                                    realChunkSize += byteData.length;
+                                    message.getReportMechanism()
+                                        .countReceivedBodyBlock(message, this,
+                                            startingIndex, byteData.length);
+                                    i += byteData.length;
+                                    startingIndex += byteData.length;
+
+                                }
+                            }
+                        }
+                        else
+                        {
+                            byteData = toParse.substring(i).getBytes(usascii);
+                            if (byteData.length > 0)
+                            {
+                                bodyByteBuffer.put(byteData);
+                                realChunkSize += byteData.length;
+                                i += byteData.length;
+                            }
+                            else if (bodyByteBuffer == null)
+                            {
+                                bodyByteBuffer = ByteBuffer.wrap(byteData);
+                            }
+
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        // TODO log it
+                        e.printStackTrace();
+                        // FIXME ?! give a 400 response?!
+                        this.generateResponse(400);
+                        try
+                        {
+                            transactionManager.addPriorityTransaction(this);
+                        }
+                        catch (InternalErrorException e1)
+                        {
+                            // TODO log it
+                            e1.printStackTrace();
+                        }
+                    }
                 }
 
-            }// if (!headercomplete)
+                if (completeTransaction)
+                    break;
+            }
+
+        } // if (!receivingBinaryData)
+        else
+        {
+            ByteBuffer incByteBuffer = ByteBuffer.wrap(incData, offset, length);
+
             if (headerComplete)
             {
-                /* if we don't have a valid transaction at this point, return */
+                /*
+                 * if we don't have a valid transaction at this point, return
+                 */
                 if (!isValid())
                     return;
                 try
@@ -952,13 +1083,18 @@ public class Transaction
                     if (!isIncomingResponse() && message != null
                         && transactionType.equals(TransactionType.SEND))
                     {
+                        /*
+                         * if this isn't an incoming response, has a message
+                         * associated with it and it's actually a SEND method
+                         */
                         long startingIndex = realChunkSize;
-                        while (toParse.length() - i != 0)
+                        while (incByteBuffer.hasRemaining())
                         {
 
                             if (message.getReportMechanism()
-                                .getTriggerGranularity() >= toParse.length()
-                                - i)
+                                .getTriggerGranularity() >= incByteBuffer
+                                .limit()
+                                - incByteBuffer.position())
                             {
                                 /*
                                  * put all of the remaining data on the data
@@ -966,45 +1102,44 @@ public class Transaction
                                  * account the reported bytes (that
                                  * automatically calls the trigger TODO)
                                  */
-                                byteData =
-                                    toParse.substring(i).getBytes(usascii);
+                                byteData = new byte[incByteBuffer.remaining()];
+                                incByteBuffer.get(byteData);
                                 message.getDataContainer().put(startingIndex,
                                     byteData);
                                 realChunkSize += byteData.length;
                                 message.getReportMechanism()
                                     .countReceivedBodyBlock(message, this,
                                         startingIndex, byteData.length);
-                                i += byteData.length;
+                                startingIndex += byteData.length;
                             }
                             else
                             {
                                 byteData =
-                                    toParse.substring(
-                                        i,
-                                        i
-                                            + (message.getReportMechanism()
-                                                .getTriggerGranularity()))
-                                        .getBytes(usascii);
+                                    new byte[message.getReportMechanism()
+                                        .getTriggerGranularity()];
+                                incByteBuffer.get(byteData, 0, message
+                                    .getReportMechanism()
+                                    .getTriggerGranularity());
                                 message.getDataContainer().put(startingIndex,
                                     byteData);
                                 realChunkSize += byteData.length;
                                 message.getReportMechanism()
                                     .countReceivedBodyBlock(message, this,
                                         startingIndex, byteData.length);
-                                i += byteData.length;
                                 startingIndex += byteData.length;
 
                             }
                         }
-                    }
+                    }// if (!isIncomingResponse() && message != null
+                    // && transactionType.equals(TransactionType.SEND))
                     else
                     {
-                        byteData = toParse.substring(i).getBytes(usascii);
+                        byteData = new byte[incByteBuffer.remaining()];
+                        incByteBuffer.get(byteData);
                         if (byteData.length > 0)
                         {
                             bodyByteBuffer.put(byteData);
                             realChunkSize += byteData.length;
-                            i += byteData.length;
                         }
                         else if (bodyByteBuffer == null)
                         {
@@ -1031,10 +1166,7 @@ public class Transaction
                 }
             }
 
-            if (completeTransaction)
-                break;
         }
-
     }
 
     /**
@@ -1430,7 +1562,7 @@ public class Transaction
      * @param endTransactionChar the character associated with the end of
      *            transaction ($, + or #)
      */
-    public void sinalizeEnd(char continuationFlag)
+    public void signalizeEnd(char continuationFlag)
     {
         this.continuationFlag = continuationFlag;
 
