@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
@@ -34,6 +33,9 @@ import msrp.exceptions.InternalErrorException;
 import msrp.exceptions.InvalidHeaderException;
 
 /**
+ * Tests for the transaction class. At the moment it tests mainly the parser
+ * method of the class and if it has the expected behavior
+ * 
  * @author João André Pereira Antunes 2008
  * 
  */
@@ -58,7 +60,8 @@ public class TestTransaction
     static Random random;
 
     static byte[] randomData;
-    static TransactionManager dummyTransactionManager; 
+
+    static TransactionManager dummyTransactionManager;
 
     @BeforeClass
     public static void setUpValues()
@@ -105,12 +108,17 @@ public class TestTransaction
     }
 
     @Test
-    public void testParsingCompleteBody() throws InvalidHeaderException, ImplementationException
+    public void testParsingCompleteBody()
+        throws InvalidHeaderException,
+        ImplementationException
     {
 
-        Transaction newTransaction = new Transaction(tID, TransactionType.REPORT, dummyTransactionManager);
-        newTransaction.parse(completeSendTransaction);
-        newTransaction.sinalizeEnd('$');
+        Transaction newTransaction =
+            new Transaction(tID, TransactionType.REPORT,
+                dummyTransactionManager);
+        newTransaction.parse(completeSendTransaction.getBytes(usascii), 0,
+            completeSendTransaction.length(), false);
+        newTransaction.signalizeEnd('$');
 
         try
         {
@@ -119,18 +127,23 @@ public class TestTransaction
         }
         catch (InternalErrorException e)
         {
-           fail("Error ocurred while retrieving the body of the transaction");
+            fail("Error ocurred while retrieving the body of the transaction");
         }
 
     }
 
     @Test
-    public void testParsingEmptySendHeaders() throws InvalidHeaderException, ImplementationException
+    public void testParsingEmptySendHeaders()
+        throws InvalidHeaderException,
+        ImplementationException
     {
 
-        Transaction newTransaction = new Transaction(tID, TransactionType.REPORT, dummyTransactionManager);
-        newTransaction.parse(emptyCompleteSendTransaction);
-        newTransaction.sinalizeEnd('$');
+        Transaction newTransaction =
+            new Transaction(tID, TransactionType.REPORT,
+                dummyTransactionManager);
+        newTransaction.parse(emptyCompleteSendTransaction.getBytes(usascii), 0,
+            emptyCompleteSendTransaction.length(), false);
+        newTransaction.signalizeEnd('$');
 
         URI[] toPathExpected = new URI[1];
         toPathExpected[0] = URI.create("msrp://192.168.2.3:1234/asd23asd;tcp");
@@ -169,27 +182,22 @@ public class TestTransaction
          */
         assertEquals("Error parsing the failure report", failureReportExpected,
             newTransaction.getFailureReport().toLowerCase());
-        
 
     }
-    /*@Test(expected=msrp.exceptions.InvalidHeaderException.class)
-    public void testInvalidHeaderFailureReport() throws InvalidHeaderException 
-    {
-        
-        /*
-         * Should throw an exception here:
-         
-        Transaction newTransaction = new Transaction(tID, TransactionType.SEND);
-        try {
-        newTransaction.parse(emptyInvalidHeaderCompleteSendTransaction);
-        newTransaction.sinalizeEnd('$');
-        fail("Exception not thrown!");
-        }
-        catch (InvalidHeaderException e)
-        {
-        
-        }
-    }*/
+
+    /*
+     * @Test(expected=msrp.exceptions.InvalidHeaderException.class) public void
+     * testInvalidHeaderFailureReport() throws InvalidHeaderException {
+     * 
+     * / Should throw an exception here:
+     * 
+     * Transaction newTransaction = new Transaction(tID, TransactionType.SEND);
+     * try { newTransaction.parse(emptyInvalidHeaderCompleteSendTransaction);
+     * newTransaction.sinalizeEnd('$'); fail("Exception not thrown!"); } catch
+     * (InvalidHeaderException e) {
+     * 
+     * } }
+     */
 
     @Test
     public void testParsingReportFields()
