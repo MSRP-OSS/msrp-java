@@ -741,7 +741,7 @@ public class MiscTests
                     incomingTransaction =
                         new Transaction(tID, newTransactionType, dummyManager);
                     if (newTransactionType.equals(TransactionType.UNSUPPORTED))
-                        incomingTransaction.sinalizeEnd('$');
+                        incomingTransaction.signalizeEnd('$');
 
                     // DEBUG REMOVE
                     System.out.println("identified the following TID:" + tID);
@@ -831,8 +831,8 @@ public class MiscTests
                 // if we have a complete end of transaction:
                 if (matchEndTransaction.matches())
                 {
-                    incomingTransaction.parse(matchEndTransaction.group(1));
-                    incomingTransaction.sinalizeEnd(matchEndTransaction
+                    incomingTransaction.parse(matchEndTransaction.group(1).getBytes(usascii),0,matchEndTransaction.group(1).length(),false);
+                    incomingTransaction.signalizeEnd(matchEndTransaction
                         .group(3).charAt(0));
                     receivingTransaction = false;
                     // parse the rest of the received data extracting the
@@ -904,7 +904,7 @@ public class MiscTests
                         toParse =
                             toParse.substring(0, toParse.lastIndexOf('\r'));
                     }
-                    incomingTransaction.parse(toParse);
+                    incomingTransaction.parse(toParse.getBytes(usascii),0,toParse.length(),false);
                     complete = true;
                 }
             }
