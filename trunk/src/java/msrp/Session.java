@@ -472,6 +472,7 @@ public class Session
      * the success reports
      * 
      * it will use the DefaultReportMechanism
+     * @see DefaultReportMechanism
      */
     private ReportMechanism reportMechanism =
         DefaultReportMechanism.getInstance();
@@ -485,6 +486,14 @@ public class Session
     public msrp.SessionManager get_sessionManager()
     {
         return manager;
+    }
+
+    /**
+     * @param reportMechanism the reportMechanism to set
+     */
+    public void setReportMechanism(ReportMechanism reportMechanism)
+    {
+        this.reportMechanism = reportMechanism;
     }
 
     /**
