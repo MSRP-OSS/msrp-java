@@ -131,6 +131,21 @@ public class Counter
     {
         return count;
     }
+    
+    /**
+     * This method gives the number of consecutive received bytes.
+     * e.g. if the counter array is: 111011 this method will return 3;
+     * @return the number of consecutive received bytes counted from the beginning.
+     */
+    protected int getNrConsecutiveBytes() 
+    {
+        int i;
+        for (i=0; i < counter.length; i++)
+            if (counter[i] != EXISTS)
+                return i;
+        return i;
+        
+    }
 
     /**
      * field that is used to register the receipt or not of the end of message

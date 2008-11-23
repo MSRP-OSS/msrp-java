@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
@@ -105,27 +104,24 @@ public class SuccessReport
                 + "Message-ID: " + message + "\r\n");
 
         /* Byte-Range: */
-        if (!messageCounter.isComplete())
+        /*
+         * Only if the message isn't complete we will insert the Byte Range
+         * header
+         */
+        long[] byteRange = transaction.getByteRange();
+        header =
+            header.concat("Byte-Range: 1" + "-"
+                + message.getCounter().getNrConsecutiveBytes() + "/");
+        long totalBytes = transaction.getTotalMessageBytes();
+        if (totalBytes == Message.UNINTIALIZED)
+            throw new InternalErrorException(
+                "Generating the success report, the total number of bytes of this message was unintialized");
+        if (totalBytes == Message.UNKNWON)
         {
-            /*
-             * Only if the message isn't complete we will insert the Byte Range
-             * header
-             */
-            long[] byteRange = transaction.getByteRange();
-            header =
-                header.concat("Byte-Range: " + byteRange[0] + "-"
-                    + byteRange[1] + "/");
-            long totalBytes = transaction.getTotalMessageBytes();
-            if (totalBytes == Message.UNINTIALIZED)
-                throw new InternalErrorException(
-                    "Generating the success report, the total number of bytes of this message was unintialized");
-            if (totalBytes == Message.UNKNWON)
-            {
-                header = header.concat("*\r\n");
-            }
-            else
-                header = header.concat(totalBytes + "\r\n");
+            header = header.concat("*\r\n");
         }
+        else
+            header = header.concat(totalBytes + "\r\n");
 
         /* Status header (rest of headers) */
         header = header.concat("Status: 000 200\r\n");
@@ -145,11 +141,11 @@ public class SuccessReport
             "Error the .get() of the transaction was called without available bytes to get");
 
     }
-    
+
     @Override
     public boolean hasData()
     {
-        if (offsetRead[HEADERINDEX] >= headerBytes.length 
+        if (offsetRead[HEADERINDEX] >= headerBytes.length
             && offsetRead[ENDLINEINDEX] > (7 + tID.length() + 2))
             return false;
         if (offsetRead[ENDLINEINDEX] > (7 + tID.length() + 2))

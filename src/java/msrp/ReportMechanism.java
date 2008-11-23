@@ -35,7 +35,7 @@ import javax.xml.ws.handler.MessageContext;
  * @author João André Pereira Antunes 2008
  * 
  */
-abstract class ReportMechanism
+public abstract class ReportMechanism
 {
     private HashMap<Message, Counter> messageCounters =
         new HashMap<Message, Counter>();

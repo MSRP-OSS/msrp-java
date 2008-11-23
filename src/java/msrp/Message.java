@@ -258,7 +258,7 @@ public class Message
     /**
      * TODO WORKINPROGRESS Method to be used by the MessagePrioritizer by now
      * the priority field of the messages is irrelevant as the messages work in
-     * a FIFO for each session (TODO not shure if a prioritizer within messages
+     * a FIFO for each session (TODO not sure if a prioritizer within messages
      * in same session will serve any practical purpose)
      * 
      * @return the priority of this message

@@ -26,6 +26,7 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import msrp.testutils.MockMSRPSessionListener;
 import msrp.utils.TextUtils;
 
 import org.junit.*;
@@ -69,7 +70,7 @@ public class TestSendingBinaryMessages
             MSRPStack.setShortMessageBytes(30024 * 1024);
 
             /* Gets the address from the configuration file */
-            testProperties.load(TestSuccessReport.class
+            testProperties.load(TestReportMechanism.class
                 .getResourceAsStream("/test.properties"));
             String addressString = testProperties.getProperty("address");
             /*

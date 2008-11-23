@@ -26,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import msrp.testutils.MockMSRPSessionListener;
 import msrp.utils.TextUtils;
 
 import org.junit.After;
@@ -66,7 +67,7 @@ public class SimpleProfileTests
             /* Set the limit to be of 30 MB of messages allowed in memory */
             MSRPStack.setShortMessageBytes(30024 * 1024);
 
-            testProperties.load(TestSuccessReport.class
+            testProperties.load(TestReportMechanism.class
                     .getResourceAsStream("/test.properties"));
             String addressString = testProperties.getProperty("address");
             /*
