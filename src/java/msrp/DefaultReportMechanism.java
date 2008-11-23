@@ -60,10 +60,10 @@ public class DefaultReportMechanism
      * @see msrp.ReportMechanism#shouldGenerateReport(msrp.Message, int)
      */
     /**
-     * This method is called every time a byte of the message is received
+     * This method is called every time getTriggerGranularity() of the message is received
      * 
-     * The default success report granularity is the whole message TODO (?!)
-     * alter this?!
+     * The default success report granularity is the whole message
+     * @see #getTriggerGranularity()
      */
     @Override
     public boolean shouldGenerateReport(Message message,

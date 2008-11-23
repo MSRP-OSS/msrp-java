@@ -295,31 +295,31 @@ public class Transaction
                     headerString.concat("Failure-Report: "
                         + messageBeingSent.getFailureReport() + "\r\n");
 
-            headerString =
-                headerString.concat("Byte-Range: 1-"
-                    + messageBeingSent.getStringTotalSize() + "/"
-                    + messageBeingSent.getStringTotalSize() + "\r\n"
-                    + "Content-Type: " + messageBeingSent.getContentType()
-                    + "\r\n\r\n");
-
-            headerBytes = headerString.getBytes(usascii);
-
+            /*
+             * assert if either we are in the case of an interruptible
+             * transaction or not and fill the Byte-Range fields and other
+             * internal fields accordingly
+             */
             if (headerBytes.length + (message.getSize() - message.bytesSent())
                 + (7 + tID.length() + 1) > MSRPStack.MAXIMUMUNINTERRUPTIBLE)
             {
-                /*
-                 * Send requests larger than 2048 bytes must be interruptible
-                 */
                 interruptible = true;
-                headerBytes =
-                    new String("MSRP " + tID + " SEND\r\n" + "To-Path: "
-                        + toPathUri.toASCIIString() + "\r\n" + "From-Path: "
-                        + fromPathUri.toASCIIString() + "\r\n" + "Message-ID: "
-                        + messageID + "\r\n" + "Byte-Range: 1-*" + "/"
+                headerString = headerString.concat("Byte-Range: 1-*" + "/"
+                    + messageBeingSent.getStringTotalSize() + "\r\n"
+                    + "Content-Type: " + messageBeingSent.getContentType()
+                    + "\r\n\r\n");
+            }
+            else
+            {
+                headerString =
+                    headerString.concat("Byte-Range: 1-"
+                        + messageBeingSent.getStringTotalSize() + "/"
                         + messageBeingSent.getStringTotalSize() + "\r\n"
                         + "Content-Type: " + messageBeingSent.getContentType()
-                        + "\r\n\r\n").getBytes(usascii);
+                        + "\r\n\r\n");
+
             }
+            headerBytes = headerString.getBytes(usascii);
 
             /* by default have the continuation flag to be the end of message */
             continuationFlagByte = ENDMESSAGE;
@@ -1585,7 +1585,7 @@ public class Transaction
         if (headerComplete)
         {
             // body from the end of transaction line
-            if (byteRange[1] != 0 && byteRange[1] != UNINTIALIZED)
+            if (byteRange[1] != 0 && byteRange[1] != UNINTIALIZED && transactionType.equals(TransactionType.SEND))
                 /*
                  * update of the chunk size with the actual data bytes that were
                  * parsed
