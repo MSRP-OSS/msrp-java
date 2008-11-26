@@ -617,17 +617,23 @@ public class Session
      * calling the callback
      */
     /**
+     * This function is only used so that we have a central point to eventually do any cleanup before the real callback.
+     * (for instance with the Stack itself, at this moment nothing is being done though).
+     * 
      * trigger for the registered MSRPSessionListener callback.
      * 
      * @see MSRPSessionListener
      * @param report the transaction associated with the report request
      */
-    protected void triggerReceiveReport(Transaction report)
+    protected void triggerReceivedReport(Transaction report)
     {
         msrpSessionListener.receivedReport(this, report);
     }
 
     /**
+     * This function is only used so that we have a central point to eventually do any cleanup before the real callback.
+     * (for instance with the Stack itself, at this moment nothing is being done though).
+     * 
      * trigger for the registered MSRPSessionListener callback.
      * 
      * @see MSRPSessionListener
@@ -640,6 +646,9 @@ public class Session
     }
 
     /**
+     * This function is only used so that we have a central point to eventually do any cleanup before the real callback.
+     * (for instance with the Stack itself, at this moment nothing is being done though).
+     * 
      * trigger for the registered MSRPSessionListener callback
      * 
      * @see MSRPSessionListener
@@ -653,14 +662,30 @@ public class Session
     }
 
     /**
+     * This function is only used so that we have a central point to eventually do any cleanup before the real callback.
+     * (for instance with the Stack itself, at this moment nothing is being done though).
+     * 
      * trigger for the registered MSRPSessionListener callback updateSendStatus
      * 
      * @see MSRPSessionListener
      */
-    protected void triggerSendUpdate(Session session, Message outgoingMessage)
+    protected void triggerUpdateSendStatus(Session session, Message outgoingMessage)
     {
         msrpSessionListener.updateSendStatus(session, outgoingMessage,
             outgoingMessage.bytesSent());
+    }
+    /**
+     * This function is only used so that we have a central point to eventually do any cleanup before the real callback.
+     * (for instance with the Stack itself, at this moment nothing is being done though).
+     *
+     * trigger for the registered MSRPSessionListener callback abortedMessage
+     * 
+     * 
+     */
+    protected void triggerAbortedMessage(Session session, IncomingMessage message)
+    {
+        msrpSessionListener.abortedMessage(session, message);
+        
     }
 
     /*
@@ -713,6 +738,20 @@ public class Session
         messagesSent.put(message.getMessageID(), message);
 
     }
+
+    /**
+     * Method that receives a message to be deleted from the queue of messages to being sent
+     * This method was created meant only to be called by the Message.abortSend()
+     * 
+     * @see Message#abortSend()
+     * @param message
+     */
+    protected void delMessageToSend(Message message)
+    {
+        messagesToSend.remove(message);
+        
+    }
+
 
     /*
      * public Message sendMessage(String contentType, byte[] byteContent) throws

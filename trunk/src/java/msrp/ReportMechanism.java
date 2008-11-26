@@ -126,7 +126,7 @@ public abstract class ReportMechanism
         Session session = outgoingMessage.getSession();
         if (shouldTriggerSentHook(outgoingMessage, session,
             outgoingMessage.lastCallSentData))
-            session.triggerSendUpdate(session, outgoingMessage);
+            session.triggerUpdateSendStatus(session, outgoingMessage);
         outgoingMessage.lastCallSentData =
             outgoingMessage.getDataContainer().currentReadOffset();
 
