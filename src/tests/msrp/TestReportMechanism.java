@@ -20,8 +20,7 @@ import java.net.*;
 import java.util.*;
 import java.io.*;
 
-import msrp.testutils.CustomExampleReportMechanism;
-import msrp.testutils.MockMSRPSessionListener;
+import msrp.testutils.*;
 import msrp.utils.*;
 
 import static org.junit.Assert.*;
@@ -233,7 +232,7 @@ public class TestReportMechanism
         try
         {
             Long startTime = System.currentTimeMillis();
-            /* transfer the 1MB bytes message: */
+            /* transfer the 5MB bytes message: */
             byte[] bigData = new byte[5 * 1024 * 1024];
             binaryRandom.nextBytes(bigData);
             FileOutputStream fileStream = new FileOutputStream(tempFile);
