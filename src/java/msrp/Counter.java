@@ -137,7 +137,7 @@ public class Counter
      * e.g. if the counter array is: 111011 this method will return 3;
      * @return the number of consecutive received bytes counted from the beginning.
      */
-    protected int getNrConsecutiveBytes() 
+    protected long getNrConsecutiveBytes() 
     {
         int i;
         for (i=0; i < counter.length; i++)

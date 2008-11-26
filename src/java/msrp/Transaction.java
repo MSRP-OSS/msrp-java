@@ -304,10 +304,11 @@ public class Transaction
                 + (7 + tID.length() + 1) > MSRPStack.MAXIMUMUNINTERRUPTIBLE)
             {
                 interruptible = true;
-                headerString = headerString.concat("Byte-Range: 1-*" + "/"
-                    + messageBeingSent.getStringTotalSize() + "\r\n"
-                    + "Content-Type: " + messageBeingSent.getContentType()
-                    + "\r\n\r\n");
+                headerString =
+                    headerString.concat("Byte-Range: 1-*" + "/"
+                        + messageBeingSent.getStringTotalSize() + "\r\n"
+                        + "Content-Type: " + messageBeingSent.getContentType()
+                        + "\r\n\r\n");
             }
             else
             {
@@ -1546,8 +1547,6 @@ public class Transaction
      * }
      */
 
-    private char continuationFlag;
-
     /**
      *TODO do what is needed if it receives an # char (that being: mark the
      * message as aborted and "send" it to the transactionmanager thread to deal
@@ -1564,7 +1563,7 @@ public class Transaction
      */
     public void signalizeEnd(char continuationFlag)
     {
-        this.continuationFlag = continuationFlag;
+        this.continuationFlagByte = (byte) continuationFlag;
 
         if (!headerComplete)
         {
@@ -1585,7 +1584,8 @@ public class Transaction
         if (headerComplete)
         {
             // body from the end of transaction line
-            if (byteRange[1] != 0 && byteRange[1] != UNINTIALIZED && transactionType.equals(TransactionType.SEND))
+            if (byteRange[1] != 0 && byteRange[1] != UNINTIALIZED
+                && transactionType.equals(TransactionType.SEND))
                 /*
                  * update of the chunk size with the actual data bytes that were
                  * parsed
@@ -1607,6 +1607,23 @@ public class Transaction
                     .receivedEndOfMessage();
             }
 
+            if (transactionType.equals(TransactionType.SEND)
+                && !isIncomingResponse()
+                && continuationFlagByte == ABORTMESSAGE)
+            {
+                /*
+                 * if we received a send request with a continuation flag of
+                 * aborted we should notify the message via the method
+                 * message.gotAborted so that it can change itself and notify
+                 * the appropriate listener that is associated with this message
+                 */
+                if (message == null)
+                    /* TODO log it and maybe try to recover from the error (?!) */
+                    throw new RuntimeException(
+                        "Error! implementation error, we should always have "
+                            + "a message associated at this point");
+                message.gotAborted();
+            }
         }
         String aux = headerBuffer.toString();
         headerBytes = aux.getBytes(usascii);
@@ -1735,6 +1752,10 @@ public class Transaction
 
     static Charset usascii = Charset.forName("US-ASCII");
 
+    /**
+     * Variable that tells if this Transaction is interrupted (paused or
+     * aborted)
+     */
     private boolean interrupted = false;
 
     /**
@@ -1788,6 +1809,7 @@ public class Transaction
      * Function responsible for giving out the bytes associated with this
      * transaction TODO: put it to write the end of transaction dynamically
      * without having to be on the body
+     * TODO: tidy up a lil'bit the code
      * 
      * @return the next byte associated with this transaction
      * @throws Exception
@@ -1805,6 +1827,17 @@ public class Transaction
             if (interrupted
                 && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
             {
+                if (hasContentStuff && offsetRead[DATAINDEX] < 2)
+                {
+
+                    if (offsetRead[DATAINDEX]++ == 0)
+                        return 13;
+                    else
+                        return 10;
+                    /*
+                     * Add the extra CRLF separating the data and the end-line
+                     */
+                }
                 return getEndLineByte();
             }
             if (!interrupted && message.hasData())
@@ -1975,7 +2008,7 @@ public class Transaction
             // FIXME (?!) TODO check to see if there can be the case where the
             // message when gets interrupted has no remaining bytes left to be
             // sent due to possible concurrency here
-            continuationFlag = INTERRUPT;
+            continuationFlagByte = INTERRUPT;
             IOInterface.debugln("Called the interrupt of transaction " + tID);
             interrupted = true;
         }
@@ -1987,6 +2020,16 @@ public class Transaction
     protected void disposeBody()
     {
 
+    }
+
+    /**
+     * Method used to abort the transaction. This method switches the
+     * continuation flag and marks this transaction as interrupted
+     */
+    protected void abort()
+    {
+        continuationFlagByte = ABORTMESSAGE;
+        interrupted = true;
     }
 
 }

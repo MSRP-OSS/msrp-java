@@ -49,6 +49,93 @@ class TransactionManager
     private Message messageBeingSent = null;
 
     /**
+     * @uml.property name="_connections"
+     */
+    private Connection connection = null;
+
+    /**
+     * @uml.property name="_transactionCounter"
+     */
+    private byte counter = 0;
+
+    /**
+     * @uml.property name="_transactions"
+     * @uml.associationEnd multiplicity="(0 -1)"
+     *                     inverse="_transactionManager:msrp.Transaction"
+     */
+    private ArrayList<Transaction> transactionsToSend =
+        new ArrayList<Transaction>();
+
+    private HashMap<String, Transaction> existingTransactions =
+    new HashMap<String, Transaction>();
+
+    private MSRPStack instanceStack = MSRPStack.getInstance();
+
+    private HashMap<URI, Session> associatedSessions =
+    new HashMap<URI, Session>();
+
+    /**
+     * generates and queues the response of the given transaction based on the
+     * Report header fields.
+     * 
+     * @param transaction
+     */
+    private void proccessResponse(Transaction transaction, int responseCode)
+    {
+    
+        String failureReport = transaction.getFailureReport();
+    
+        // TODO generate the responses based on the success report field
+    
+        // generate the responses based on the failure report field
+        if (failureReport == null || failureReport.equalsIgnoreCase("yes")
+            || failureReport.equalsIgnoreCase("partial"))
+        {
+            if (failureReport != null
+                && failureReport.equalsIgnoreCase("partial")
+                && responseCode == 200)
+                return;
+            else
+            {
+                // Generate transaction response
+                transaction.generateResponse(responseCode);
+            }
+    
+            try
+            {
+                addPriorityTransaction(transaction);
+            }
+            catch (InternalErrorException e)
+            {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+    
+        }
+    
+    }
+
+    /**
+     * Convenience method that gets the session associated with the given
+     * transaction
+     * 
+     * @param transaction transaction from which to get an associated session
+     * @return the session associated with this transaction
+     */
+    private Session getAssociatedSession(Transaction transaction)
+    {
+        return MSRPStack.getInstance().getSession((transaction.getToPath())[0]);
+    
+    }
+
+    /**
+     */
+    private String uniqueTransaction()
+    {
+        return "";
+    }
+
+    /**
      * Getter of the property <tt>_message</tt>
      * 
      * @return Returns the _message.
@@ -72,11 +159,6 @@ class TransactionManager
     }
 
     /**
-     * @uml.property name="_connections"
-     */
-    private Connection connection = null;
-
-    /**
      * Getter of the property <tt>_connections</tt>
      * 
      * @return Returns the _connections.
@@ -86,11 +168,6 @@ class TransactionManager
     {
         return connection;
     }
-
-    /**
-     * @uml.property name="_transactionCounter"
-     */
-    private byte counter = 0;
 
     /**
      * Getter of the property <tt>_transactionCounter</tt>
@@ -115,17 +192,6 @@ class TransactionManager
     }
 
     /**
-     * @uml.property name="_transactions"
-     * @uml.associationEnd multiplicity="(0 -1)"
-     *                     inverse="_transactionManager:msrp.Transaction"
-     */
-    private ArrayList<Transaction> transactionsToSend =
-        new ArrayList<Transaction>();
-
-    private HashMap<String, Transaction> existingTransactions =
-        new HashMap<String, Transaction>();
-
-    /**
      * Getter of the property <tt>_transactions</tt>
      * 
      * @return Returns the _transactions.
@@ -134,47 +200,6 @@ class TransactionManager
     protected ArrayList<Transaction> getTransactionsToSend()
     {
         return transactionsToSend;
-    }
-
-    /**
-     * generates and queues the response of the given transaction based on the
-     * Report header fields.
-     * 
-     * @param transaction
-     */
-    private void proccessResponse(Transaction transaction, int responseCode)
-    {
-
-        String failureReport = transaction.getFailureReport();
-
-        // TODO generate the responses based on the success report field
-
-        // generate the responses based on the failure report field
-        if (failureReport == null || failureReport.equalsIgnoreCase("yes")
-            || failureReport.equalsIgnoreCase("partial"))
-        {
-            if (failureReport != null
-                && failureReport.equalsIgnoreCase("partial")
-                && responseCode == 200)
-                return;
-            else
-            {
-                // Generate transaction response
-                transaction.generateResponse(responseCode);
-            }
-
-            try
-            {
-                addPriorityTransaction(transaction);
-            }
-            catch (InternalErrorException e)
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-        }
-
     }
 
     /**
@@ -258,7 +283,7 @@ class TransactionManager
                 // be handled like this?!
                 try
                 {
-                    transaction.getSession().triggerReceiveReport(transaction);
+                    transaction.getSession().triggerReceivedReport(transaction);
                 }
                 catch (ImplementationException e)
                 {
@@ -269,19 +294,6 @@ class TransactionManager
             }
 
         }
-
-    }
-
-    /**
-     * Convenience method that gets the session associated with the given
-     * transaction
-     * 
-     * @param transaction transaction from which to get an associated session
-     * @return the session associated with this transaction
-     */
-    private Session getAssociatedSession(Transaction transaction)
-    {
-        return MSRPStack.getInstance().getSession((transaction.getToPath())[0]);
 
     }
 
@@ -374,13 +386,6 @@ class TransactionManager
         connection.addObserver(this);
     }
 
-    /**
-     */
-    private String uniqueTransaction()
-    {
-        return "";
-    }
-
     protected String generateNewTID()
     {
         byte[] tid = new byte[8];
@@ -457,11 +462,6 @@ class TransactionManager
         return associatedSessions.get(uriSession);
 
     }
-
-    private MSRPStack instanceStack = MSRPStack.getInstance();
-
-    private HashMap<URI, Session> associatedSessions =
-        new HashMap<URI, Session>();
 
     /**
      * Associates the given session to this transaction manager and hencefore

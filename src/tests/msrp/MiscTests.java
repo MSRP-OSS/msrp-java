@@ -925,5 +925,12 @@ public class MiscTests
         return true;
     }
 
+    @Override
+    public void abortedMessage(Session session, IncomingMessage message)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
 }// end of class
 

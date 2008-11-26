@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
@@ -200,12 +199,84 @@ public class Message
     protected long lastCallReportCount = 0;
 
     /**
+     * This method is intended to abort a message's send process. If the message
+     * is not being sent it won't be anymore. If the message is being sent, the
+     * current SEND transaction will end with the # continuation-flag char and
+     * further data belonging to the message will not be sent. On the other end,
+     * if the message is being sent, receiving the # continuation-flag will
+     * trigger a call to the abortedMessage method on MSRPSessionListener binded
+     * to the session.
+     * 
+     * @throws InternalErrorException If we have a failure on the sanity checks
+     * 
+     * @see MSRPSessionListener#abortedMessage(Session, Message)
+     */
+    public void abortSend() throws InternalErrorException
+    {
+        /*
+         * Sanity checks:
+         */
+        if (this.isComplete())
+            throw new InternalErrorException("The pause method"
+                + " was called on a complete message!");
+        if (session == null)
+            throw new InternalErrorException(
+                "The session on this message is null"
+                    + " and the pause method was called upon it");
+        TransactionManager transactionManager = session.getTransactionManager();
+        if (transactionManager == null)
+            throw new InternalErrorException("The transaction manager "
+                + "associated with this message is null"
+                + " and the pause method was called upon it");
+        /*
+         * End of sanity checks.
+         */
+
+        /* internally signal this message as aborted */
+        aborted = true;
+
+        /* remove this message from the list of messages to send of the session */
+        session.delMessageToSend(this);
+
+        /*
+         * find the first transaction belonging to a SEND of this message and
+         * abort it, remove eventually other transactions that serve the purpose
+         * of sending this message
+         */
+        ArrayList<Transaction> transactionsToSend =
+            transactionManager.getTransactionsToSend();
+        boolean firstTransactionFound = false;
+        for (Transaction transaction : transactionsToSend)
+        {
+            if (transaction.transactionType.equals(TransactionType.SEND)
+                && transaction.getMessage().equals(this))
+            {
+                if (!firstTransactionFound)
+                {
+                    transaction.abort();
+                    firstTransactionFound = true;
+                }
+                else
+                {
+                    transactionsToSend.remove(transaction);
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Field used to conserve the abortion state of the message
+     */
+    private boolean aborted = false;
+
+    /**
      * This method interrupts all of the existing and interruptible SEND request
      * transactions associated with this message that are on the transactions to
      * be sent queue, and gets this message back on top of the messages to send
      * queue on the respective session.
      * 
-     * This method is called internally by the prioritizer.
+     * This method is meant to be called internally by the prioritizer.
      * 
      * @throws InternalErrorException if this method, that is called internally,
      *             was called with the message in an invalid state
@@ -655,4 +726,25 @@ public class Message
             return true;
         return false;
     }
+
+    /**
+     * Method called by the Transaction when it wants to notify a message that
+     * it got aborted.
+     * 
+     * It is this method's responsibility to notify the listeners associated
+     * with it's session and change it's internal state accordingly
+     * 
+     * TODO reflect about the possibility to eliminate all the data associated
+     * with this message or not. Could be done with a variable associated with
+     * the stack, in some cases it may be useful to keep the data. ATM it
+     * disposes the DataContainer associated with it
+     */
+    protected void gotAborted()
+    {
+        aborted = true;
+        dataContainer.dispose();
+        session.triggerAbortedMessage(session, (IncomingMessage)this);
+
+    }
+
 }

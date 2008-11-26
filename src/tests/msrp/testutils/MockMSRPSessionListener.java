@@ -54,6 +54,10 @@ public class MockMSRPSessionListener
 
     private Message updateSendStatusMessage;
 
+    private Session abortedMessageSession;
+    
+    private IncomingMessage abortedMessage;
+    
     private Boolean acceptHookResult;
 
     /**
@@ -80,6 +84,13 @@ public class MockMSRPSessionListener
      * A counter for the number of success reports received
      */
     public ArrayList<Long> successReportCounter = new ArrayList<Long>();
+
+    /**
+     * A counter for the number of message aborts received. the size of this
+     * array counts how many message abortions and its values the bytes that
+     * were received before the message was aborted
+     */
+    public ArrayList<Long> abortMessageCounter = new ArrayList<Long>();
 
     /**
      * Constructor of the mock session listener
@@ -184,7 +195,11 @@ public class MockMSRPSessionListener
         report("receivedReport", arrayStrings);
         receivedReportSession = session;
         receivedReportTransaction = tReport;
-        successReportCounter.add(tReport.getByteRange()[1]);
+        synchronized (successReportCounter)
+        {
+            successReportCounter.add(tReport.getByteRange()[1]);
+            successReportCounter.notifyAll();
+        }
 
     }
 
@@ -198,7 +213,31 @@ public class MockMSRPSessionListener
         report("updateSendStatus", arrayStrings);
         updateSendStatusSession = session;
         updateSendStatusMessage = message;
-        updateSendStatusCounter.add(numberBytesSent);
+        synchronized (updateSendStatusCounter)
+        {
+            updateSendStatusCounter.add(numberBytesSent);
+            updateSendStatusCounter.notifyAll();
+
+        }
+    }
+
+    @Override
+    public void abortedMessage(Session session, IncomingMessage message)
+    {
+        String[] arrayStrings =
+        { "received: " + message.getReceivedBytes() + " bytes; " + (message.getReceivedBytes() * 100)
+            / message.getSize() + "% " };
+        report("abortedMessage", arrayStrings);
+        abortedMessage= message;
+        abortedMessageSession = session;
+        synchronized (abortMessageCounter)
+        {
+            abortMessageCounter.add(message.getReceivedBytes());
+            abortMessageCounter.notifyAll();
+            
+        }
+        
+
     }
 
     /**
@@ -263,6 +302,22 @@ public class MockMSRPSessionListener
     public Message getUpdateSendStatusMessage()
     {
         return updateSendStatusMessage;
+    }
+
+    /**
+     * @return the abortedMessageSession
+     */
+    public Session getAbortedMessageSession()
+    {
+        return abortedMessageSession;
+    }
+
+    /**
+     * @return the abortedMessage
+     */
+    public IncomingMessage getAbortedMessage()
+    {
+        return abortedMessage;
     }
 
     /**

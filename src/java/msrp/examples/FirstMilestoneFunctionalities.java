@@ -368,6 +368,13 @@ public class FirstMilestoneFunctionalities
 
         }
 
+        @Override
+        public void abortedMessage(Session session, IncomingMessage message)
+        {
+            // TODO Auto-generated method stub
+            
+        }
+
     }
 
 }
