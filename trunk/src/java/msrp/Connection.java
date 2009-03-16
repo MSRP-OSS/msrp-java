@@ -72,6 +72,8 @@ class Connection
         localURI = newLocalURI;
         transactionManager = new TransactionManager(this);
         this.addObserver(transactionManager);
+        
+        
     }
 
     /**
@@ -1374,7 +1376,18 @@ class Connection
         // listening/writing cycle
         SocketAddress remoteAddress =
             new InetSocketAddress(uri.getHost(), uri.getPort());
+        /* TODO FIXME probably the new TransactionManager isn't needed, however i'll still create it but copy the values needed for automatic testing SubIssue #1*/
+        boolean testingOld = false;
+        String presetTidOld = new String();
+        if (transactionManager != null)
+        {
+            testingOld = transactionManager.testing;
+           presetTidOld = transactionManager.presetTID; 
+            
+        }
         transactionManager = new TransactionManager(this);
+        transactionManager.testing = testingOld;
+        transactionManager.presetTID = presetTidOld;
         socketChannel.connect(remoteAddress);
         Connections connectionsInstance =
             MSRPStack.getConnectionsInstance(address);

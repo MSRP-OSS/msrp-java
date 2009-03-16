@@ -116,14 +116,14 @@ public class IncomingMessage
     }
 
     /**
-     * Method used to get the number of received bytes so far reported by the associated Counter class
-     * @return
+     * @return the number of received bytes so far reported by the associated Counter class
      */
     public Long getReceivedBytes()
     {
         return getCounter().getCount();
     }
     /**
+
      * Contains the response code of the accept hook call
      */
     protected int result = 413;

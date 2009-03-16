@@ -47,9 +47,7 @@ import java.nio.CharBuffer;
 import sun.misc.HexDumpEncoder;
 
 import msrp.*;
-import msrp.Transaction.TransactionType;
-import msrp.exceptions.IllegalUseException;
-import msrp.exceptions.NotEnoughDataException;
+import msrp.Transaction.*;
 
 public class MiscTests
     implements MSRPSessionListener, Runnable
