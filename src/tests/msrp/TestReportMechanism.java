@@ -127,7 +127,7 @@ public class TestReportMechanism
 
         try
         {
-            /* transfer the 499 bytes message: */
+            /* transfer the 499 kbytes message: */
             byte[] smallData = new byte[499 * 1024];
             TextUtils.generateRandom(smallData);
 

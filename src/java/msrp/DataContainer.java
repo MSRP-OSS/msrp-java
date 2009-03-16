@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
@@ -75,9 +74,9 @@ public abstract class DataContainer
      * @param offsetIndex the offset index to start reading the data
      * @param size the number of bytes to read or zero to get all the remaining
      *            data counting from the offset position
-     * @return a Byte Buffer containing a copy of the requested data.
-     *          To note: one can write in this byte buffer without altering
-     *          the actual content;
+     * @return a Byte Buffer containing a copy of the requested data. To note:
+     *         one can write in this byte buffer without altering the actual
+     *         content;
      * @throws NotEnoughDataException if the request couldn't be satisfied due
      *             to the fact that there isn't enough available data to
      *             retrieve as requested
@@ -95,10 +94,12 @@ public abstract class DataContainer
      * 
      * this maximum number of bytes is defined by the MSRPStack short message
      * 
-     * @see MSRPStack#setShortMessageBytes(int) MSRPStack.setShortMessageBytes(int)
+     * @see MSRPStack#setShortMessageBytes(int)
+     *      MSRPStack.setShortMessageBytes(int)
      */
-    public final int MAXIMUMNUMBERBYTES = MSRPStack.getInstance().getShortMessageBytes();
-    
+    public final int MAXIMUMNUMBERBYTES =
+        MSRPStack.getInstance().getShortMessageBytes();
+
     /**
      * Convenience number 0 that used as size argument on the get operations
      * represents all of the remaining bytes
@@ -148,9 +149,8 @@ public abstract class DataContainer
     public abstract boolean hasDataToRead();
 
     /**
-     * Method used to dispose this data container resources.
-     * Frees up any memory blocks of data reserved
-     * Should be called explicitly!
+     * Method used to dispose this data container resources. Frees up any memory
+     * blocks of data reserved Should be called explicitly!
      */
     public abstract void dispose();
 
@@ -167,10 +167,20 @@ public abstract class DataContainer
     public abstract void put(long startingIndex, byte byteToPut)
         throws NotEnoughStorageException,
         Exception;
-    
+
     /**
      * @return the number of bytes in this DataContainer
      */
     public abstract long size();
-    
+
+    /**
+     * Method used to rewind the read buffer the supplied number of positions.
+     * Example: a call to the {@link #get()} followed by a call to this function
+     * with nrPositions = 1 followed by another call to {@link #get()} will
+     * return the same value
+     * 
+     * @param nrPositions
+     */
+    public abstract void rewindRead(long nrPositions);
+
 }

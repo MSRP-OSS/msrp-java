@@ -30,8 +30,7 @@ public class IOInterface
         //System.out.println(s);
     }
 
-    /*
-     * void println(String s) { System.out.println(s); }
-     */
+      //void println(String s) { System.out.println(s); }
+     
 
 }

@@ -19,7 +19,7 @@ package msrp;
 import java.util.EventListener;
 
 /**
- * @author D
+ * @author João André Pereira Antunes
  * 
  *         Gives the class that is going to be used by the client application
  * 
