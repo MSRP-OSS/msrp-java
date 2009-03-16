@@ -81,6 +81,7 @@ public class MemoryDataContainer
     @Override
     public byte get() throws NotEnoughDataException, IOException
     {
+
         try
         {
             return byteBuffer.get();
@@ -211,5 +212,12 @@ public class MemoryDataContainer
     public long size()
     {
         return content.length;
+    }
+
+    @Override
+    public void rewindRead(long nrPositions)
+    {
+        byteBuffer.position((int) (byteBuffer.position() - nrPositions));
+
     }
 }

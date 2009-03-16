@@ -31,7 +31,7 @@ import msrp.exceptions.*;
  * transaction response solely as RequestResponse or Response TODO(?) from
  * transactionType change to requestType
  * 
- * @author D
+ * @author João André Pereira Antunes
  */
 public class Transaction
 {
@@ -117,10 +117,10 @@ public class Transaction
 
     /**
      * Array that contains the offset of various pieces of the transaction: the
-     * header; the content-stuff; the end of line; These are indexed by the
-     * *INDEX constants
+     * header; the content-stuff to keep track of the CRLF after the end of the
+     * data; the end of line; These are indexed by the *INDEX constants
      */
-    protected int[] offsetRead = new int[3];
+    protected long[] offsetRead = new long[3];
 
     /**
      * Constant used to index the header in the offsetRead
@@ -133,7 +133,8 @@ public class Transaction
     protected static final int ENDLINEINDEX = 1;
 
     /**
-     * Constant used to index the data on the offsetRead
+     * servers the purpose of keeping track of the CRLF after the end of the
+     * data Constant used to index the data on the offsetRead
      */
     protected static final int DATAINDEX = 2;
 
@@ -143,6 +144,22 @@ public class Transaction
      * transaction the value -2 is reserved as unknown
      */
     private long[] byteRange = new long[2];
+
+    /**
+     * The constant used to access the byteRange first field that has the number
+     * of the first byte of the chunk bound to this transaction
+     * 
+     * @see #byteRange
+     */
+    private static final int CHUNKSTARTBYTEINDEX = 0;
+
+    /**
+     * The constant used to access the byteRange second field that has the
+     * number of the last byte of the chunk bound to this transaction
+     * 
+     * @see #byteRange
+     */
+    private static final int CHUNKENDBYTEINDX = 1;
 
     /**
      * value associated with the Byte-Range parsed to the transaction refering
@@ -300,27 +317,41 @@ public class Transaction
              * transaction or not and fill the Byte-Range fields and other
              * internal fields accordingly
              */
+            /*
+             * first value of the Byte-Range header field is the
+             * currentReadOffset + 1, or the current number of already sent
+             * bytes + 1 because the first field is the number of the first byte
+             * being sent:
+             */
+            long numberFirstByteChunk = messageBeingSent.bytesSent() + 1;
             if (headerBytes.length + (message.getSize() - message.bytesSent())
                 + (7 + tID.length() + 1) > MSRPStack.MAXIMUMUNINTERRUPTIBLE)
             {
                 interruptible = true;
                 headerString =
-                    headerString.concat("Byte-Range: 1-*" + "/"
-                        + messageBeingSent.getStringTotalSize() + "\r\n"
-                        + "Content-Type: " + messageBeingSent.getContentType()
-                        + "\r\n\r\n");
+                    headerString.concat("Byte-Range: " + numberFirstByteChunk
+                        + "-*" + "/" + messageBeingSent.getStringTotalSize()
+                        + "\r\n" + "Content-Type: "
+                        + messageBeingSent.getContentType() + "\r\n\r\n");
             }
             else
             {
                 headerString =
-                    headerString.concat("Byte-Range: 1-"
-                        + messageBeingSent.getStringTotalSize() + "/"
+                    headerString.concat("Byte-Range: " + numberFirstByteChunk
+                        + "-" + messageBeingSent.getStringTotalSize() + "/"
                         + messageBeingSent.getStringTotalSize() + "\r\n"
                         + "Content-Type: " + messageBeingSent.getContentType()
                         + "\r\n\r\n");
 
             }
             headerBytes = headerString.getBytes(usascii);
+
+
+
+
+
+
+
 
             /* by default have the continuation flag to be the end of message */
             continuationFlagByte = ENDMESSAGE;
@@ -557,7 +588,9 @@ public class Transaction
              * in the case we are dealing with an incoming response the header
              * ends with the from-path last uri and \r\n
              */
-            // TODO support multiple From-Path URIs
+            // TODO support multiple From-Path URIs and support the rest of the
+            // headers that could exist on the Header even of a response
+            // (although it's not usual)
             Pattern endOfHeaderWithoutContentStuff =
                 Pattern.compile(
                     "(^To-Path:) (.{7,120})(\r\n)(From-Path:) (.{7,})(\r\n)",
@@ -800,8 +833,29 @@ public class Transaction
     private void associateMessage()
     {
         message = session.getSentMessage(messageID);
+        /* check if this is a transaction for an already existing message */
+        if (session.getReceivingMessage(messageID) != null)
+        {
+            message = session.getReceivingMessage(messageID);
+            if (message.wasAborted())
+            /*
+             * if the message was previously aborted it shouldn't be on the
+             * queue, log the event, delete it from the list of the messages to
+             * be received by the bound session and continue the process TODO
+             * FIXME: eventually need to check with the stack if the messageID
+             * is known and not only with the session and act according to the
+             * RFC
+             */
+            {
+                /* TODO: log it */
+                session.delMessageToReceive((IncomingMessage) message);
+                message = null;
+            }
+
+        }
         if (message == null)
         {
+
             if (this.transactionType.equals(TransactionType.SEND))
             {
                 message =
@@ -839,6 +893,14 @@ public class Transaction
                          * dataContainer field
                          */
 
+                    }
+                    else
+                    {
+                        /*
+                         * otherwise we put this message on the receiving
+                         * message "list" of the Session
+                         */
+                        session.putReceivingMessage(incomingMessage);
                     }
 
                 }
@@ -978,7 +1040,14 @@ public class Transaction
                         if (!isIncomingResponse() && message != null
                             && transactionType.equals(TransactionType.SEND))
                         {
-                            long startingIndex = realChunkSize;
+                            /*
+                             * TODO the byteRange header fields should be
+                             * validated to make sure they have no negative
+                             * values etc
+                             */
+                            long startingIndex =
+                                (byteRange[CHUNKSTARTBYTEINDEX] - 1)
+                                    + realChunkSize;
                             while (toParse.length() - i != 0)
                             {
 
@@ -1087,8 +1156,12 @@ public class Transaction
                         /*
                          * if this isn't an incoming response, has a message
                          * associated with it and it's actually a SEND method
+                         * TODO validate the byteRange values for non negatives
+                         * etc
                          */
-                        long startingIndex = realChunkSize;
+                        long startingIndex =
+                            (byteRange[CHUNKSTARTBYTEINDEX] - 1)
+                                + realChunkSize;
                         while (incByteBuffer.hasRemaining())
                         {
 
@@ -1733,6 +1806,25 @@ public class Transaction
     }
 
     /**
+     * 
+     * @return true if this transaction has no more data and still has to
+     *         transmit all of the end-line content. false otherwise NOTE: This
+     *         method returns false for transaction responses because they have
+     *         their own end-line inside their content
+     */
+    public boolean hasEndLine()
+    {
+        if (hasResponse() && !isIncomingResponse())
+            return false;
+        if (hasData())
+            return false;
+        if (offsetRead[ENDLINEINDEX] > (7 + tID.length() + 2))
+            return false;
+        return true;
+
+    }
+
+    /**
      * TODO: put it to take into account the dynamic creation of the end of
      * transaction
      * 
@@ -1742,10 +1834,11 @@ public class Transaction
     {
         if (hasResponse())
             return response.hasData();
-        if (offsetRead[HEADERINDEX] >= headerBytes.length && !message.hasData()
-            && offsetRead[ENDLINEINDEX] > (7 + tID.length() + 2))
+        if (interrupted)
             return false;
-        if (interrupted && offsetRead[ENDLINEINDEX] > (7 + tID.length() + 2))
+        if (offsetRead[HEADERINDEX] >= headerBytes.length && !message.hasData())
+            return false;
+        if (interrupted)
             return false;
         return true;
     }
@@ -1767,6 +1860,17 @@ public class Transaction
      */
     byte getEndLineByte() throws InternalErrorException
     {
+        if (hasContentStuff && offsetRead[DATAINDEX] < 2)
+        {
+
+            /*
+             * Add the extra CRLF separating the data and the end-line
+             */
+            if (offsetRead[DATAINDEX]++ == 0)
+                return 13;
+            else
+                return 10;
+        }
         if (offsetRead[ENDLINEINDEX] >= 0 && offsetRead[ENDLINEINDEX] <= 6)
         {
             offsetRead[ENDLINEINDEX]++;
@@ -1776,7 +1880,7 @@ public class Transaction
             && (offsetRead[ENDLINEINDEX] < tID.length() + 7))
         {
             byte[] byteTID = tID.getBytes(usascii);
-            return byteTID[offsetRead[ENDLINEINDEX]++ - 7];
+            return byteTID[(int) (offsetRead[ENDLINEINDEX]++ - 7)];
         }
 
         // TODO If we are in the last character, get the
@@ -1807,63 +1911,60 @@ public class Transaction
 
     /**
      * Function responsible for giving out the bytes associated with this
-     * transaction TODO: put it to write the end of transaction dynamically
-     * without having to be on the body
-     * TODO: tidy up a lil'bit the code
+     * transaction DATA only, the end-line should be retrieved using the
+     * appropriate method {@link #getEndLineByte()} TODO: put it to write the
+     * end of transaction dynamically without having to be on the body TODO:
+     * tidy up a lil'bit the code
      * 
      * @return the next byte associated with this transaction
-     * @throws Exception
+     * @throws ImplementationException if this method was called when the
+     *             getEndLineData should have been called or when no more bytes
+     *             remain
      */
-    protected byte get() throws InternalErrorException
+    protected byte get() throws ImplementationException
     {
         if (hasResponse())
         {
             return response.get();
         }
         if (offsetRead[HEADERINDEX] < headerBytes.length)
-            return headerBytes[offsetRead[HEADERINDEX]++];
+            return headerBytes[(int) offsetRead[HEADERINDEX]++];
         else
         {
             if (interrupted
                 && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
             {
-                if (hasContentStuff && offsetRead[DATAINDEX] < 2)
-                {
+                // old line: FIXME to remove these lines if no problems are
+                // encountered running the tests return getEndLineByte();
+                throw new ImplementationException("The Transaction.get() "
+                    + "when it should have been the "
+                    + "Transaction.getEndLineByte");
 
-                    if (offsetRead[DATAINDEX]++ == 0)
-                        return 13;
-                    else
-                        return 10;
-                    /*
-                     * Add the extra CRLF separating the data and the end-line
-                     */
-                }
-                return getEndLineByte();
+
+
+
+
+
+
             }
             if (!interrupted && message.hasData())
             {
                 hasContentStuff = true;
                 return message.get();
             }
-            if (!interrupted && hasContentStuff && offsetRead[DATAINDEX] < 2)
-            {
-                if (offsetRead[DATAINDEX]++ == 0)
-                    return 13;
-                else
-                    return 10;
-                /*
-                 * Add the extra CRLF separating the data and the end-line
-                 */
-
-            }
             if (!interrupted
                 && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
             {
-                return getEndLineByte();
+                // old line: FIXME to remove these lines if no problems are
+                // encountered running the tests return getEndLineByte();
+                throw new ImplementationException("The Transaction.get() "
+                    + "when it should have been the "
+                    + "Transaction.getEndLineByte");
             }
 
-            throw new InternalErrorException(
-                "Error the .get() of the transaction was called without available bytes to get");
+            throw new ImplementationException(new InternalErrorException(
+                "Error the .get() of the transaction was called without "
+                    + "available bytes to get"));
         }
 
     }
@@ -2019,7 +2120,7 @@ public class Transaction
      */
     protected void disposeBody()
     {
-
+        // TODO
     }
 
     /**
@@ -2030,6 +2131,46 @@ public class Transaction
     {
         continuationFlagByte = ABORTMESSAGE;
         interrupted = true;
+    }
+
+    /**
+     * This method is used to rewind positions on the read offsets of this
+     * transaction. It's main purpose it's to allow the transaction manager to
+     * rewind the data prior from interrupting the transaction when an end-line
+     * is found on the content of the transaction.
+     * 
+     * @param numberPositionsToRewind the number of positions to rewind on this
+     *            transaction.
+     * @throws IllegalUseException if this method was called to do for instance
+     *             a rewind on a response
+     */
+    protected void rewind(int numberPositionsToRewind)
+        throws IllegalUseException
+    {
+        /* sanity checks: */
+
+        /* make sure we aren't trying to rewind a response */
+        if (hasResponse())
+            throw new IllegalUseException("Trying to rewind a response");
+
+        /* make sure we aren't trying to rewind on the header: */
+        if (offsetRead[HEADERINDEX] < headerBytes.length)
+            throw new IllegalUseException("Trying to rewind the header");
+
+        /*
+         * if the message doesn't has any data, there's really no sense in
+         * rewinding:
+         */
+        if (!hasContentStuff)
+            throw new IllegalUseException("Trying to rewind an empty "
+                + "transaction");
+
+        /*
+         * rewinds the given nr of positions the data container
+         */
+        DataContainer dataContainer = message.getDataContainer();
+        dataContainer.rewindRead(numberPositionsToRewind);
+
     }
 
 }

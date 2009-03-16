@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
@@ -67,12 +66,31 @@ class TransactionManager
         new ArrayList<Transaction>();
 
     private HashMap<String, Transaction> existingTransactions =
-    new HashMap<String, Transaction>();
+        new HashMap<String, Transaction>();
 
     private MSRPStack instanceStack = MSRPStack.getInstance();
 
     private HashMap<URI, Session> associatedSessions =
-    new HashMap<URI, Session>();
+        new HashMap<URI, Session>();
+
+    /**
+     * Variable used so that some method can behave in a different way for
+     * automatic testing purposes.
+     * 
+     * Methods that may behave differently:
+     * 
+     * @see #generateNewTID()
+     */
+    protected boolean testing = false;
+
+    /**
+     * Variable used for testing purposes in conjunction with the testing
+     * boolean flag
+     * 
+     * @see #testing
+     * @see #generateNewTID()
+     */
+    protected String presetTID;
 
     /**
      * generates and queues the response of the given transaction based on the
@@ -82,11 +100,11 @@ class TransactionManager
      */
     private void proccessResponse(Transaction transaction, int responseCode)
     {
-    
+
         String failureReport = transaction.getFailureReport();
-    
+
         // TODO generate the responses based on the success report field
-    
+
         // generate the responses based on the failure report field
         if (failureReport == null || failureReport.equalsIgnoreCase("yes")
             || failureReport.equalsIgnoreCase("partial"))
@@ -100,7 +118,7 @@ class TransactionManager
                 // Generate transaction response
                 transaction.generateResponse(responseCode);
             }
-    
+
             try
             {
                 addPriorityTransaction(transaction);
@@ -110,9 +128,9 @@ class TransactionManager
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-    
+
         }
-    
+
     }
 
     /**
@@ -125,7 +143,7 @@ class TransactionManager
     private Session getAssociatedSession(Transaction transaction)
     {
         return MSRPStack.getInstance().getSession((transaction.getToPath())[0]);
-    
+
     }
 
     /**
@@ -386,8 +404,26 @@ class TransactionManager
         connection.addObserver(this);
     }
 
+    /**
+     * 
+     * @return the new Transaction ID generated randomly and making sure that it
+     *         doesn't exist on the existingTransactions that is the list of
+     *         existing transactions that this transaction manager manages. It
+     *         may return also a preset transaction ID for debug and test
+     *         purposes.
+     */
     protected String generateNewTID()
     {
+        /* next two lines used for automatic testing purposes */
+        if (testing && presetTID != null)
+        { /*
+           * we can only generate once a presetTID otherwise the transaction
+           * manager will be unable to generate new transactions
+           */
+            String tidToReturn = new String(presetTID);
+            presetTID = null;
+            return tidToReturn;
+        }
         byte[] tid = new byte[8];
         String newTID;
         TextUtils.generateRandom(tid);
@@ -546,6 +582,249 @@ class TransactionManager
     }
 
     /**
+     * Class used to validate the outgoing data to what concerns the transaction
+     * id validation.
+     * 
+     * This class gives the needed methods to check if there is an end-line on
+     * the body of the transaction currently being sent or not.
+     * 
+     * As written in RFC 4975: " If the request contains a body, the sender MUST
+     * ensure that the end- line (seven hyphens, the transaction identifier, and
+     * a continuation flag) is not present in the body. [...] Some
+     * implementations may choose to scan for the closing sequence as they send
+     * the body, and if it is encountered, simply interrupt the chunk at that
+     * point and start a new transaction with a different transaction identifier
+     * to carry the rest of the body."
+     * 
+     * The approach of interrupting the ongoing transaction and create a new one
+     * was the one chosen and implemented by this library
+     * 
+     * @author João André Pereira Antunes
+     * 
+     */
+    class OutgoingDataValidator
+    {
+
+        /**
+         * This variable is true if the end-line was found and false otherwise.
+         * Calls to the dataHasEndLine reset this variable to false.
+         * 
+         * @see #dataHasEndLine()
+         */
+        private boolean foundEndLine = false;
+
+        /**
+         * It contains the number of bytes we should rewind the read offsets of
+         * the transaction
+         */
+        private int toRewind = 0;
+
+        /**
+         * Variable used to store the transaction ID that this class is using to
+         * look for the end-line
+         */
+        private String transactionID = null;
+
+        /**
+         * Variable used by the method parse to assert in which state the parser
+         * is so that we can save the state of this state machine between calls
+         */
+        private short parserState = INITIALSTATE;
+
+        /* constants to make the code a little bit more readable: */
+        private static final short INITIALSTATE = 0;
+
+        private static final short FIRSTHYPHEN = 1;
+
+        private static final short SECONDHYPHEN = 2;
+
+        private static final short THIRDHYPHEN = 3;
+
+        private static final short FOURTHHYPHEN = 4;
+
+        private static final short FIFTHHYPHEN = 5;
+
+        private static final short SIXTHHYPHEN = 6;
+
+        private static final short SEVENTHHYPHEN = 7;
+
+        /**
+         * Method used to assert if the data we have so far has or not the end
+         * of line
+         * 
+         * @return true if the data parsed so far has the end of line or false
+         *         otherwise
+         * 
+         *         NOTE: This method resets the hasEndLine variable so by doing
+         *         two consecutive calls to this method the result of the second
+         *         can never be true.
+         * @see #foundEndLine
+         */
+        private boolean dataHasEndLine()
+        {
+            boolean auxBoolean = foundEndLine;
+            foundEndLine = false;
+            return auxBoolean;
+        }
+
+        /**
+         * Method used to initialize this class
+         * 
+         * @param transactionId the transaction id to be used in the search of
+         *            the end-line
+         */
+        private void init(String transactionId)
+        {
+            this.transactionID = transactionId;
+        }
+
+        /**
+         * Method used to reset the outgoingValidator. After this method future
+         * calls to the parse won't parse anything before a call to the init
+         * method is done
+         * 
+         */
+        private void reset()
+        {
+            this.transactionID = null;
+        }
+
+        /**
+         * This method is used to parse the data to be searched for the end line
+         * characters
+         * 
+         * @param outputData the data to be parsed and searched for the end line
+         *            string
+         * @param length how many bytes of the outputData vector should be
+         *            searched
+         * @throws ImplementationException if it was detected that this method
+         *             was used in an incorrect way
+         */
+        private void parse(byte[] outputData, int length)
+            throws ImplementationException
+        {
+            if (transactionID == null)
+                return;
+
+            if (outputData.length < length)
+                throw new ImplementationException("method "
+                    + "called with argument length too big");
+            /*
+             * if we found already the end of line and haven't reset the value
+             * with a call to hasEndLine and we call the parse that generates an
+             * ImplementationException
+             */
+            if (foundEndLine)
+                throw new ImplementationException(
+                    "Error, bad use of the class "
+                        + "outgoingDataValidator on TransactionManager, after "
+                        + "after calling parse a call should always be made "
+                        + "to the dataHasEndLine");
+            for (int i = 0; i < length; i++)
+            {
+                switch (parserState)
+                {
+                case INITIALSTATE:
+                    if (outputData[i] == '-')
+                        parserState = FIRSTHYPHEN;
+                    break;
+
+                case FIRSTHYPHEN:
+                    if (outputData[i] == '-')
+                        parserState = SECONDHYPHEN;
+                    else
+                        parserState = INITIALSTATE;
+                    break;
+
+                case SECONDHYPHEN:
+                    if (outputData[i] == '-')
+                        parserState = THIRDHYPHEN;
+                    else
+                        parserState = INITIALSTATE;
+                    break;
+
+                case THIRDHYPHEN:
+                    if (outputData[i] == '-')
+                        parserState = FOURTHHYPHEN;
+                    else
+                        parserState = INITIALSTATE;
+                    break;
+
+                case FOURTHHYPHEN:
+                    if (outputData[i] == '-')
+                        parserState = FIFTHHYPHEN;
+                    else
+                        parserState = INITIALSTATE;
+                    break;
+
+                case FIFTHHYPHEN:
+                    if (outputData[i] == '-')
+                        parserState = SIXTHHYPHEN;
+                    else
+                        parserState = INITIALSTATE;
+                    break;
+
+                case SIXTHHYPHEN:
+                    if (outputData[i] == '-')
+                        parserState = SEVENTHHYPHEN;
+                    else
+                        parserState = INITIALSTATE;
+                    break;
+
+                default:
+                    if (parserState >= SEVENTHHYPHEN)
+                    {
+                        if ((parserState - SEVENTHHYPHEN) < transactionID
+                            .length()
+                            && outputData[i] == transactionID
+                                .charAt(parserState - SEVENTHHYPHEN))
+                            parserState++;
+                        else if ((parserState - SEVENTHHYPHEN >= transactionID
+                            .length() && (outputData[i] == '$'
+                            || outputData[i] == '#' || outputData[i] == '+')))
+                        {
+                            foundEndLine = true;
+                            toRewind = length - i + parserState;
+                            /*
+                             * if we had a end-line splitted by buffers we
+                             * rewind to the beginning of the data in this
+                             * buffer and then interrupt the transaction
+                             */
+                            if (toRewind > length)
+                                toRewind = length;
+
+                            parserState = INITIALSTATE;
+
+                            /* we exit the for */
+                            break;
+
+                        }
+                        else
+                            parserState = INITIALSTATE;
+                    }
+                    break;
+
+                }
+            }
+
+        }
+
+        /**
+         * @return this method returns the number of positions we should rewind
+         *         on the buffer and on the transaction's read offset before we
+         *         interrupt the current transaction
+         */
+        private int numberPositionsToRewind()
+        {
+            return toRewind;
+        }
+
+    }
+
+    private OutgoingDataValidator outgoingDataValidator =
+        new OutgoingDataValidator();
+
+    /**
      * Method used by the connection object to retrieve the byte array of data
      * to be sent by the connection
      * 
@@ -566,17 +845,57 @@ class TransactionManager
         for (i = 0; hasDataToSend() && i < outData.length;)
         {
             Transaction t = transactionsToSend.get(0);
+            outgoingDataValidator.init(t.getTID());
+
             while (i < outData.length)
             {
 
                 if (!t.hasData())
                 {
-                    /*
-                     * Removing the given transaction from the queue of
-                     * transactions to send
-                     */
-                    transactionsToSend.remove(t);
-                    break;
+                    if (t.hasEndLine())
+                    {
+                        /*
+                         * the first time we get here we should check if the
+                         * end-line was found, and if it was we should rewind,
+                         * interrupt the transaction and set the bytesToAccount
+                         * back the appropriate positions and also the index i
+                         * we can also do the reset of the outgoingDataValidator
+                         * because we have for certain that the end-line won't
+                         * appear again on the content before the transaction
+                         * finishes
+                         */
+                        outgoingDataValidator.parse(outData, i);
+                        outgoingDataValidator.reset();
+                        if (outgoingDataValidator.dataHasEndLine())
+                        {
+                            int numberPositionsToRewind =
+                                outgoingDataValidator.numberPositionsToRewind();
+                            t.rewind(numberPositionsToRewind);
+                            t.interrupt();
+                            generateTransactionsToSend();
+                            i -= numberPositionsToRewind;
+                            bytesToAccount -= numberPositionsToRewind;
+                            continue;
+                        }
+                        bytesToAccount++;
+                        outData[i++] = t.getEndLineByte();
+
+                    }
+                    else
+                    {
+                        /*
+                         * Removing the given transaction from the queue of
+                         * transactions to send
+                         */
+                        transactionsToSend.remove(t);
+                        /*
+                         * we should also reset the outgoingDataValidator, so
+                         * that future calls to the parser won't misjudge the
+                         * correct end-line as an end-line on the body content.
+                         */
+                        outgoingDataValidator.reset();
+                        break;
+                    }
                 }
                 else
                 {
@@ -584,8 +903,25 @@ class TransactionManager
                     outData[i++] = t.get();
                 }
 
-            } // End of while, the transaction was removed from the transactions
-            // to send list
+            } /*
+               * End of while, the buffer is full and or the transaction has
+               * been removed from the list of transactions to send and if that
+               * was the case the outgoingValidator won't make a false positive
+               * because it has been reseted
+               */
+
+            outgoingDataValidator.parse(outData, i);
+            if (outgoingDataValidator.dataHasEndLine())
+            {
+                int numberPositionsToRewind =
+                    outgoingDataValidator.numberPositionsToRewind();
+                t.rewind(numberPositionsToRewind);
+                t.interrupt();
+                generateTransactionsToSend();
+                i -= numberPositionsToRewind;
+                bytesToAccount -= numberPositionsToRewind;
+                outgoingDataValidator.reset();
+            }
 
             if (!t.isIncomingResponse()
                 && t.transactionType.equals(TransactionType.SEND)
@@ -608,6 +944,23 @@ class TransactionManager
         return i;
     }
 
+    /**
+     * Method used only for automatic test purposes
+     * 
+     * @return the collection of the values of the existingTransactions variable
+     * @see #existingTransactions
+     */
+    protected Collection<Transaction> getExistingTransactions()
+    {
+        return existingTransactions.values();
+    }
+
+    /**
+     * @param tid the String with the transaction id of the desired transaction
+     * @return the transaction with transaction id given, if it exists on the
+     *         existingTransactions Hashmap, or null otherwise
+     * @see #existingTransactions
+     */
     protected Transaction getTransaction(String tid)
     {
 

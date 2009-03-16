@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
@@ -472,6 +471,7 @@ public class Session
      * the success reports
      * 
      * it will use the DefaultReportMechanism
+     * 
      * @see DefaultReportMechanism
      */
     private ReportMechanism reportMechanism =
@@ -586,16 +586,15 @@ public class Session
         return messageToReturn;
     }
 
-    //public void addUriToIdentify(URI uri)
-    //{
-        // TODO add the uri to a list in order to verify the authenticity of the
-        // sender
-        /*
-         * if (this.connection instanceof Connections) ((Connections)
-         * Connections.getInstance()).addUriToIdentify(uri,this);
-         */
-    //}
-
+    // public void addUriToIdentify(URI uri)
+    // {
+    // TODO add the uri to a list in order to verify the authenticity of the
+    // sender
+    /*
+     * if (this.connection instanceof Connections) ((Connections)
+     * Connections.getInstance()).addUriToIdentify(uri,this);
+     */
+    // }
     /**
      * method used by an incoming transaction to retrieve the message object
      * associated with it, if it's already being received
@@ -611,14 +610,30 @@ public class Session
 
     }
 
+    /**
+     * Function used to put a message on the list of messages being received by
+     * this session. TODO FIXME: in the future just put the queue of messages
+     * being received on the Stack as the Message object isn't necessarily bound
+     * to the Session
+     * 
+     * @see #messagesReceive;
+     * 
+     * @param message the message to be put on the received messages queue
+     */
+    protected void putReceivingMessage(IncomingMessage message)
+    {
+        messagesReceive.put(message.getMessageID(), message);
+    }
+
     /*
      * Triggers to the Listener, not really sure if they are needed now, but
      * later can be used to trigger some extra validations before actually
      * calling the callback
      */
     /**
-     * This function is only used so that we have a central point to eventually do any cleanup before the real callback.
-     * (for instance with the Stack itself, at this moment nothing is being done though).
+     * This function is only used so that we have a central point to eventually
+     * do any cleanup before the real callback. (for instance with the Stack
+     * itself, at this moment nothing is being done though).
      * 
      * trigger for the registered MSRPSessionListener callback.
      * 
@@ -631,8 +646,9 @@ public class Session
     }
 
     /**
-     * This function is only used so that we have a central point to eventually do any cleanup before the real callback.
-     * (for instance with the Stack itself, at this moment nothing is being done though).
+     * This function is only used so that we have a central point to eventually
+     * do any cleanup before the real callback. (for instance with the Stack
+     * itself, at this moment nothing is being done though).
      * 
      * trigger for the registered MSRPSessionListener callback.
      * 
@@ -646,8 +662,9 @@ public class Session
     }
 
     /**
-     * This function is only used so that we have a central point to eventually do any cleanup before the real callback.
-     * (for instance with the Stack itself, at this moment nothing is being done though).
+     * This function is only used so that we have a central point to eventually
+     * do any cleanup before the real callback. (for instance with the Stack
+     * itself, at this moment nothing is being done though).
      * 
      * trigger for the registered MSRPSessionListener callback
      * 
@@ -662,30 +679,35 @@ public class Session
     }
 
     /**
-     * This function is only used so that we have a central point to eventually do any cleanup before the real callback.
-     * (for instance with the Stack itself, at this moment nothing is being done though).
+     * This function is only used so that we have a central point to eventually
+     * do any cleanup before the real callback. (for instance with the Stack
+     * itself, at this moment nothing is being done though).
      * 
      * trigger for the registered MSRPSessionListener callback updateSendStatus
      * 
      * @see MSRPSessionListener
      */
-    protected void triggerUpdateSendStatus(Session session, Message outgoingMessage)
+    protected void triggerUpdateSendStatus(Session session,
+        Message outgoingMessage)
     {
         msrpSessionListener.updateSendStatus(session, outgoingMessage,
             outgoingMessage.bytesSent());
     }
+
     /**
-     * This function is only used so that we have a central point to eventually do any cleanup before the real callback.
-     * (for instance with the Stack itself, at this moment nothing is being done though).
-     *
+     * This function is only used so that we have a central point to eventually
+     * do any cleanup before the real callback. (for instance with the Stack
+     * itself, at this moment nothing is being done though).
+     * 
      * trigger for the registered MSRPSessionListener callback abortedMessage
      * 
      * 
      */
-    protected void triggerAbortedMessage(Session session, IncomingMessage message)
+    protected void triggerAbortedMessage(Session session,
+        IncomingMessage message)
     {
         msrpSessionListener.abortedMessage(session, message);
-        
+
     }
 
     /*
@@ -740,8 +762,9 @@ public class Session
     }
 
     /**
-     * Method that receives a message to be deleted from the queue of messages to being sent
-     * This method was created meant only to be called by the Message.abortSend()
+     * Method that receives a message to be deleted from the queue of messages
+     * to being sent This method was created meant only to be called by the
+     * Message.abortSend()
      * 
      * @see Message#abortSend()
      * @param message
@@ -749,9 +772,27 @@ public class Session
     protected void delMessageToSend(Message message)
     {
         messagesToSend.remove(message);
-        
+
     }
 
+    /**
+     * Method used to delete a message that stopped being received from the
+     * being received queue of the Session
+     * NOTE: currently this method is only called for IncomingMessage objects
+     * 
+     * @param incomingMessage the message to be removed
+     */
+    protected void delMessageToReceive(IncomingMessage incomingMessage)
+    {
+        if (messagesReceive.remove(incomingMessage.getMessageID()) == null)
+        {
+            /*
+             * log the fact that the message wasn't found when it should have
+             * been!! TODO: log it!
+             */
+        }
+
+    }
 
     /*
      * public Message sendMessage(String contentType, byte[] byteContent) throws

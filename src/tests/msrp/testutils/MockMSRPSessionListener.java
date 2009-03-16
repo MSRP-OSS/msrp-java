@@ -112,7 +112,7 @@ public class MockMSRPSessionListener
      */
     private void report(String method, String[] optionalStrings)
     {
-        System.out.print(method + " Mock GOT CALLED!!!!!!! mock: " + this.name);
+        /*System.out.print(method + " Mock GOT CALLED!!!!!!! mock: " + this.name);
         if (optionalStrings == null)
         {
             System.out.println();
@@ -122,7 +122,7 @@ public class MockMSRPSessionListener
         {
             System.out.print(" " + string);
         }
-        System.out.println();
+        System.out.println();*/
 
     }
 

@@ -19,6 +19,7 @@ package msrp;
 import java.net.ProtocolException;
 import java.net.URI;
 
+import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InternalErrorException;
 import msrp.exceptions.NonValidSessionSuccessReportException;
 import msrp.exceptions.ProtocolViolationException;
@@ -131,13 +132,20 @@ public class SuccessReport
     }
 
     @Override
-    protected byte get() throws InternalErrorException
+    protected byte get() throws ImplementationException
     {
         if (offsetRead[HEADERINDEX] < headerBytes.length)
-            return headerBytes[offsetRead[HEADERINDEX]++];
+            return headerBytes[(int) offsetRead[HEADERINDEX]++];
         else if (offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
-            return getEndLineByte();
-        throw new InternalErrorException(
+            try
+            {
+                return getEndLineByte();
+            }
+            catch (InternalErrorException e)
+            {
+                throw new ImplementationException(e);
+            }
+        throw new ImplementationException(
             "Error the .get() of the transaction was called without available bytes to get");
 
     }

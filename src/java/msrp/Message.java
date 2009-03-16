@@ -353,21 +353,6 @@ public class Message
     }
 
     /**
-     * @param size the size to read from the message source
-     * @return returns the data in a byte array
-     */
-    public byte[] readData(int size)
-    {
-        return null;
-    }
-
-    /**
-     */
-    public void setContentType(String contentType)
-    {
-    }
-
-    /**
      * method used to set the failure report string
      * 
      * @param failureReport String representing the failure report field, it
@@ -743,8 +728,21 @@ public class Message
     {
         aborted = true;
         dataContainer.dispose();
-        session.triggerAbortedMessage(session, (IncomingMessage)this);
+        session.triggerAbortedMessage(session, (IncomingMessage) this);
 
+    }
+
+    /**
+     * Method used to detect if the message was aborted or not
+     * 
+     * @return true if the message was previously aborted (received the #
+     *         continuation flag, called the gotAborted() method) or false
+     *         otherwise
+     * @see #gotAborted()
+     */
+    protected boolean wasAborted()
+    {
+        return aborted;
     }
 
 }
