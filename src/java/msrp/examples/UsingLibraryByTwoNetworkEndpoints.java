@@ -27,7 +27,7 @@ import java.util.*;
 
 import msrp.exceptions.IllegalUseException;
 import msrp.exceptions.InternalErrorException;
-import msrp.testutils.MockMSRPSessionListener;
+import msrp.testutils.*;
 import msrp.utils.TextUtils;
 
 /**

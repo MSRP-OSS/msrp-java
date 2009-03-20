@@ -26,8 +26,8 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-import msrp.testutils.MockMSRPSessionListener;
 import msrp.utils.TextUtils;
+import msrp.testutils.*;
 
 import org.junit.*;
 

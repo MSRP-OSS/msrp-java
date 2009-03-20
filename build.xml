@@ -16,7 +16,7 @@
 	</path>
 
 	<!-- TARGETS -->
-	<target name="build" depends="javadoc,build-library" description="Builds the project">
+	<target name="build" depends="compile,config,javadoc,build-library" description="Builds the project">
 	</target>
 
 	<target name="deploy-lib-in-sc" depends="build" description="Build the project and puts it in the correct SC lib directory">
@@ -24,7 +24,7 @@
 	</target>
 
 	<!--CRUISE CONTROL BUILD LOOP target-->
-	<target name="cc-buildloop" depends="rebuild,run-tests"
+	<target name="cc-buildloop" depends="clean,rebuild,run-tests"
             description="Comprehensive (paranoid) rebuild and test (used by Cruise Control)."/>
 	<!--
 	<target name="run-test-example" description="test" depends="config,compile" >

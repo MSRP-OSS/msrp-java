@@ -27,6 +27,7 @@ import org.junit.internal.ArrayComparisonFailure;
 import static org.junit.Assert.*;
 
 import msrp.*;
+import msrp.testutils.*;
 import msrp.Transaction.TransactionType;
 import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InternalErrorException;
