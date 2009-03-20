@@ -17,6 +17,8 @@
  */
 package msrp;
 
+import msrp.testutils.*;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.fail;
 
