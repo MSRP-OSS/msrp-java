@@ -17,7 +17,6 @@
  */
 package msrp;
 
-import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
 
 import msrp.exceptions.InvalidHeaderException;
 

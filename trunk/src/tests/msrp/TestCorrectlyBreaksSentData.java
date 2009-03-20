@@ -38,7 +38,7 @@ import msrp.testutils.*;
  * @author João André Pereira Antunes
  * 
  */
-public class TestCorrectlySendsData
+public class TestCorrectlyBreaksSentData
 {
     Random binaryRandom = new Random();
 
