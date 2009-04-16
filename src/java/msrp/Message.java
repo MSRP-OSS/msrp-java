@@ -699,10 +699,9 @@ public class Message
     }
 
     /**
-     * Method that uses the associated counter of this message to assert if the
-     * message is completely sent or completely received depending on the type
-     * of message
-     * 
+     * This method is overwritten in IncomingMessage so that there it fetches the result from the Counter object.
+     * TODO rewrite of the Message class to be an interface and rewrite the following specializations:
+     * IncomingMessage OutoingMessage
      * @return true if the message is complete, false otherwise
      */
     public boolean isComplete()
