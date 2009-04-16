@@ -1,0 +1,3 @@
+Message.java: - style and code legibility
+TODO rewrite of the Message class to be an interface and rewrite the following specializations:
+     * IncomingMessage OutoingMessage
