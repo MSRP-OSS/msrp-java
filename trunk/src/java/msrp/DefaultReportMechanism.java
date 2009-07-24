@@ -75,7 +75,7 @@ public class DefaultReportMechanism
     }
 
     /**
-     * if the message size is unknown always trigger
+     * if the message size is unknown dont trigger
      * 
      * The default sent hook granularity is for each 10% of the message if the
      * message is bigger than 500K
@@ -92,7 +92,7 @@ public class DefaultReportMechanism
     	if (outgoingMessage.isComplete())
     		return true;
         if (outgoingMessage.getSize() == Message.UNKNWON)
-            return true;
+            return false;
         else if (outgoingMessage.getSize() > Message.UNINTIALIZED)
         {
             int lastPercentage =
