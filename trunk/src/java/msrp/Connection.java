@@ -1417,9 +1417,12 @@ class Connection
      */
     public void notifyWriteThread()
     {
-        synchronized (writeThread)
+        if (writeThread != null)
         {
-            writeThread.notify();
+            synchronized (writeThread)
+            {
+                writeThread.notify();
+            }
         }
     }
 
