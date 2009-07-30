@@ -72,8 +72,7 @@ class Connection
         localURI = newLocalURI;
         transactionManager = new TransactionManager(this);
         this.addObserver(transactionManager);
-        
-        
+
     }
 
     /**
@@ -389,13 +388,6 @@ class Connection
     }
 
     /**
-     * @desc Write (writes to the stream of the socket)
-     */
-    private void write()
-    {
-    }
-
-    /**
      * Setter of the property <tt>_transactions</tt>
      * 
      * @param _transactions The _transactions to set.
@@ -472,7 +464,12 @@ class Connection
                 }
                 else
                     // TODO FIXME do this in another way, maybe with notify!
-                    Thread.currentThread().sleep(2000);
+                    synchronized (writeThread)
+                    {
+                        writeThread.wait(2000);
+                    }
+                // Thread.currentThread().wait(2000);
+                // Thread.currentThread().sleep(2000);
                 // this.wait();
             }
             catch (Exception e)
@@ -1056,7 +1053,8 @@ class Connection
                         catch (IllegalArgumentException argExcptn)
                         {
                             // Then we have ourselves an unsupported method
-                            // create an unsupported transaction and signalize it
+                            // create an unsupported transaction and signalize
+                            // it
                             newTransactionType =
                                 TransactionType.valueOf("Unsupported"
                                     .toUpperCase());
@@ -1247,14 +1245,16 @@ class Connection
                         }
                         if (incomingTransaction.hasContentStuff)
                         {
-                            incomingTransaction.signalizeEnd(matchEndTransaction
-                                .group(4).charAt(0));
+                            incomingTransaction
+                                .signalizeEnd(matchEndTransaction.group(4)
+                                    .charAt(0));
                             restData = matchEndTransaction.group(6);
                         }
                         else
                         {
-                            incomingTransaction.signalizeEnd(matchEndTransaction
-                                .group(3).charAt(0));
+                            incomingTransaction
+                                .signalizeEnd(matchEndTransaction.group(3)
+                                    .charAt(0));
                             restData = matchEndTransaction.group(5);
                         }
                         setChanged();
@@ -1376,14 +1376,18 @@ class Connection
         // listening/writing cycle
         SocketAddress remoteAddress =
             new InetSocketAddress(uri.getHost(), uri.getPort());
-        /* TODO FIXME probably the new TransactionManager isn't needed, however i'll still create it but copy the values needed for automatic testing SubIssue #1*/
+        /*
+         * TODO FIXME probably the new TransactionManager isn't needed, however
+         * i'll still create it but copy the values needed for automatic testing
+         * SubIssue #1
+         */
         boolean testingOld = false;
         String presetTidOld = new String();
         if (transactionManager != null)
         {
             testingOld = transactionManager.testing;
-           presetTidOld = transactionManager.presetTID; 
-            
+            presetTidOld = transactionManager.presetTID;
+
         }
         transactionManager = new TransactionManager(this);
         transactionManager.testing = testingOld;
@@ -1413,7 +1417,10 @@ class Connection
      */
     public void notifyWriteThread()
     {
-        writeThread.notify();
+        synchronized (writeThread)
+        {
+            writeThread.notify();
+        }
     }
 
 }
