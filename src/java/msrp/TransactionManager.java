@@ -563,8 +563,28 @@ class TransactionManager
         // this is used to generate unique TIDs in the connection and to
         // be used when a response to a transaction is received
         existingTransactions.put(newTransaction.getTID(), newTransaction);
-        transactionsToSend.add(newTransaction);
+        addTransactionToSend(newTransaction, UNIMPORTANT);
         // possibly split the message into several transactions
+
+    }
+
+    private static final int UNIMPORTANT = -1;
+
+    /**
+     * Adds the given transaction to the queue of transactions to send and wakes
+     * up the write thread of the associated connection
+     * 
+     * @param Transaction transactionToSend
+     * @param positionIndex the position in which to add the transaction, if -1
+     *            (UNIMPORTANT) just run an .add
+     */
+    private void addTransactionToSend(Transaction transaction, int positionIndex)
+    {
+        if (positionIndex != UNIMPORTANT)
+            transactionsToSend.add(positionIndex, transaction);
+        else
+            transactionsToSend.add(transaction);
+        connection.notifyWriteThread();
 
     }
 
@@ -998,9 +1018,9 @@ class TransactionManager
                 if (trans.isInterruptible())
                 {
                     if (i == 0)
-                        transactionsToSend.add(1, transaction);
+                        addTransactionToSend(transaction, 1);
                     else
-                        transactionsToSend.add(i, transaction);
+                        addTransactionToSend(transaction, i);
                     trans.interrupt();
                     generateTransactionsToSend();
 
@@ -1012,7 +1032,7 @@ class TransactionManager
         catch (IndexOutOfBoundsException e)
         {
             // There are no transaction to send, just add the one given
-            transactionsToSend.add(transaction);
+            addTransactionToSend(transaction, UNIMPORTANT);
         }
     }
 
