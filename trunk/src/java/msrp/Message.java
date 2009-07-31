@@ -394,8 +394,46 @@ public class Message
     }
 
     /**
+     * 
+     * Method that fills the given array with DATA bytes starting from offset
+     * and stopping at the array limit or end of data and returns the number of
+     * bytes filled
+     * 
+     * @param outData the byte array to fill
+     * @param offset the offset index to start filling the outData
+     * @return the number of bytes filled
+     * @throws ImplementationException when there was something wrong with the
+     *             written code
+     * @throws InternalErrorException when there was an internal error that lead
+     *             this operation to be an unsuccessful one
+     */
+    public int get(byte[] outData, int offset)
+        throws ImplementationException,
+        InternalErrorException
+    {
+        try
+        {
+            return dataContainer.get(outData, offset);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            // TODO log it
+            e.printStackTrace();
+            throw new ImplementationException(e);
+        }
+        catch (Exception e)
+        {
+            // TODO log it
+            e.printStackTrace();
+            throw new InternalErrorException(e);
+        }
+    }
+
+    /**
      * Function used to retrieve the message content byte by byte
      * 
+     * @deprecated due to performance issues please use
+     *             {@link #get(byte[], int)}
      * @return a byte of this message's content
      */
     protected byte get()
@@ -699,9 +737,11 @@ public class Message
     }
 
     /**
-     * This method is overwritten in IncomingMessage so that there it fetches the result from the Counter object.
-     * TODO rewrite of the Message class to be an interface and rewrite the following specializations:
+     * This method is overwritten in IncomingMessage so that there it fetches
+     * the result from the Counter object. TODO rewrite of the Message class to
+     * be an interface and rewrite the following specializations:
      * IncomingMessage OutoingMessage
+     * 
      * @return true if the message is complete, false otherwise
      */
     public boolean isComplete()
@@ -743,5 +783,4 @@ public class Message
     {
         return aborted;
     }
-
 }

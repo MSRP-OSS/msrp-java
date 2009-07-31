@@ -140,7 +140,7 @@ public class SimpleProfileTests
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(9000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null

@@ -16,6 +16,7 @@
  */
 package msrp;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import msrp.exceptions.IllegalUseException;
@@ -56,9 +57,27 @@ public abstract class DataContainer
     }
 
     /**
+     * Method used to retrieve data to fill the destination buffer or until
+     * there is no more data
+     * 
+     * 
+     * @param dst the byte array to fill
+     * @param offset the offset where to start to fill the byte array
+     * @return the number of bytes that got copied to dst
+     * @throws IndexOutOfBoundsException if the offset is bigger than the length
+     *             of the dst byte array
+     * @throws Exception if there was any other kind of Exception
+     */
+    public abstract int get(byte[] dst, int offset)
+        throws IndexOutOfBoundsException,
+        Exception;
+
+    /**
      * Method used to retrieve the data from the data container
      * 
      * @return a byte of data
+     * @deprecated due to performance issues it's better to use
+     *             {@link #get(byte[], int)}
      * @throws NotEnoughDataException if the request couldn't be satisfied due
      *             to the fact that there isn't anymore available data to
      *             retrieve

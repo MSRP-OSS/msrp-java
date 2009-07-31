@@ -622,7 +622,7 @@ public class TestSendingBinaryMessages
      * the fix probably passes by changing the read cycle and the way it gets
      * the data from the file, that currently is byte by byte
      */
-    @Ignore("Too big, takes too much time")
+    @Ignore("Too big, Java heap space problems")
     @Test
     public void test20MBMessageFileToFile()
     {

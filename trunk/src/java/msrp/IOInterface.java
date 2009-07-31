@@ -27,6 +27,7 @@ public class IOInterface
     static void debugln(String s)
     {
         // TODO way to alter the method if it isn't in debug mode
+        //TODO ^^ even better, replace it with a logging system
         //System.out.println(s);
     }
 

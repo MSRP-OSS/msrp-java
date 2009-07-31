@@ -35,6 +35,9 @@ import org.junit.*;
  */
 public class TestReportMechanism
 {
+    private static final Logger logger =
+        Logger.getLogger(TestReportMechanism.class);
+
     Random binaryRandom = new Random();
 
     File tempFile;
@@ -125,10 +128,11 @@ public class TestReportMechanism
     public void testDefaultReportMechanismSmall()
     {
 
+        int messageSize = 499 * 1024;
         try
         {
             /* transfer the 499 kbytes message: */
-            byte[] smallData = new byte[499 * 1024];
+            byte[] smallData = new byte[messageSize];
             TextUtils.generateRandom(smallData);
 
             Message lessFiveHundredMessage =
@@ -150,11 +154,11 @@ public class TestReportMechanism
             /* make the mocklistener accept the message */
             synchronized (receivingSessionListener)
             {
-                DataContainer dc = new MemoryDataContainer(499 * 1024);
+                DataContainer dc = new MemoryDataContainer(messageSize);
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(5000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -170,10 +174,10 @@ public class TestReportMechanism
             }
             synchronized (sendingSessionListener)
             {
-                sendingSessionListener.wait(3000);
+                sendingSessionListener.wait(5000);
             }
             assertTrue("Error the success report was called: "
-                + sendingSessionListener.successReportCounter
+                + sendingSessionListener.successReportCounter.size()
                 + " times and not 1",
                 sendingSessionListener.successReportCounter.size() == 1);
 
@@ -190,21 +194,49 @@ public class TestReportMechanism
              * times: . one for the barrier of the 49% to 50% (if the
              * message+headers < buffers of the connection size this won't
              * appear) [not the case actually] . another when the message is
-             * completely sent
+             * completely sent. Be tolerant (+/- Connection.OUTPUTBUFFERLENGTH)
+             * about the values
              */
             assertEquals(
                 "The updateSendStatus wasn't called the expected number "
                     + "of times", 2,
                 sendingSessionListener.updateSendStatusCounter.size());
             /*
-             * make sure it was called with the 50% and 100%
+             * make sure it was called with the 50% and 100% it must have a
+             * tolerance of +/- the buffer (Connection.OUTPUTBUFFERLENGTH bytes)
              */
-            assertEquals("The updateSendStatus was called with a "
-                + "strange/unexpected number of bytes sent as argument", 50,
-                (sendingSessionListener.updateSendStatusCounter.get(0)
-                    .longValue() * 100)
-                    / sendingSessionListener.getUpdateSendStatusMessage()
-                        .getSize());
+            long receivedMessageSize =
+                sendingSessionListener.getUpdateSendStatusMessage().getSize();
+            // Extra check, the size of the sent content must be the same as the
+            // reported that was received:
+            assertEquals(
+                "The reported size of the received message is different from the size of bytes sent",
+                (long) messageSize, receivedMessageSize);
+            // Calculate the maximum and minimum percentage values with the
+            // tolerance
+
+            // number of bytes to which 50% corresponds to
+            int idealValue = (int) receivedMessageSize / 2;
+            int obtainedPValue =
+                (int) (sendingSessionListener.updateSendStatusCounter.get(0)
+                    .longValue() * 100 / receivedMessageSize);
+            int maxPValue =
+                (int) (idealValue + Connection.OUTPUTBUFFERLENGTH * 100
+                    / receivedMessageSize);
+            int minPValue =
+                (int) (idealValue - Connection.OUTPUTBUFFERLENGTH * 100
+                    / receivedMessageSize);
+            logger.debug("50% Check, maxPValue:" + maxPValue + " minPValue:"
+                + minPValue + " value obtained:" + obtainedPValue);
+            assertTrue(
+                "The updateSendStatus was called with a value of percentage out of the expected!"
+                    + " minPValue:"
+                    + minPValue
+                    + " maxPValue:"
+                    + maxPValue
+                    + " obtained value:" + obtainedPValue,
+                (obtainedPValue < minPValue || obtainedPValue > maxPValue));
+            // no tolerance for the 100% check:
             assertEquals("The updateSendStatus was called with a "
                 + "strange/unexpected number of bytes sent as argument", 100,
                 (sendingSessionListener.updateSendStatusCounter.get(1)
@@ -266,7 +298,7 @@ public class TestReportMechanism
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(5000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -282,7 +314,7 @@ public class TestReportMechanism
             }
             synchronized (sendingSessionListener)
             {
-                sendingSessionListener.wait(3000);
+                sendingSessionListener.wait(5000);
             }
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter
@@ -307,17 +339,35 @@ public class TestReportMechanism
                     + "of times", 10,
                 sendingSessionListener.updateSendStatusCounter.size());
             /*
-             * make sure it was called with the right percentages
+             * make sure it was called with the right percentages, with the
+             * Connection.OUTPUTBUFFERLENGTH tolerance
              */
-            for (int i = 0; i < 10; i++)
-                assertEquals("The updateSendStatus was called with a "
-                    + "strange/unexpected number of bytes sent as argument",
-                    (i + 1) * 10,
-                    (sendingSessionListener.updateSendStatusCounter.get(i)
-                        .longValue() * 100)
-                        / sendingSessionListener.getUpdateSendStatusMessage()
-                            .getSize());
 
+            // let's have a different approach, let's calculate how much
+            // percentual points the buffer size represent and give a tolerance
+            // between the ideal percentage and the ideal + the calculated value
+
+            long receivedMessageSize =
+                sendingSessionListener.getUpdateSendStatusMessage().getSize();
+            // how much is Connection.OUTPUTBUFFERLENGTH
+            int tolerancePValue =
+                (int) (Connection.OUTPUTBUFFERLENGTH * 100 / receivedMessageSize);
+
+            for (int i = 0; i < 10; i++)
+            {
+                int expectedIdealPValue = (i + 1) * 10;
+                int expectedMaximumPValue =
+                    expectedIdealPValue + tolerancePValue;
+                int obtainedPValue =
+                    (int) ((int) (sendingSessionListener.updateSendStatusCounter
+                        .get(i).longValue() * 100) / receivedMessageSize);
+                assertTrue(
+                    "The updateSendStatus was called with a strange/unexpected number of bytes sent as argument, obtained percentage value:"
+                        + obtainedPValue
+                        + " maximum value tolerated:"
+                        + expectedMaximumPValue,
+                    (obtainedPValue >= expectedIdealPValue && obtainedPValue <= expectedMaximumPValue));
+            }
         }
         catch (Exception e)
         {
@@ -369,7 +419,7 @@ public class TestReportMechanism
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(5000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -385,23 +435,45 @@ public class TestReportMechanism
             }
             synchronized (sendingSessionListener)
             {
-                sendingSessionListener.wait(3000);
+                sendingSessionListener.wait(5000);
             }
             assertTrue("Error the success report was called: "
-                + sendingSessionListener.successReportCounter
+                + sendingSessionListener.successReportCounter.size()
                 + " times and not 2",
                 sendingSessionListener.successReportCounter.size() == 2);
 
             /*
-             * make sure it was called with the 50% and 100%
+             * make sure it was called with the 50% and 100% it must have a
+             * tolerance of +/- the buffer (Connection.OUTPUTBUFFERLENGTH bytes)
              */
+            long receivedMessageSize =
+                sendingSessionListener.getUpdateSendStatusMessage().getSize();
+            // Calculate the maximum and minimum percentage values with the
+            // tolerance
 
-            assertEquals(
-                "The receivedReport was called with a "
-                    + "strange/unexpected number of bytes sent as argument",
-                50,
-                (sendingSessionListener.successReportCounter.get(0).longValue() * 100)
-                    / lessFiveHundredMessage.getSize());
+            // number of bytes to which 50% corresponds to
+            int idealValue = (int) receivedMessageSize / 2;
+            int obtainedPValue =
+                (int) (sendingSessionListener.updateSendStatusCounter.get(0)
+                    .longValue() * 100 / receivedMessageSize);
+            int maxPValue =
+                (int) (idealValue + Connection.OUTPUTBUFFERLENGTH * 100
+                    / receivedMessageSize);
+            int minPValue =
+                (int) (idealValue - Connection.OUTPUTBUFFERLENGTH * 100
+                    / receivedMessageSize);
+            logger.debug("50% Check, maxPValue:" + maxPValue + " minPValue:"
+                + minPValue + " value obtained:" + obtainedPValue);
+            assertTrue(
+                "The updateSendStatus was called with a value of percentage out of the expected!"
+                    + " minPValue:"
+                    + minPValue
+                    + " maxPValue:"
+                    + maxPValue
+                    + " obtained value:" + obtainedPValue,
+                (obtainedPValue < minPValue || obtainedPValue > maxPValue));
+            
+            /* no tolerance for the 100% check */
             assertEquals(
                 "The receivedReport was called with a "
                     + "strange/unexpected number of bytes sent as argument",
@@ -492,7 +564,7 @@ public class TestReportMechanism
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(5000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -508,7 +580,7 @@ public class TestReportMechanism
             }
             synchronized (sendingSessionListener)
             {
-                sendingSessionListener.wait(3000);
+                sendingSessionListener.wait(5000);
             }
             /*
              * 11 Times might be one time too many times, because the sender
@@ -540,12 +612,12 @@ public class TestReportMechanism
             /*
              * make sure it was called with the right percentages
              */
-            assertEquals(
-                "The updateSendStatus was called with a "
-                    + "strange/unexpected number of bytes sent as argument",
-                100,
-                (sendingSessionListener.updateSendStatusCounter.get(0).longValue() * 100)
-                    / sendingSessionListener.getUpdateSendStatusMessage().getSize());
+            assertEquals("The updateSendStatus was called with a "
+                + "strange/unexpected number of bytes sent as argument", 100,
+                (sendingSessionListener.updateSendStatusCounter.get(0)
+                    .longValue() * 100)
+                    / sendingSessionListener.getUpdateSendStatusMessage()
+                        .getSize());
 
         }
         catch (Exception e)

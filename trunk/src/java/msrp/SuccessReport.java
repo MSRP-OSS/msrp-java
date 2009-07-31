@@ -153,8 +153,7 @@ public class SuccessReport
     @Override
     public boolean hasData()
     {
-        if (offsetRead[HEADERINDEX] >= headerBytes.length
-            && offsetRead[ENDLINEINDEX] > (7 + tID.length() + 2))
+        if (offsetRead[HEADERINDEX] >= headerBytes.length)
             return false;
         if (offsetRead[ENDLINEINDEX] > (7 + tID.length() + 2))
             return false;
