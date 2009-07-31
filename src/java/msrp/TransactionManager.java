@@ -848,8 +848,149 @@ class TransactionManager
      * Method used by the connection object to retrieve the byte array of data
      * to be sent by the connection
      * 
+     * Validates and interrupts the transaction as neccessary with the validator
+     * 
+     * It is also at this level that the sending of bytes is accounted for
+     * purposes of triggering the sendUpdateStatus and the prioritizer
+     * 
+     * @param outData the byte array to fill with data to be sent
+     * @return the number of bytes filled on outData
+     * @throws Exception if something went wrong retrieving the data FIXME (?!
+     *             or maybe not ?!) maybe be more specific on the exception
+     */
+    protected int dataToSend2(byte[] outData) throws Exception
+    {
+        int byteCounter = 0;
+        /*
+         * Variable that accounts the number of bytes per transaction sent
+         */
+        int bytesToAccount = 0;
+        while (hasDataToSend() && byteCounter < outData.length)
+        {
+            outgoingDataValidator.reset();
+            Transaction t = transactionsToSend.get(0);
+            outgoingDataValidator.init(t.getTID());
+
+            boolean stopTransmission = false;
+            while (byteCounter < outData.length && !stopTransmission)
+            {
+                if (t.hasData())
+                {// if we are still transmitting data
+                    int result = t.get(outData, byteCounter);
+                    byteCounter += result;
+                    bytesToAccount += result;
+
+
+                }
+                else
+                {
+                    // Let's check to see if we should transmit the end of line
+                    if (t.hasEndLine())
+                    {
+                        /*
+                         * the first time we get here we should check if the
+                         * end-line was found, and if it was we should rewind,
+                         * interrupt the transaction and set the bytesToAccount
+                         * back the appropriate positions and also the index i
+                         * we can also do the reset of the outgoingDataValidator
+                         * because we have for certain that the end-line won't
+                         * appear again on the content before the transaction
+                         * finishes
+                         */
+                        outgoingDataValidator.parse(outData, byteCounter);
+                        outgoingDataValidator.reset();
+                        if (outgoingDataValidator.dataHasEndLine())
+                        {
+                            int numberPositionsToRewind =
+                                outgoingDataValidator.numberPositionsToRewind();
+                            t.rewind(numberPositionsToRewind);
+                            t.interrupt();
+                            generateTransactionsToSend();
+                            byteCounter -= numberPositionsToRewind;
+                            bytesToAccount -= numberPositionsToRewind;
+                            continue;
+                        }
+                        bytesToAccount++;
+                        // TODO ISSUE #PF probably could optimize better with a
+                        // bulk end line method, but seen that this is less than
+                        // 30 bytes..
+                        outData[byteCounter++] = t.getEndLineByte();
+
+                    }
+                    else
+                    {
+                        /*
+                         * Removing the given transaction from the queue of
+                         * transactions to send
+                         */
+                        transactionsToSend.remove(t);
+                        /*
+                         * we should also reset the outgoingDataValidator, so
+                         * that future calls to the parser won't misjudge the
+                         * correct end-line as an end-line on the body content.
+                         */
+                        outgoingDataValidator.reset();
+                        // let's get the next transaction if any
+                        stopTransmission = true; // jump out of second while
+
+                    }
+                }
+            }// end of transaction while
+            stopTransmission = false;
+            /*
+             * the buffer is full and or the transaction has been removed from
+             * the list of transactions to send and if that was the case the
+             * outgoingValidator won't make a false positive because it has been
+             * reseted
+             */
+
+            outgoingDataValidator.parse(outData, byteCounter);
+            if (outgoingDataValidator.dataHasEndLine())
+            {
+                int numberPositionsToRewind =
+                    outgoingDataValidator.numberPositionsToRewind();
+                t.rewind(numberPositionsToRewind);
+                t.interrupt();
+                generateTransactionsToSend();
+                byteCounter -= numberPositionsToRewind;
+                bytesToAccount -= numberPositionsToRewind;
+                outgoingDataValidator.reset();
+            }
+
+            // account for the bytes sent from this transaction if they should
+            // be accounted for
+            if (!t.isIncomingResponse()
+                && t.transactionType.equals(TransactionType.SEND)
+                && !t.hasResponse())
+            {
+                /*
+                 * reporting the sent update status seen that this is an
+                 * outgoing send request
+                 */
+                Message transactionMessage = t.getMessage();
+                if (transactionMessage != null)
+                {
+                    transactionMessage.reportMechanism.countSentBodyBytes(
+                        transactionMessage, bytesToAccount);
+                    bytesToAccount = 0;
+
+                }
+            }
+        }// end of main while, the one that goes across transactions
+
+        return byteCounter;
+
+    }
+
+    /**
+     * Method used by the connection object to retrieve the byte array of data
+     * to be sent by the connection
+     * 
      * Also it's at this level that the sending of bytes is accounted for
      * purposes of triggering the sendUpdateStatus and the prioritizer
+     * 
+     * @deprecated use #dataToSend2 remove this method when the other is proven
+     *             that is working right
      * 
      * @param outData the byte to fill with data to be sent
      * @return the number of bytes filled on outData

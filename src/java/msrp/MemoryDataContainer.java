@@ -148,6 +148,8 @@ public class MemoryDataContainer
     @Override
     public boolean hasDataToRead()
     {
+        if (byteBuffer == null)
+            return false;
         return byteBuffer.hasRemaining();
     }
 
@@ -219,5 +221,19 @@ public class MemoryDataContainer
     {
         byteBuffer.position((int) (byteBuffer.position() - nrPositions));
 
+    }
+
+    @Override
+    public int get(byte[] dst, int offset)
+        throws IndexOutOfBoundsException,
+        Exception
+    {
+        int bytesToCopy = 0;
+        if (byteBuffer.remaining() < dst.length - offset)
+            bytesToCopy = byteBuffer.remaining();
+        else
+            bytesToCopy = dst.length - offset;
+        byteBuffer.get(dst, offset, bytesToCopy);
+        return bytesToCopy;
     }
 }

@@ -286,4 +286,37 @@ public class FileDataContainer
         }
 
     }
+
+    @Override
+    public int get(byte[] dst, int offset)
+        throws IndexOutOfBoundsException,
+        Exception
+    {
+        if (offset > dst.length - 1)
+            throw new IndexOutOfBoundsException();
+        synchronized (currentReadOffset)
+        {
+            int bytesToCopy = 0;
+            long remainingDataBytes =
+                fileChannel.size() - currentReadOffset.longValue();
+            if (remainingDataBytes < dst.length - offset)
+                bytesToCopy = (int) remainingDataBytes;
+            else
+                bytesToCopy = dst.length - offset;
+
+            auxByteBuffer = ByteBuffer.allocate(bytesToCopy);
+            int result = fileChannel.read(auxByteBuffer);
+            if (result == 0 || result == -1)
+                throw new NotEnoughDataException();
+            if (result != bytesToCopy)
+                throw new Exception(
+                    "Something went wrong, it should have copied "
+                        + bytesToCopy + " but instead copied " + result);
+            
+            System.arraycopy(auxByteBuffer.array(), 0, dst, offset, result);
+            currentReadOffset += result;
+            return result;
+        }
+
+    }
 }
