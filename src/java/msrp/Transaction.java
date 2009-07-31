@@ -18,6 +18,7 @@ package msrp;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -202,6 +203,40 @@ public class Transaction
             content.rewind();
         }
 
+        /**
+         * 
+         * @return an int representing the number of bytes remaining for this
+         *         response
+         */
+        public int getNumberBytesRemaining()
+        {
+            return content.remaining();
+
+        }
+
+        /**
+         * Method that gets bulks of data (int maximum)
+         * 
+         * @param toFill byte array to be filled
+         * @param offset
+         * @return the number of bytes filled of the array
+         * @throws IndexOutOfBoundsException if the offset is bigger than the
+         *             array length
+         */
+        public int get(byte[] toFill, int offset)
+            throws IndexOutOfBoundsException
+        {
+            int remainingBytes = content.remaining();
+            int lengthToTransfer = 0;
+            if (toFill.length > remainingBytes)
+                lengthToTransfer = remainingBytes;
+            else
+                lengthToTransfer = toFill.length;
+            content.get(toFill, 0, lengthToTransfer);
+            return lengthToTransfer;
+
+        }
+
         public byte get()
         {
             return content.get();
@@ -345,13 +380,6 @@ public class Transaction
 
             }
             headerBytes = headerString.getBytes(usascii);
-
-
-
-
-
-
-
 
             /* by default have the continuation flag to be the end of message */
             continuationFlagByte = ENDMESSAGE;
@@ -550,7 +578,7 @@ public class Transaction
      * don't have a DoS by memory exaustion)
      * 
      */
-    private static final int MAXHEADERBYTES = 2024;
+    private static final int MAXHEADERBYTES = 3024;
 
     /**
      * Adds the given data to the buffer checking if it already doesn't exceed
@@ -565,9 +593,9 @@ public class Transaction
     private void addHeaderBuffer(char charToAdd) throws InvalidHeaderException
     {
 
-        if (1 + headerBuffer.length() > MAXHEADERBYTES)
+        if (2 + headerBuffer.length() > MAXHEADERBYTES)
             throw new InvalidHeaderException("Trying to parse a line of "
-                + (1 + headerBuffer.length()) + " bytes" + "when the limit is "
+                + (2 + headerBuffer.length()) + " bytes" + "when the limit is "
                 + MAXHEADERBYTES);
         else
         {
@@ -1824,10 +1852,13 @@ public class Transaction
 
     }
 
+
     /**
      * TODO: put it to take into account the dynamic creation of the end of
      * transaction
      * 
+     * @deprecated ?? FIXME if only used by the dataToSend of TM then yes put it
+     *             private then
      * @return true/false if this transaction still has data to be sent or not
      */
     public boolean hasData()
@@ -1940,12 +1971,6 @@ public class Transaction
                     + "when it should have been the "
                     + "Transaction.getEndLineByte");
 
-
-
-
-
-
-
             }
             if (!interrupted && message.hasData())
             {
@@ -1967,6 +1992,89 @@ public class Transaction
                     + "available bytes to get"));
         }
 
+    }
+
+    /**
+     * Method that fills the given array with DATA (header and content excluding
+     * end of line) bytes starting from offset and stopping at the array limit
+     * or end of data and returns the number of bytes filled
+     * 
+     * @param outData the byte array to fill
+     * @param offset the offset index to start filling the outData
+     * @return the number of bytes filled
+     * @throws ImplementationException if this function was called when there
+     *             was no more data or if it was interrupted
+     * @throws IndexOutOfBoundsException if the offset is bigger than the length
+     *             of the byte buffer to fill
+     * @throws InternalErrorException if something went wrong while trying to get this data
+     */
+    public int get(byte[] outData, int offset)
+        throws ImplementationException,
+        IndexOutOfBoundsException, InternalErrorException
+    {
+        // sanity checks:
+        if (interrupted && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
+        {
+            // old line: FIXME to remove these lines if no problems are
+            // encountered running the tests return getEndLineByte();
+            throw new ImplementationException("The Transaction.get() "
+                + "when it should have been the "
+                + "Transaction.getEndLineByte");
+
+        }
+        if (interrupted)
+        {
+            throw new ImplementationException("The Transaction.get() "
+                + "when it should have been the "
+                + "Transaction.getEndLineByte");
+            
+        }
+        //end of sanity checks
+        int bytesCopied = 0;
+        boolean stopCopying = false;
+        int spaceRemainingOnBuffer = outData.length - offset;
+        while ((bytesCopied < spaceRemainingOnBuffer) && !stopCopying)
+        {
+
+            if (offset > (outData.length - 1))
+                throw new IndexOutOfBoundsException();
+            if (hasResponse())
+            {
+                return response.get(outData, offset);
+            }
+
+            if (offsetRead[HEADERINDEX] < headerBytes.length)
+            { // if we are processing the header
+                int bytesToCopy = 0;
+                if ((outData.length - offset) < (headerBytes.length - offsetRead[HEADERINDEX]))
+                    // if the remaining bytes on the outdata is smaller than the
+                    // remaining bytes on the header then fill the outdata with
+                    // that length
+                    bytesToCopy = (outData.length - offset);
+                else
+                    bytesToCopy =
+                        (int) (headerBytes.length - offsetRead[HEADERINDEX]);
+                System.arraycopy(headerBytes, (int) offsetRead[HEADERINDEX],
+                    outData, offset, bytesToCopy);
+                offsetRead[HEADERINDEX] += bytesToCopy;
+                bytesCopied += bytesToCopy;
+                offset += bytesCopied;
+                continue;
+            }
+            if (!interrupted && message.hasData())
+            {
+                hasContentStuff = true;
+                
+                bytesCopied += message.get(outData, offset);
+                offset += bytesCopied;
+                continue;
+                
+            }
+            if (!interrupted && !message.hasData() && (offsetRead[HEADERINDEX] >= headerBytes.length))
+                stopCopying = true;
+        }
+
+        return bytesCopied;
     }
 
     private int receivedResponseCode = NONEXISTANT;

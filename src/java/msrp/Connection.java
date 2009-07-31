@@ -59,6 +59,7 @@ class Connection
     implements Runnable
 {
 
+    public static final int OUTPUTBUFFERLENGTH = 2048;
     public Connection(SocketChannel newSocketChannel)
         throws URISyntaxException
     {
@@ -441,7 +442,7 @@ class Connection
          */
         Thread.currentThread().setName(
             "Connection: " + localURI + " writeCycle thread");
-        byte[] outData = new byte[2048];
+        byte[] outData = new byte[OUTPUTBUFFERLENGTH];
         ByteBuffer outByteBuffer = ByteBuffer.wrap(outData);
 
         int wroteNrBytes = 0;
@@ -449,12 +450,15 @@ class Connection
         {
             try
             {
+                    
                 if (transactionManager.hasDataToSend())
                 {
                     int toWriteNrBytes;
 
                     outByteBuffer.clear();
-                    toWriteNrBytes = transactionManager.dataToSend(outData);
+                    //toWriteNrBytes = transactionManager.dataToSend(outData);
+                    //FIXME remove comment and change method name after the tests go well
+                    toWriteNrBytes = transactionManager.dataToSend2(outData);
 
                     outByteBuffer.limit(toWriteNrBytes);
                     wroteNrBytes = 0;
