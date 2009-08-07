@@ -27,6 +27,10 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import msrp.utils.TextUtils;
+import msrp.messages.FileMessage;
+import msrp.messages.Message;
+import msrp.messages.OutgoingFileMessage;
+import msrp.messages.OutgoingMessage;
 import msrp.testutils.*;
 
 import org.junit.*;
@@ -70,7 +74,7 @@ public class TestSendingBinaryMessages
             MSRPStack.setShortMessageBytes(30024 * 1024);
 
             /* Gets the address from the configuration file */
-            testProperties.load(TestReportMechanism.class
+            testProperties.load(TestSendingBinaryMessages.class
                 .getResourceAsStream("/test.properties"));
             String addressString = testProperties.getProperty("address");
             /*
@@ -79,7 +83,7 @@ public class TestSendingBinaryMessages
              */
             tempFileDir = testProperties.getProperty("tempdirectory");
             address = InetAddress.getByName(addressString);
-            
+
             /* Sets up the sessions used for message transfer: */
             sendingSession = new Session(false, false, address);
             receivingSession =
@@ -135,9 +139,9 @@ public class TestSendingBinaryMessages
             byte[] smallData = new byte[300 * 1024];
 
             randomGenerator.nextBytes(smallData);
-            
+
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
@@ -159,7 +163,7 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -205,7 +209,7 @@ public class TestSendingBinaryMessages
             randomGenerator.nextBytes(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
@@ -227,7 +231,7 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -273,7 +277,7 @@ public class TestSendingBinaryMessages
             randomGenerator.nextBytes(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
@@ -295,7 +299,7 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -345,7 +349,7 @@ public class TestSendingBinaryMessages
             fileStream.close();
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
 
@@ -367,7 +371,7 @@ public class TestSendingBinaryMessages
 
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -423,7 +427,7 @@ public class TestSendingBinaryMessages
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
 
@@ -446,7 +450,7 @@ public class TestSendingBinaryMessages
 
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -496,6 +500,11 @@ public class TestSendingBinaryMessages
             byte[] smallData = new byte[300 * 1024];
             FileOutputStream fileStream = new FileOutputStream(tempFile);
             randomGenerator.nextBytes(smallData);
+            // let's make it interesting and add a CRLF to end of the data:
+            Byte cr = Byte.decode("0x0D");
+            Byte lf = Byte.decode("0x0A");
+            smallData[300 * 1024 - 2] = cr.byteValue();
+            smallData[300 * 1024 - 1] = lf.byteValue();
             fileStream.write(smallData);
             fileStream.flush();
             fileStream.close();
@@ -503,7 +512,7 @@ public class TestSendingBinaryMessages
             smallData = null;
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
 
@@ -549,7 +558,7 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -658,7 +667,7 @@ public class TestSendingBinaryMessages
             System.gc();
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
 
@@ -704,7 +713,7 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -779,7 +788,7 @@ public class TestSendingBinaryMessages
             randomGenerator.nextBytes(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
@@ -801,7 +810,7 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -847,7 +856,7 @@ public class TestSendingBinaryMessages
             randomGenerator.nextBytes(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
@@ -869,7 +878,7 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -915,7 +924,7 @@ public class TestSendingBinaryMessages
             randomGenerator.nextBytes(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
@@ -937,7 +946,7 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -987,7 +996,7 @@ public class TestSendingBinaryMessages
             fileStream.close();
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
 
@@ -1009,7 +1018,7 @@ public class TestSendingBinaryMessages
 
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -1043,8 +1052,8 @@ public class TestSendingBinaryMessages
     }
 
     /**
-     * Tests sending a 5MB Message with a FileDataContainer
-     * FIXME test currently being ignored because of memory issues
+     * Tests sending a 5MB Message with a FileDataContainer FIXME test currently
+     * being ignored because of memory issues
      */
     @Ignore("Java Heap space problems running these batch of tests if this one isn't ignored")
     @Test
@@ -1067,7 +1076,7 @@ public class TestSendingBinaryMessages
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
 
@@ -1090,7 +1099,7 @@ public class TestSendingBinaryMessages
 
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -1147,7 +1156,7 @@ public class TestSendingBinaryMessages
             smallData = null;
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
 
@@ -1193,7 +1202,7 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -1269,7 +1278,8 @@ public class TestSendingBinaryMessages
     // byte[] smallData = new byte[10024 * 1024];
     // TextUtils.generateRandom(smallData);
     //
-    // Message threeHKbMessage = new Message(sendingSession, "plain/text",
+    // Message threeHKbMessage = new OutgoingMessage(sendingSession,
+    // "plain/text",
     // smallData);
     // threeHKbMessage.setSuccessReport(false);
     //
@@ -1292,7 +1302,7 @@ public class TestSendingBinaryMessages
     // receivingSessionListener.setDataContainer(dc);
     // receivingSessionListener.setAcceptHookResult(new Boolean(true));
     // receivingSessionListener.notify();
-    // receivingSessionListener.wait(3000);
+    // receivingSessionListener.wait(6000);
     // }
     //
     // if (receivingSessionListener.getAcceptHookMessage() == null
@@ -1331,7 +1341,8 @@ public class TestSendingBinaryMessages
     // byte[] smallData = new byte[20024 * 1024];
     // TextUtils.generateRandom(smallData);
     //
-    // Message threeHKbMessage = new Message(sendingSession, "plain/text",
+    // Message threeHKbMessage = new OutgoingMessage(sendingSession,
+    // "plain/text",
     // smallData);
     // threeHKbMessage.setSuccessReport(false);
     //
@@ -1354,7 +1365,7 @@ public class TestSendingBinaryMessages
     // receivingSessionListener.setDataContainer(dc);
     // receivingSessionListener.setAcceptHookResult(new Boolean(true));
     // receivingSessionListener.notify();
-    // receivingSessionListener.wait(3000);
+    // receivingSessionListener.wait(6000);
     // }
     //
     // if (receivingSessionListener.getAcceptHookMessage() == null

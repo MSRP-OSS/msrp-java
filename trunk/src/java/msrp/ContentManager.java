@@ -17,8 +17,9 @@
  */
 package msrp;
 
-import msrp.Message;
 import msrp.Stream;
+import msrp.messages.Message;
+
 import java.util.*;
 
 /**
@@ -32,7 +33,7 @@ public class ContentManager
      * @uml.associationEnd multiplicity="(1 1)"
      *                     inverse="_contentManager:msrp.Message"
      */
-    private msrp.Message _message = null;
+    private msrp.messages.Message _message = null;
 
     /**
      * Getter of the property <tt>_message</tt>
@@ -40,7 +41,7 @@ public class ContentManager
      * @return Returns the _message.
      * @uml.property name="_message"
      */
-    public msrp.Message get_message()
+    public msrp.messages.Message get_message()
     {
         return _message;
     }
@@ -92,7 +93,7 @@ public class ContentManager
      * @param _message The _message to set.
      * @uml.property name="_message"
      */
-    public void set_message(msrp.Message _message)
+    public void set_message(msrp.messages.Message _message)
     {
         this._message = _message;
     }

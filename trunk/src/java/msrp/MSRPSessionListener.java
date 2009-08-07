@@ -18,6 +18,9 @@ package msrp;
 
 import java.util.EventListener;
 
+import msrp.messages.IncomingMessage;
+import msrp.messages.Message;
+
 /**
  * @author João André Pereira Antunes
  * 

@@ -18,6 +18,8 @@ package msrp;
 
 import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InternalErrorException;
+import msrp.messages.IncomingMessage;
+import msrp.messages.Message;
 import msrp.utils.*;
 
 import java.io.IOException;
@@ -34,11 +36,19 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author João Antunes
  */
 public class Session
 {
+
+    /**
+     * The logger associated with this class
+     */
+    private static final Logger logger = LoggerFactory.getLogger(Session.class);
 
     /**
      * Associates an interface to the session, used to process incoming messages
@@ -61,6 +71,8 @@ public class Session
     {
         this(tls, relays, address);
         this.reportMechanism = reportMechanism;
+        logger.trace("MSRP Session created with custom report mechanism, tls: "
+            + tls + " relays: " + relays + " InetAddress:" + address);
     }
 
     /**
@@ -75,6 +87,9 @@ public class Session
     {
         this(tls, relays, destinationURI, address);
         this.reportMechanism = reportMechanism;
+        logger.trace("MSRP Session created with custom report mechanism, tls: "
+            + tls + " relays: " + relays + " destinationURI: " + destinationURI
+            + " InetAddress:" + address);
     }
 
     /**
@@ -109,6 +124,8 @@ public class Session
             // let's wrap every exception in an InternalError one
             throw new InternalErrorException(e);
         }
+        logger.trace("MSRP Session created, tls: " + tls + " relays: " + relays
+            + " InetAddress:" + address);
 
     }
 
@@ -138,38 +155,47 @@ public class Session
         catch (Exception e)
         {
             // let's wrap every exception in an InternalError one
+            logger.error("Got an internal error exception", e);
             throw new InternalErrorException(e);
         }
         ((Connections) connection).addUriToIdentify(uri, this);
         // is the subsequent needed?! TODO
         stackInstance.addConnection(uri, connection);
         set_relays(relays);
+        logger.trace("MSRP Session created, tls: " + tls + " relays: " + relays
+            + " destinationURI: " + destinationURI + " InetAddress:" + address);
 
     }
 
-    /**
+    /*
+     * TODO: remove these lines
+     * 
      * @param tls says if this is a secure connection or not.
+     * 
      * @param failureReport sets the failure-report value
+     * 
      * @param relays says if this sessions uses relays or not
+     * 
      * @return Session the newly created session with the failureport altered
-     */
-    public Session(boolean tls, boolean failureReport, boolean relays)
-    {
-        super();
-    }
-
-    /**
+     * 
+     * public Session(boolean tls, boolean failureReport, boolean relays) {
+     * super(); }
+     * 
+     * /**
+     * 
      * @param tls tells if this session goes through a seucure connection or not
+     * 
      * @param successReport sets the value of the success-Report field
+     * 
      * @param failureReport sets the failure-report value
+     * 
      * @param relays does this session uses relays
+     * 
      * @return a newly created session
+     * 
+     * public Session(boolean tls, boolean successReport, boolean failureReport,
+     * boolean relays) { super(); }
      */
-    public Session(boolean tls, boolean successReport, boolean failureReport,
-        boolean relays)
-    {
-        super();
-    }
 
     private MSRPStack stackInstance = MSRPStack.getInstance();
 
@@ -180,8 +206,8 @@ public class Session
     private void setConnection(Connection conn)
     {
         if (conn == null)
-            IOInterface
-                .debugln("Error, tried to add a null connection to the session!");
+            logger
+                .error("Error, tried to add a null connection to the session!");
 
         MSRPStack.getInstance().delConnection(connection);
         connection = conn;
@@ -206,7 +232,7 @@ public class Session
     /**
      * @return the transactionManager
      */
-    protected TransactionManager getTransactionManager()
+    public TransactionManager getTransactionManager()
     {
         return transactionManager;
     }
@@ -236,6 +262,9 @@ public class Session
         transactionManager = connection.getTransactionManager();
         transactionManager.addSession(this);
         transactionManager.initialize(this);
+
+        logger.trace("Added toPath with URI[0]: " + uris.get(0).toString()
+            + " URI array size:" + this.uris.size());
 
         /*
          * //TODO: refactor the method it does somethings that don't make sense
@@ -279,14 +308,14 @@ public class Session
      * 
      * @return
      */
-    protected String generateMessageID()
+    public String generateMessageID()
     {
         byte[] messageID = new byte[9];
         TextUtils.generateRandom(messageID);
         String newMessageID = new String(messageID, TextUtils.usascii);
 
         while (messagesReceive.containsKey(newMessageID)
-            || messagesSent.containsKey(newMessageID)
+            || messagesSentOrSending.containsKey(newMessageID)
             || existsInMessagesToSend(newMessageID))
         {
             TextUtils.generateRandom(messageID);
@@ -384,7 +413,7 @@ public class Session
      * @uml.property name="_messagesSent" stores the sent/being sended messages
      *               according to the Success-Report field
      */
-    private HashMap<String, Message> messagesSent =
+    private HashMap<String, Message> messagesSentOrSending =
         new HashMap<String, Message>();
 
     /**
@@ -513,7 +542,12 @@ public class Session
         if (object != null && object instanceof MSRPSessionListener)
         {
             msrpSessionListener = object;
+            logger.trace("MSRP Session Listener added to Session: "
+                + getURI().toString());
+            return;
         }
+        logger.error("MSRP Session Listener called but not added to Session: "
+            + getURI().toString() + " because it didn't matched the criteria");
     }
 
     public String toString()
@@ -529,7 +563,7 @@ public class Session
      * 
      * @param message the message to be added to the top of the message queue
      */
-    protected void addMessageOnTop(Message message)
+    public void addMessageOnTop(Message message)
     {
         messagesToSend.add(0, message);
     }
@@ -563,9 +597,9 @@ public class Session
      * @param messageID of the message to retrieve
      * @return the message associated with the messageID
      */
-    protected Message getSentMessage(String messageID)
+    protected Message getSentOrSendingMessage(String messageID)
     {
-        return messagesSent.get(messageID);
+        return messagesSentOrSending.get(messageID);
 
     }
 
@@ -642,6 +676,7 @@ public class Session
      */
     protected void triggerReceivedReport(Transaction report)
     {
+        logger.trace("Called the triggerReceivedReport hook");
         msrpSessionListener.receivedReport(this, report);
     }
 
@@ -657,6 +692,7 @@ public class Session
      */
     protected void triggerReceiveMessage(Message message)
     {
+        logger.trace("Called the triggerReceiveMessage hook");
         msrpSessionListener.receiveMessage(this, message);
 
     }
@@ -674,6 +710,7 @@ public class Session
      */
     protected boolean triggerAcceptHook(IncomingMessage message)
     {
+        logger.trace("Called the triggerAcceptHook hook");
         return msrpSessionListener.acceptHook(this, message);
 
     }
@@ -690,6 +727,7 @@ public class Session
     protected void triggerUpdateSendStatus(Session session,
         Message outgoingMessage)
     {
+        logger.trace("Called the triggerUpdateSendStatus hook");
         msrpSessionListener.updateSendStatus(session, outgoingMessage,
             outgoingMessage.bytesSent());
     }
@@ -703,9 +741,10 @@ public class Session
      * 
      * 
      */
-    protected void triggerAbortedMessage(Session session,
+    public void triggerAbortedMessage(Session session,
         IncomingMessage message)
     {
+        logger.trace("Called the triggerAbortedMessage hook");
         msrpSessionListener.abortedMessage(session, message);
 
     }
@@ -717,7 +756,7 @@ public class Session
     /**
      * @return the reportMechanism associated with this session
      */
-    protected ReportMechanism getReportMechanism()
+    public ReportMechanism getReportMechanism()
     {
         return reportMechanism;
     }
@@ -755,9 +794,9 @@ public class Session
      * 
      * @param message the message to add
      */
-    protected void addSentMessage(Message message)
+    protected void addSentOrSendingMessage(Message message)
     {
-        messagesSent.put(message.getMessageID(), message);
+        messagesSentOrSending.put(message.getMessageID(), message);
 
     }
 
@@ -769,7 +808,7 @@ public class Session
      * @see Message#abortSend()
      * @param message
      */
-    protected void delMessageToSend(Message message)
+    public void delMessageToSend(Message message)
     {
         messagesToSend.remove(message);
 
@@ -777,8 +816,8 @@ public class Session
 
     /**
      * Method used to delete a message that stopped being received from the
-     * being received queue of the Session
-     * NOTE: currently this method is only called for IncomingMessage objects
+     * being received queue of the Session NOTE: currently this method is only
+     * called for IncomingMessage objects
      * 
      * @param incomingMessage the message to be removed
      */

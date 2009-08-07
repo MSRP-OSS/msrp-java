@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
@@ -35,16 +34,24 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import msrp.Connection;
 import msrp.utils.NetworkUtils;
 
 /**
- * @author D
+ * @author João André Pereira Antunes
  */
 public class Connections
     extends Connection
     implements Runnable
 {
+    /**
+     * The logger associated with this class
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(Connections.class);
 
     public Connections(InetAddress address)
     {
@@ -72,8 +79,8 @@ public class Connections
 
             if (NetworkUtils.isLinkLocalIPv4Address(address))
             {
-                IOInterface
-                    .debugln("Connections: Warning! given address is a local one: "
+                logger
+                    .info("Connections: given address is a local one: "
                         + address);
             }
             serverSocketChannel =
@@ -97,8 +104,8 @@ public class Connections
                 catch (IOException e)
                 {
 
-            IOInterface
-                .debugln("Error! the connections hangued and didn't got a socket associated");
+                    logger
+                        .error("Error! the connections hanged and didn't got a socket associated");
                     // do nothing
                 }
             }
@@ -196,8 +203,7 @@ public class Connections
         }
         catch (Exception e)
         {
-            IOInterface
-                .debugln("Error! the connections hanged and didn't got a socket associated");
+                logger.error("Error! the connections hanged and didn't got a socket associated");
         }
         return this;
     }
@@ -261,7 +267,8 @@ public class Connections
                 Connection connection =
                     new Connection(serverSocketChannel.accept());
                 Thread newConnThread = new Thread(connection);
-                newConnThread.setName("connection: " + connection.getLocalURI() + " by connections newConnThread");
+                newConnThread.setName("connection: " + connection.getLocalURI()
+                    + " by connections newConnThread");
                 newConnThread.start();
 
             }
@@ -316,7 +323,9 @@ public class Connections
         }
     }
 
-    protected URI generateNewUri() throws ImplementationException, URISyntaxException 
+    protected URI generateNewUri()
+        throws ImplementationException,
+        URISyntaxException
     {
 
         if (localURI == null)
@@ -329,13 +338,9 @@ public class Connections
         byte[] randomBytes = new byte[8]; // Variable used for generating the
         // random US-ASCII alpha numeric and
         // digit bytes
-        // DEBUG
-        IOInterface.debugln("random bytes uninitialized:"
-            + (new String(randomBytes, Charset.forName("ascii"))));
-
         generateRandom(randomBytes);
         // DEBUG
-        IOInterface.debugln("random bytes:"
+        logger.trace("random bytes generated:"
             + (new String(randomBytes, Charset.forName("us-ascii")))
             + ":END of bytes ");
 
@@ -361,7 +366,7 @@ public class Connections
         existingURISessions.add(newURI);
 
         // DEBUG
-        IOInterface.debugln("generated the new URI, value of i:" + i);
+        logger.trace("generated the new URI, value of i:" + i);
 
         if (hasStarted() && getAssociatedThread().isAlive())
         {
@@ -370,7 +375,8 @@ public class Connections
         else
         {
             associatedThread = new Thread(this);
-            associatedThread.setName("Connections: " + localURI + " associatedThread");
+            associatedThread.setName("Connections: " + localURI
+                + " associatedThread");
             associatedThread.start();
             hasStarted = true;
             return newURI;
@@ -389,9 +395,10 @@ public class Connections
     /**
      * Returns a session from the list of sessions negotiated but yet to
      * identify
+     * 
      * @param uri of the session to be identified
-     * @return the associated session to the given uri, taken from the list
-     * of sessions negotiated but yet to identify
+     * @return the associated session to the given uri, taken from the list of
+     *         sessions negotiated but yet to identify
      */
     public Session sessionToIdentify(URI uri)
     {
@@ -417,7 +424,8 @@ public class Connections
 
     {
         Thread newConnectionThread = new Thread(ioOperationGroup, connection);
-        newConnectionThread.setName("Connections: " + localURI + " newConnectionThread");
+        newConnectionThread.setName("Connections: " + localURI
+            + " newConnectionThread");
         newConnectionThread.start();
 
     }

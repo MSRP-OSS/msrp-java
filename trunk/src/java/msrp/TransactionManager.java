@@ -23,6 +23,7 @@ import msrp.MSRPStack;
 import msrp.Transaction.TransactionType;
 import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InternalErrorException;
+import msrp.messages.Message;
 import msrp.utils.TextUtils;
 
 import java.net.URI;
@@ -33,12 +34,21 @@ import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * @author D
  */
-class TransactionManager
+public class TransactionManager
     implements Observer
 {
+
+    /**
+     * The logger associated with this class
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(TransactionManager.class);
 
     /**
      * @uml.property name="_message"
@@ -101,6 +111,8 @@ class TransactionManager
     private void proccessResponse(Transaction transaction, int responseCode)
     {
 
+        logger.trace("Response being sent for Transaction tId: "
+            + transaction.tID + " response code: " + responseCode);
         String failureReport = transaction.getFailureReport();
 
         // TODO generate the responses based on the success report field
@@ -215,7 +227,7 @@ class TransactionManager
      * @return Returns the _transactions.
      * @uml.property name="_transactions"
      */
-    protected ArrayList<Transaction> getTransactionsToSend()
+    public ArrayList<Transaction> getTransactionsToSend()
     {
         return transactionsToSend;
     }
@@ -232,9 +244,9 @@ class TransactionManager
      */
     protected void r200(Transaction transaction)
     {
-        IOInterface.debugln("called the r200 with transaction:"
-            + transaction.getTID() + " message-id:"
-            + transaction.getMessageID());
+        logger.trace("called the r200 with transaction:" + transaction.getTID()
+            + " message-id:" + transaction.getMessageID()
+            + " Connection (localURI) associated: " + connection.getLocalURI());
 
         if (!transaction.isIncomingResponse())
         {
@@ -250,6 +262,10 @@ class TransactionManager
                 Message associatedMessage = transaction.getMessage();
                 if (associatedMessage != null && associatedMessage.isComplete())
                 {
+
+                    logger.trace("transaction: tId" + transaction.getTID()
+                        + " has an associated message message-id:"
+                        + transaction.getMessageID() + " that is complete");
                     /*
                      * if we have a complete message
                      */
@@ -295,6 +311,8 @@ class TransactionManager
                 String statusCodeString =
                     Integer.toString(transaction.getStatusHeader()
                         .getStatusCode());
+                logger.trace("transaction:" + transaction.getTID()
+                    + " is a report! Status code: " + statusCodeString);
 
                 transaction.gotResponse(statusCodeString);
                 // REMOVE FIXME TODO the implementation exception should
@@ -440,20 +458,21 @@ class TransactionManager
         // TODO Check to see if the associated transaction belongs to this
         // session
         // Sanity check, check if this is the right type of object
-        IOInterface
-            .debugln("Called the UPDATE of the Transaction Manager. received a transaction");
+        logger
+            .trace("Called the UPDATE of the Transaction Manager. received a transaction, associated connection (localURI): "
+                + connection.getLocalURI());
 
         if (connectionObservable.getClass().getName() != "msrp.Connection")
         {
-            IOInterface
-                .debugln("Error! TransactionManager was notified without the wrong type of object associated");
+            logger
+                .error("Error! TransactionManager was notified with the wrong type of object associated");
             return;
         }
         // Sanity check, check if this is the right type of Observable
         if (transactionObject.getClass().getName() != "msrp.Transaction")
         {
-            IOInterface
-                .debugln("Error! TransactionManager was notified with the wrong observable type");
+            logger
+                .error("Error! TransactionManager was notified with the wrong observable type");
             return;
         }
 
@@ -464,8 +483,14 @@ class TransactionManager
          * If the transaction is an incoming response, atm do nothing. TODO(?!)
          */
         if (transaction.isIncomingResponse())
+        {
+            logger
+                .trace("Transaction tID: "
+                    + transaction.getTID()
+                    + " is an incoming response and has been processed by the transactionManager for connection localURI: "
+                    + this.connection.getLocalURI());
             return;
-
+        }
         if (transaction.getTransactionType()
             .equals(TransactionType.UNSUPPORTED))
         {
@@ -473,6 +498,11 @@ class TransactionManager
              * "important" question: does this 501 response precedes the 506 or
              * not?! should the to-path also be checked before?!
              */
+            logger
+                .trace("Transaction tID: "
+                    + transaction.getTID()
+                    + " is not supported and has been processed by the transactionManager for connection localURI: "
+                    + this.connection.getLocalURI());
             r501();
             return;
         }
@@ -483,6 +513,11 @@ class TransactionManager
          */
         if (transaction.isValid())
             r200(transaction);
+        logger
+            .trace("Transaction tID: "
+                + transaction.getTID()
+                + " has been processed by the transactionManager for connection localURI: "
+                + this.connection.getLocalURI());
     }
 
     /**
@@ -879,7 +914,6 @@ class TransactionManager
                     int result = t.get(outData, byteCounter);
                     byteCounter += result;
                     bytesToAccount += result;
-
 
                 }
                 else

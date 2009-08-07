@@ -28,6 +28,11 @@ import msrp.*;
 import msrp.exceptions.IllegalUseException;
 import msrp.exceptions.InternalErrorException;
 import msrp.exceptions.NotEnoughDataException;
+import msrp.messages.FileMessage;
+import msrp.messages.IncomingMessage;
+import msrp.messages.Message;
+import msrp.messages.OutgoingFileMessage;
+import msrp.messages.OutgoingMessage;
 
 /**
  * This class is used to demonstrate examples of all the functionalities that
@@ -133,7 +138,7 @@ public class FirstMilestoneFunctionalities
             {
                 byte[] someData = null;
                 Message exampleMessage =
-                    new Message(sendingSession, "MIMEType/MIMEsubType",
+                    new OutgoingMessage(sendingSession, "MIMEType/MIMEsubType",
                         someData);
             }
             catch (IllegalUseException e)
@@ -148,7 +153,7 @@ public class FirstMilestoneFunctionalities
             try
             {
                 Message exampleFileMessage =
-                    new FileMessage(sendingSession, "MIMEType/MIMEsubType",
+                    new OutgoingFileMessage(sendingSession, "MIMEType/MIMEsubType",
                         someFile);
             }
             catch (FileNotFoundException e)

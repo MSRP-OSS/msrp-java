@@ -27,6 +27,8 @@ import java.util.*;
 
 import msrp.exceptions.IllegalUseException;
 import msrp.exceptions.InternalErrorException;
+import msrp.messages.Message;
+import msrp.messages.OutgoingMessage;
 import msrp.testutils.*;
 import msrp.utils.TextUtils;
 
@@ -189,7 +191,7 @@ public class UsingLibraryByTwoNetworkEndpoints
              * sendingSession:
              */
             Message messageToReturn =
-                new Message(sendingSession, "raw/whatever", data);
+                new OutgoingMessage(sendingSession, "raw/whatever", data);
             /* let us disable the success report for this example */
             messageToReturn.setSuccessReport(false);
 

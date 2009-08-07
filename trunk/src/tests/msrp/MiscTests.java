@@ -48,6 +48,9 @@ import sun.misc.HexDumpEncoder;
 
 import msrp.*;
 import msrp.Transaction.*;
+import msrp.messages.IncomingMessage;
+import msrp.messages.Message;
+import msrp.messages.OutgoingMessage;
 
 public class MiscTests
     implements MSRPSessionListener, Runnable
@@ -393,7 +396,7 @@ public class MiscTests
             // Create a new message and place it on the toSendQueue of the
             // session
             Message newMessage =
-                new Message(sessionSend, "plain/text", ("this is just a simple"
+                new OutgoingMessage(sessionSend, "plain/text", ("this is just a simple"
                     + "test to see if this message can get through")
                     .getBytes(usascii));
             ArrayList<URI> uris = new ArrayList<URI>();

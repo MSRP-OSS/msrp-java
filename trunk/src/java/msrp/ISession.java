@@ -17,6 +17,8 @@
  */
 package msrp;
 
+import msrp.messages.Message;
+
 /**
  * @author D
  * 
