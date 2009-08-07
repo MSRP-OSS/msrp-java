@@ -17,6 +17,8 @@
  */
 package msrp;
 
+import msrp.messages.Message;
+import msrp.messages.OutgoingMessage;
 import msrp.testutils.*;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -31,9 +33,7 @@ import java.util.Properties;
 import msrp.testutils.MockMSRPSessionListener;
 import msrp.utils.TextUtils;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
 /**
  * 
@@ -118,7 +118,7 @@ public class SimpleProfileTests
             byte[] smallData = new byte[300 * 1024];
             TextUtils.generateRandom(smallData);
 
-            Message threeHKbMessage = new Message(sendingSession, "plain/text",
+            Message threeHKbMessage = new OutgoingMessage(sendingSession, "plain/text",
                     smallData);
             threeHKbMessage.setSuccessReport(false);
 

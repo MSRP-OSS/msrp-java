@@ -25,7 +25,12 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import msrp.exceptions.*;
+import msrp.messages.IncomingMessage;
+import msrp.messages.Message;
 
 /**
  * TODO (?) the most adequate name here would be Request TODO(?) and the
@@ -36,6 +41,12 @@ import msrp.exceptions.*;
  */
 public class Transaction
 {
+    /**
+     * The logger associated with this class
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(Transaction.class);
+
     public enum TransactionType
     {
 
@@ -87,7 +98,7 @@ public class Transaction
      * the method associated with this transaction we call it transactionType
      * 
      */
-    protected TransactionType transactionType;
+    public TransactionType transactionType;
 
     /**
      * @return the transactionType
@@ -285,6 +296,7 @@ public class Transaction
      */
     protected Transaction()
     {
+        logger.info("transaction created by the empty constructor");
     }
 
     /**
@@ -296,6 +308,8 @@ public class Transaction
     public Transaction(String tid, TransactionType method,
         TransactionManager manager)
     {
+        logger.info("transaction created (incoming?) tID: " + tid + " method: "
+            + method + " transactionManager: " + manager);
         transactionManager = manager;
         offsetRead[HEADERINDEX] =
             offsetRead[ENDLINEINDEX] = offsetRead[DATAINDEX] = 0;
@@ -385,6 +399,8 @@ public class Transaction
             continuationFlagByte = ENDMESSAGE;
             initializeDataStructures();
         }
+        logger.info("transaction created tID: " + tID + " method: " + send
+            + " messageAssociated: " + messageBeingSent);
 
     }
 
@@ -746,7 +762,7 @@ public class Transaction
          */
         if (transactionManager.getConnection() == null)
         {
-            IOInterface.debugln("DEBUG MODE this line should only"
+            logger.debug("DEBUG MODE this line should only"
                 + "appear if the transaction is a dummy one!");
             return;
         }
@@ -817,8 +833,7 @@ public class Transaction
                      */
                     transactionManager.r506(this);
 
-                    // TODO log it:
-                    IOInterface.debugln("Error! received a request"
+                    logger.error("Error! received a request"
                         + " that is yet to identify and is associated with"
                         + " another session!");
                     return;
@@ -860,7 +875,7 @@ public class Transaction
      */
     private void associateMessage()
     {
-        message = session.getSentMessage(messageID);
+        message = session.getSentOrSendingMessage(messageID);
         /* check if this is a transaction for an already existing message */
         if (session.getReceivingMessage(messageID) != null)
         {
@@ -958,8 +973,7 @@ public class Transaction
                  * the RFC tells us to silently ignore the request if no message
                  * can be associated with it so we'll just log it
                  */
-                // TODO log the warning
-                IOInterface.debugln("Warning! incoming report request"
+                logger.warn("Warning! incoming report request"
                     + " for an unknown message to the stack. " + "Message-ID: "
                     + getMessageID());
             }
@@ -1039,12 +1053,20 @@ public class Transaction
                             // content-stuff exists)
                             // and do the next two calls only in such case (?!)
                             headerComplete = true;
+                            logger
+                                .trace("completely parsed the header of transaction: "
+                                    + tID);
                         }
                     }
                     catch (Exception e)
                     {
                         validTransaction = false;
-                        e.printStackTrace();
+                        logger
+                            .warn("an exception made this transaction: "
+                                + tID
+                                + " method:"
+                                + transactionType.TransactionType
+                                + " an invalid transaction, returning without parsing");
                         return;
                     }
 
@@ -1056,7 +1078,12 @@ public class Transaction
                      * return
                      */
                     if (!isValid())
+                    {
+                        logger
+                            .warn("parsing an invalid transaction, returning without parsing tID:"
+                                + tID);
                         return;
+                    }
                     try
                     {
                         /*
@@ -1076,6 +1103,11 @@ public class Transaction
                             long startingIndex =
                                 (byteRange[CHUNKSTARTBYTEINDEX] - 1)
                                     + realChunkSize;
+                            logger.trace("parsing the non binary body of "
+                                + "the send transaction with tID: " + tID
+                                + " startingIndex: " + startingIndex
+                                + " toParse.length - i (the nr of bytes?!): "
+                                + (toParse.length() - i));
                             while (toParse.length() - i != 0)
                             {
 
@@ -1124,6 +1156,10 @@ public class Transaction
                         else
                         {
                             byteData = toParse.substring(i).getBytes(usascii);
+                            logger.trace("parsing the body of  non-send or non"
+                                + " message associated transaction"
+                                + " with tID: " + tID + " the nr of bytes:"
+                                + byteData.length);
                             if (byteData.length > 0)
                             {
                                 bodyByteBuffer.put(byteData);
@@ -1139,7 +1175,8 @@ public class Transaction
                     }
                     catch (Exception e)
                     {
-                        // TODO log it
+                        logger.error("caught an exception while parsing tID: "
+                            + tID + " generating a 400 response", e);
                         e.printStackTrace();
                         // FIXME ?! give a 400 response?!
                         this.generateResponse(400);
@@ -1149,14 +1186,19 @@ public class Transaction
                         }
                         catch (InternalErrorException e1)
                         {
-                            // TODO log it
+                            logger.error(
+                                "caught an exception while responding with "
+                                    + "a 400 to tID: " + tID, e1);
                             e1.printStackTrace();
                         }
                     }
                 }
 
                 if (completeTransaction)
+                {
+                    logger.trace("transaction tID: " + tID + " is complete");
                     break;
+                }
             }
 
         } // if (!receivingBinaryData)
@@ -1170,7 +1212,11 @@ public class Transaction
                  * if we don't have a valid transaction at this point, return
                  */
                 if (!isValid())
+                {
+                    logger.warn("parsing an invalid transaction, returning"
+                        + " without parsing tID:" + tID);
                     return;
+                }
                 try
                 {
                     /*
@@ -1190,6 +1236,10 @@ public class Transaction
                         long startingIndex =
                             (byteRange[CHUNKSTARTBYTEINDEX] - 1)
                                 + realChunkSize;
+                        logger.trace("parsing the binary body of "
+                            + "the send transaction with tID: " + tID
+                            + " startingIndex: " + startingIndex
+                            + " the nr of bytes: " + incByteBuffer.remaining());
                         while (incByteBuffer.hasRemaining())
                         {
 
@@ -1236,6 +1286,10 @@ public class Transaction
                     // && transactionType.equals(TransactionType.SEND))
                     else
                     {
+                        logger.trace("parsing the binary body of "
+                            + "a non-send or w/o a message transaction"
+                            + " with tID: " + tID + " the nr of bytes: "
+                            + incByteBuffer.remaining());
                         byteData = new byte[incByteBuffer.remaining()];
                         incByteBuffer.get(byteData);
                         if (byteData.length > 0)
@@ -1252,7 +1306,8 @@ public class Transaction
                 }
                 catch (Exception e)
                 {
-                    // TODO log it
+                    logger.error("caught an exception while parsing tID: "
+                        + tID + " generating a 400 response", e);
                     e.printStackTrace();
                     // FIXME ?! give a 400 response?!
                     this.generateResponse(400);
@@ -1262,7 +1317,9 @@ public class Transaction
                     }
                     catch (InternalErrorException e1)
                     {
-                        // TODO log it
+                        logger.error(
+                            "caught an exception while responding with "
+                                + "a 400 to tID: " + tID, e1);
                         e1.printStackTrace();
                     }
                 }
@@ -1311,13 +1368,19 @@ public class Transaction
             throw new InvalidHeaderException(
                 "Error, transaction doesn't have a valid to-path and from-path headers");
         }
-        IOInterface.debugln("Group:" + toAndFromMatcher.group(1) + ":Groupend");
-        IOInterface.debugln("Group:" + toAndFromMatcher.group(2) + ":Groupend");
-        IOInterface.debugln("Group:" + toAndFromMatcher.group(3) + ":Groupend");
-        IOInterface.debugln("Group:" + toAndFromMatcher.group(4) + ":Groupend");
-        IOInterface.debugln("Group:" + toAndFromMatcher.group(5) + ":Groupend");
-        IOInterface.debugln("Group:" + toAndFromMatcher.group(6) + ":Groupend");
-        IOInterface.debugln("Group:" + toAndFromMatcher.group(7) + ":Groupend");
+        /*
+         * TODO log it properly: IOInterface.debugln("Group:" +
+         * toAndFromMatcher.group(1) + ":Groupend");
+         * IOInterface.debugln("Group:" + toAndFromMatcher.group(2) +
+         * ":Groupend"); IOInterface.debugln("Group:" +
+         * toAndFromMatcher.group(3) + ":Groupend");
+         * IOInterface.debugln("Group:" + toAndFromMatcher.group(4) +
+         * ":Groupend"); IOInterface.debugln("Group:" +
+         * toAndFromMatcher.group(5) + ":Groupend");
+         * IOInterface.debugln("Group:" + toAndFromMatcher.group(6) +
+         * ":Groupend"); IOInterface.debugln("Group:" +
+         * toAndFromMatcher.group(7) + ":Groupend");
+         */
         String yetToBeParsed = toAndFromMatcher.group(7);
         URI[] newToPath = new URI[1];
         try
@@ -1336,7 +1399,7 @@ public class Transaction
         {
             // TODO support multiple From-Path URIs
             URI[] fromPath = new URI[1];
-            IOInterface.debugln("FromURI:" + toAndFromMatcher.group(5)
+            logger.trace("Recognized FromURI:" + toAndFromMatcher.group(5)
                 + ":FromURI");
             fromPath[0] = URI.create(toAndFromMatcher.group(5));
             setFromPath(fromPath);
@@ -1433,16 +1496,16 @@ public class Transaction
                 contentTypePattern.matcher(yetToBeParsed);
             if (contentTypeMatcher.matches())
             {
-                IOInterface.debugln("Group:" + contentTypeMatcher.group(1)
-                    + ":Groupend");
-                IOInterface.debugln("Group:" + contentTypeMatcher.group(2)
-                    + ":Groupend");
-                IOInterface.debugln("Group:" + contentTypeMatcher.group(3)
-                    + ":Groupend");
-                IOInterface.debugln("Group:" + contentTypeMatcher.group(4)
-                    + ":Groupend");
-                IOInterface.debugln("Group:" + contentTypeMatcher.group(5)
-                    + ":Groupend");
+                /*
+                 * TODO log it properly: IOInterface.debugln("Group:" +
+                 * contentTypeMatcher.group(1) + ":Groupend");
+                 * IOInterface.debugln("Group:" + contentTypeMatcher.group(2) +
+                 * ":Groupend"); IOInterface.debugln("Group:" +
+                 * contentTypeMatcher.group(3) + ":Groupend");
+                 * IOInterface.debugln("Group:" + contentTypeMatcher.group(4) +
+                 * ":Groupend"); IOInterface.debugln("Group:" +
+                 * contentTypeMatcher.group(5) + ":Groupend");
+                 */
                 this.contentType = contentTypeMatcher.group(3);
             }
 
@@ -1496,8 +1559,7 @@ public class Transaction
                 }
                 catch (ProtocolViolationException e)
                 {
-                    // TODO Auto-generated catch block logit!
-                    IOInterface.debugln(e.getMessage());
+                    logger.error("got a parser exception!", e);
 
                 }
                 yetToBeParsed =
@@ -1852,14 +1914,14 @@ public class Transaction
 
     }
 
-
     /**
      * TODO: put it to take into account the dynamic creation of the end of
      * transaction
      * 
      * @deprecated ?? FIXME if only used by the dataToSend of TM then yes put it
      *             private then
-     * @return true/false if this transaction still has data to be sent or not
+     * @return true/false if this transaction still has data (or headers) to be
+     *         sent (excluding the end-line) or not
      */
     public boolean hasData()
     {
@@ -1868,8 +1930,6 @@ public class Transaction
         if (interrupted)
             return false;
         if (offsetRead[HEADERINDEX] >= headerBytes.length && !message.hasData())
-            return false;
-        if (interrupted)
             return false;
         return true;
     }
@@ -1880,7 +1940,7 @@ public class Transaction
      * Variable that tells if this Transaction is interrupted (paused or
      * aborted)
      */
-    private boolean interrupted = false;
+    protected boolean interrupted = false;
 
     /**
      * Gets a byte for the end of transaction line
@@ -2006,11 +2066,13 @@ public class Transaction
      *             was no more data or if it was interrupted
      * @throws IndexOutOfBoundsException if the offset is bigger than the length
      *             of the byte buffer to fill
-     * @throws InternalErrorException if something went wrong while trying to get this data
+     * @throws InternalErrorException if something went wrong while trying to
+     *             get this data
      */
     public int get(byte[] outData, int offset)
         throws ImplementationException,
-        IndexOutOfBoundsException, InternalErrorException
+        IndexOutOfBoundsException,
+        InternalErrorException
     {
         // sanity checks:
         if (interrupted && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
@@ -2027,9 +2089,9 @@ public class Transaction
             throw new ImplementationException("The Transaction.get() "
                 + "when it should have been the "
                 + "Transaction.getEndLineByte");
-            
+
         }
-        //end of sanity checks
+        // end of sanity checks
         int bytesCopied = 0;
         boolean stopCopying = false;
         int spaceRemainingOnBuffer = outData.length - offset;
@@ -2064,13 +2126,14 @@ public class Transaction
             if (!interrupted && message.hasData())
             {
                 hasContentStuff = true;
-                
+
                 bytesCopied += message.get(outData, offset);
                 offset += bytesCopied;
                 continue;
-                
+
             }
-            if (!interrupted && !message.hasData() && (offsetRead[HEADERINDEX] >= headerBytes.length))
+            if (!interrupted && !message.hasData()
+                && (offsetRead[HEADERINDEX] >= headerBytes.length))
                 stopCopying = true;
         }
 
@@ -2122,8 +2185,8 @@ public class Transaction
             break;
         default:
             // Got an unknown response code TODO log it!
-            IOInterface.debugln("Got a response code of: " + responseCodeString
-                + " that is of the transaction: " + tID);
+            logger.warn("Got an unknown response code of: "
+                + responseCodeString + " that is of the transaction: " + tID);
             return;
 
         }
@@ -2163,7 +2226,7 @@ public class Transaction
      * 
      * @return true if the transaction is interruptible false otherwise.
      */
-    protected boolean isInterruptible()
+    public boolean isInterruptible()
     {
         /*
          * if (dataBytes.length + headerBytes.length > 2048 && !hasResponse() &&
@@ -2218,7 +2281,7 @@ public class Transaction
             // message when gets interrupted has no remaining bytes left to be
             // sent due to possible concurrency here
             continuationFlagByte = INTERRUPT;
-            IOInterface.debugln("Called the interrupt of transaction " + tID);
+            logger.trace("Called the interrupt of transaction " + tID);
             interrupted = true;
         }
     }
@@ -2235,7 +2298,7 @@ public class Transaction
      * Method used to abort the transaction. This method switches the
      * continuation flag and marks this transaction as interrupted
      */
-    protected void abort()
+    public void abort()
     {
         continuationFlagByte = ABORTMESSAGE;
         interrupted = true;

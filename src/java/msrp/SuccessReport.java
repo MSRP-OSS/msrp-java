@@ -23,6 +23,7 @@ import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InternalErrorException;
 import msrp.exceptions.NonValidSessionSuccessReportException;
 import msrp.exceptions.ProtocolViolationException;
+import msrp.messages.Message;
 
 /**
  * Class used as a specific implementation of a Success report that comes from
@@ -148,6 +149,80 @@ public class SuccessReport
         throw new ImplementationException(
             "Error the .get() of the transaction was called without available bytes to get");
 
+    }
+
+    /**
+     * Method that fills the given array with DATA (header and content excluding
+     * end of line) bytes starting from offset and stopping at the array limit
+     * or end of data and returns the number of bytes filled
+     * 
+     * @param outData the byte array to fill
+     * @param offset the offset index to start filling the outData
+     * @return the number of bytes filled
+     * @throws ImplementationException if this function was called when there
+     *             was no more data or if it was interrupted
+     * @throws IndexOutOfBoundsException if the offset is bigger than the length
+     *             of the byte buffer to fill
+     * @throws InternalErrorException if something went wrong while trying to
+     *             get this data
+     */
+    @Override
+    public int get(byte[] outData, int offset)
+        throws ImplementationException,
+        IndexOutOfBoundsException,
+        InternalErrorException
+    {
+        // sanity checks:
+        if (interrupted && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
+        {
+            // old line: FIXME to remove these lines if no problems are
+            // encountered running the tests return getEndLineByte();
+            throw new ImplementationException("The Transaction.get() "
+                + "when it should have been the "
+                + "Transaction.getEndLineByte");
+
+        }
+        if (interrupted)
+        {
+            throw new ImplementationException("The Transaction.get() "
+                + "when it should have been the "
+                + "Transaction.getEndLineByte");
+
+        }
+        // end of sanity checks
+        int bytesCopied = 0;
+        boolean stopCopying = false;
+        int spaceRemainingOnBuffer = outData.length - offset;
+        while ((bytesCopied < spaceRemainingOnBuffer) && !stopCopying)
+        {
+
+            if (offset > (outData.length - 1))
+                throw new IndexOutOfBoundsException();
+
+            if (offsetRead[HEADERINDEX] < headerBytes.length)
+            { // if we are processing the header
+                int bytesToCopy = 0;
+                if ((outData.length - offset) < (headerBytes.length - offsetRead[HEADERINDEX]))
+                    // if the remaining bytes on the outdata is smaller than the
+                    // remaining bytes on the header then fill the outdata with
+                    // that length
+                    bytesToCopy = (outData.length - offset);
+                else
+                    bytesToCopy =
+                        (int) (headerBytes.length - offsetRead[HEADERINDEX]);
+                System.arraycopy(headerBytes, (int) offsetRead[HEADERINDEX],
+                    outData, offset, bytesToCopy);
+                offsetRead[HEADERINDEX] += bytesToCopy;
+                bytesCopied += bytesToCopy;
+                offset += bytesCopied;
+                continue;
+            }
+            if (!interrupted && 
+                 (offsetRead[HEADERINDEX] >= headerBytes.length))
+                stopCopying = true;
+        }
+
+        return bytesCopied;
     }
 
     @Override

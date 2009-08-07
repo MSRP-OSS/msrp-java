@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import msrp.exceptions.InternalErrorException;
+import msrp.messages.*;
 
 /**
  * Abstract class used to allow a fair share of bandwidth between sessions that
@@ -84,7 +85,7 @@ public abstract class ConnectionPrioritizer
 
             // Store the sent message based on the success report
             if (message.getSuccessReport())
-                session.addSentMessage(message);
+                session.addSentOrSendingMessage(message);
 
         }
         else if (shouldSwap(tm.getAssociatedSessions(), session, message))

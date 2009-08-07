@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
@@ -21,6 +20,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 import javax.xml.ws.handler.MessageContext;
+
+import msrp.messages.IncomingMessage;
+import msrp.messages.Message;
 
 /**
  * Public "interface" that allows one to define it's own report mechanisms of
@@ -56,24 +58,23 @@ public abstract class ReportMechanism
      * 
      * @throws IllegalArgumentException if this method was called with a Message
      *             other than an IncomingMessage
+     * 
+     *             public final void countReceivedBodyByte(Message message,
+     *             Transaction transaction) { if (!(message instanceof
+     *             IncomingMessage)) throw new
+     *             IllegalArgumentException("Illegal kind of message" +
+     *             " this method should only be called with an IncomingMessage"
+     *             ); Counter counter = getCounter(message); long
+     *             startingPosition = transaction.getByteRange()[0]; int
+     *             numberBytes = transaction.getNrBodyBytes();
+     * 
+     *             if (counter.register(startingPosition, numberBytes)) {
+     *             triggerSuccessReport(message, transaction,
+     *             message.getCounter() .getCount() - 1,
+     *             message.getCounter().getCount()); }
+     * 
+     *             }
      */
-    public final void countReceivedBodyByte(Message message,
-        Transaction transaction)
-    {
-        if (!(message instanceof IncomingMessage))
-            throw new IllegalArgumentException("Illegal kind of message"
-                + " this method should only be called with an IncomingMessage");
-        Counter counter = getCounter(message);
-        long startingPosition = transaction.getByteRange()[0];
-        int numberBytes = transaction.getNrBodyBytes();
-
-        if (counter.register(startingPosition, numberBytes))
-        {
-            triggerSuccessReport(message, transaction, message.getCounter()
-                .getCount() - 1, message.getCounter().getCount());
-        }
-
-    }
 
     /**
      * Method that accounts for blocks of received body of the given message
@@ -130,7 +131,14 @@ public abstract class ReportMechanism
         outgoingMessage.lastCallSentData =
             outgoingMessage.getDataContainer().currentReadOffset();
 
-        // TODO call the connection prioritizer method
+        // TODO call the connection prioritizer method so far we will only check
+        // to see if message is complete and account it on the session's sent
+        // messages, if the connectionprioritizer is called the next lines
+        // should be removed:
+        // Store the sent message based on the success report
+        if (outgoingMessage.getSuccessReport())
+            outgoingMessage.getSession().addSentOrSendingMessage(
+                outgoingMessage);
 
     }
 
@@ -141,7 +149,7 @@ public abstract class ReportMechanism
      * @param message the message to retrieve the counter from
      * @return the counter associated with the given message
      */
-    protected final Counter getCounter(Message message)
+    public final Counter getCounter(Message message)
     {
         Counter counterToRetrieve = messageCounters.get(message);
         if (counterToRetrieve == null)

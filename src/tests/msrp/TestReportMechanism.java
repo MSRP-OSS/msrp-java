@@ -20,12 +20,17 @@ import java.net.*;
 import java.util.*;
 import java.io.*;
 
+import msrp.messages.Message;
+import msrp.messages.OutgoingFileMessage;
+import msrp.messages.OutgoingMessage;
 import msrp.testutils.*;
 import msrp.utils.*;
 
 import static org.junit.Assert.*;
 
 import org.junit.*;
+
+import org.slf4j.*;
 
 /**
  * Test the success reports
@@ -36,7 +41,7 @@ import org.junit.*;
 public class TestReportMechanism
 {
     private static final Logger logger =
-        Logger.getLogger(TestReportMechanism.class);
+        LoggerFactory.getLogger(TestReportMechanism.class);
 
     Random binaryRandom = new Random();
 
@@ -136,7 +141,7 @@ public class TestReportMechanism
             TextUtils.generateRandom(smallData);
 
             Message lessFiveHundredMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             lessFiveHundredMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
@@ -172,9 +177,9 @@ public class TestReportMechanism
                  */
                 receivingSessionListener.wait();
             }
-            synchronized (sendingSessionListener)
+            synchronized (sendingSessionListener.successReportCounter)
             {
-                sendingSessionListener.wait(5000);
+                sendingSessionListener.successReportCounter.wait(5000);
             }
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter.size()
@@ -276,7 +281,7 @@ public class TestReportMechanism
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message fiveMegaByteMessage =
-                new Message(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
             fiveMegaByteMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
@@ -397,7 +402,7 @@ public class TestReportMechanism
             TextUtils.generateRandom(smallData);
 
             Message lessFiveHundredMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             lessFiveHundredMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
@@ -542,7 +547,7 @@ public class TestReportMechanism
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message fiveMegaByteMessage =
-                new Message(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
             fiveMegaByteMessage.setSuccessReport(true);
 
             /* connect the two sessions: */

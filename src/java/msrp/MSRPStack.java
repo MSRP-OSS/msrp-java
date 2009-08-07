@@ -31,6 +31,7 @@ import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InternalErrorException;
 import msrp.exceptions.NonValidSessionSuccessReportException;
 import msrp.exceptions.ProtocolViolationException;
+import msrp.messages.Message;
 
 /**
  * @author D

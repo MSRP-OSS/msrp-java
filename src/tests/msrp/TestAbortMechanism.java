@@ -16,6 +16,8 @@
  */
 package msrp;
 
+import msrp.messages.Message;
+import msrp.messages.OutgoingFileMessage;
 import msrp.testutils.*;
 import java.net.*;
 import java.util.*;
@@ -70,7 +72,7 @@ public class TestAbortMechanism
         Properties testProperties = new Properties();
         try
         {
-            testProperties.load(TestReportMechanism.class
+            testProperties.load(TestAbortMechanism.class
                 .getResourceAsStream("/test.properties"));
             String addressString = testProperties.getProperty("address");
             address = InetAddress.getByName(addressString);
@@ -155,7 +157,7 @@ public class TestAbortMechanism
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message fiveMegaByteMessage =
-                new Message(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
             fiveMegaByteMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
@@ -177,7 +179,7 @@ public class TestAbortMechanism
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -188,7 +190,7 @@ public class TestAbortMechanism
             {
                 /*
                  * Wait for the first updateSendStatusCounter (that should be
-                 * done at the 10%)
+                 * done at the 10% [more or less the buffer size in %])
                  */
                 sendingSessionListener.updateSendStatusCounter.wait();
             }
@@ -201,7 +203,7 @@ public class TestAbortMechanism
              */
             synchronized (receivingSessionListener.abortMessageCounter)
             {
-                receivingSessionListener.abortMessageCounter.wait(3000);
+                receivingSessionListener.abortMessageCounter.wait(6000);
 
             }
 
@@ -212,13 +214,23 @@ public class TestAbortMechanism
 
             /*
              * confirm that the aborted message size received before it was
-             * aborted is on the 10% NOTE: it may be useful to allow some slack
-             * here!
+             * aborted is on the 10% + buffer size%
              */
-            assertEquals("Aborted message's expected size is wrong", 10,
-                (receivingSessionListener.getAbortedMessage()
-                    .getReceivedBytes() * 100)
-                    / receivingSessionListener.getAbortedMessage().getSize());
+            long receivedMessageSize =
+                receivingSessionListener.getAbortedMessage().getSize();
+            // how much is Connection.OUTPUTBUFFERLENGTH
+            int tolerancePValue =
+                (int) (Connection.OUTPUTBUFFERLENGTH * 100 / receivedMessageSize);
+            int expectedIdealPValue = 10;
+            int expectedMaximumPValue = expectedIdealPValue + tolerancePValue;
+            int obtainedPValue =
+                (int) ((int) (receivingSessionListener.getAbortedMessage()
+                    .getReceivedBytes() * 100) / receivedMessageSize);
+            assertTrue(
+                "Aborted message's expected size is wrong, " + "obtained: "
+                    + obtainedPValue + " maximum value tolerated: "
+                    + expectedMaximumPValue,
+                (obtainedPValue >= expectedIdealPValue && obtainedPValue <= expectedMaximumPValue));
 
         }
         catch (Exception e)

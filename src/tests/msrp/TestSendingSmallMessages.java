@@ -25,6 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import msrp.utils.TextUtils;
+import msrp.messages.*;
 import msrp.testutils.*;
 
 import org.junit.After;
@@ -129,7 +130,7 @@ public class TestSendingSmallMessages
             randomGenerator.nextBytes(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
@@ -198,7 +199,7 @@ public class TestSendingSmallMessages
             TextUtils.generateRandom(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
