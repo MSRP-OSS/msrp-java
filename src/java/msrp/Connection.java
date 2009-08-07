@@ -38,8 +38,10 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import msrp.Connections;
-import msrp.Message;
 import msrp.Session;
 import msrp.Transaction;
 import msrp.TransactionManager;
@@ -49,6 +51,7 @@ import msrp.exceptions.ConnectionReadException;
 import msrp.exceptions.ConnectionWriteException;
 import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InvalidHeaderException;
+import msrp.messages.Message;
 import msrp.utils.NetworkUtils;
 
 /**
@@ -59,7 +62,14 @@ class Connection
     implements Runnable
 {
 
+    /**
+     * The logger associated with this class
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(Connection.class);
+
     public static final int OUTPUTBUFFERLENGTH = 2048;
+
     public Connection(SocketChannel newSocketChannel)
         throws URISyntaxException
     {
@@ -112,9 +122,8 @@ class Connection
 
         if (NetworkUtils.isLinkLocalIPv4Address(address))
         {
-            IOInterface
-                .debugln("Connection: Warning! given address is a local one: "
-                    + address);
+            logger.info("Connection: given address is a local one: "
+                + address);
         }
 
         // bind a socket to a local random port, if it's in use try again
@@ -233,12 +242,10 @@ class Connection
         // random US-ASCII alpha numeric and
         // digit bytes
         // DEBUG
-        IOInterface.debugln("random bytes uninitialized:"
-            + (new String(randomBytes, Charset.forName("ascii"))));
 
         generateRandom(randomBytes);
         // DEBUG
-        IOInterface.debugln("random bytes:"
+        logger.trace("random bytes generated:"
             + (new String(randomBytes, Charset.forName("us-ascii")))
             + ":END of bytes ");
 
@@ -264,8 +271,7 @@ class Connection
 
         sessions.add(newURI);
 
-        // DEBUG
-        IOInterface.debugln("generated the new URI, value of i:" + i);
+        logger.trace("generated the new URI, value of i:" + i);
         return newURI;
 
     }
@@ -450,20 +456,28 @@ class Connection
         {
             try
             {
-                    
+
                 if (transactionManager.hasDataToSend())
                 {
                     int toWriteNrBytes;
 
                     outByteBuffer.clear();
-                    //toWriteNrBytes = transactionManager.dataToSend(outData);
-                    //FIXME remove comment and change method name after the tests go well
+                    // toWriteNrBytes = transactionManager.dataToSend(outData);
+                    // FIXME remove comment and change method name after the
+                    // tests go well
                     toWriteNrBytes = transactionManager.dataToSend2(outData);
 
                     outByteBuffer.limit(toWriteNrBytes);
                     wroteNrBytes = 0;
                     while (wroteNrBytes != toWriteNrBytes)
                         wroteNrBytes += socketChannel.write(outByteBuffer);
+                    // commented, too much output was being generated:
+                    /*
+                     * logger.trace("Wrote: " + wroteNrBytes +
+                     * " bytes of data to: " +
+                     * socketChannel.socket().getRemoteSocketAddress()
+                     * .toString());
+                     */
 
                 }
                 else
@@ -509,6 +523,13 @@ class Connection
                 {
                     inByteBuffer.flip();
 
+                    // commented, too much output was being generated:
+                    /*
+                     * logger.trace("Read: " + readNrBytes +
+                     * " bytes of data from: " +
+                     * socketChannel.socket().getRemoteSocketAddress()
+                     * .toString());
+                     */
                     preParser.preParse(inData, inByteBuffer.limit());
                 }
             }
@@ -529,13 +550,12 @@ class Connection
         {
             // if the socket is not bound to a local address or is
             // not connected, it shouldn't be running
-            IOInterface.debugln("Error!, Connection shouldn't be running yet");
+            logger.error("Error!, Connection shouldn't be running yet");
             return;
         }
         if (!this.isEstablished() || !this.isBound())
         {
-            // DEBUG it shouldn't get here!
-            IOInterface.debugln("Error! got a unestablished either or "
+            logger.error("Error! got a unestablished either or "
                 + "unbound connection");
             return;
         }
@@ -698,6 +718,8 @@ class Connection
 
             }
 
+            boolean shouldConsumeChar = false;
+            byte byteToEval = bufferIncData.get();
             while (bufferIncData.hasRemaining())
             {
 
@@ -707,27 +729,45 @@ class Connection
                  */
                 if (!receivingBinaryData)
                 {
+                    if (shouldConsumeChar)
+                        byteToEval = bufferIncData.get();
                     switch (parserState)
                     {
                     case 0:
-                        if (bufferIncData.get() == '\r')
+                        if (byteToEval == '\r')
+                        {
                             parserState = 1;
+                        }
+                            shouldConsumeChar = true;
                         break;
                     case 1:
-                        if (bufferIncData.get() == '\n')
+                        if (byteToEval == '\n')
+                        {
                             parserState = 2;
+                            shouldConsumeChar = true;
+                        }
                         else
+                        {
                             parserState = 0;
+                            shouldConsumeChar = false;
+                        } 
                         break;
                     case 2:
-                        if (bufferIncData.get() == '\r')
+                        if (byteToEval == '\r')
+                        {
                             parserState = 3;
+                            shouldConsumeChar = true;
+                        }
                         else
+                        {
                             parserState = 0;
+                            shouldConsumeChar = false;
+                        }
                         break;
                     case 3:
-                        if (bufferIncData.get() == '\n')
+                        if (byteToEval == '\n')
                         {
+                            shouldConsumeChar = true;
                             parserState = 0;
                             /*
                              * if the state (binary or text) changed since the
@@ -742,70 +782,134 @@ class Connection
                             receivingBinaryData = true;
                         }
                         else
+                        {
+                            shouldConsumeChar = false;
                             parserState = 0;
+                        }
                     }// switch (parserState)
                 }// if (!receivingBinaryData)
                 else
                 {
+                    if (shouldConsumeChar)
+                        byteToEval = bufferIncData.get();
                     /*
                      * if we are receiving binary data we should/must be in a
                      * transaction
                      */
+                    if (incomingTransaction == null)
+                    {
+                        // TODO FIXME ?! maybe throw an exception, if we
+                        // are here it means that the protocol was
+                        // violated
+                        logger
+                            .error("The incomingTransaction is null on the preParser in a state where it should not be (receiving binary data)!");
+                    }
 
                     switch (parserState)
                     {
                     case 0:
-                        if (bufferIncData.get() == '\r')
+                        if (byteToEval == '\r')
+                        {
                             parserState = 1;
+                        }
+                            shouldConsumeChar = true;
                         break;
                     case 1:
-                        if (bufferIncData.get() == '\n')
+                        if (byteToEval == '\n')
+                        {
                             parserState = 2;
+                            shouldConsumeChar = true;
+                        }
                         else
+                        {
                             parserState = 0;
+                            shouldConsumeChar = false;
+                        }
                         break;
                     case 2:
-                        if (bufferIncData.get() == '-')
+                        if (byteToEval == '-')
+                        {
                             parserState = 3;
+                            shouldConsumeChar = true;
+                        }
                         else
+                        {
                             parserState = 0;
+                            shouldConsumeChar = false;
+                        }
                         break;
                     case 3:
-                        if (bufferIncData.get() == '-')
+                        if (byteToEval == '-')
+                        {
                             parserState = 4;
+                            shouldConsumeChar = true;
+                        }
                         else
+                        {
                             parserState = 0;
+                            shouldConsumeChar = false;
+                        }
                         break;
                     case 4:
-                        if (bufferIncData.get() == '-')
+                        if (byteToEval == '-')
+                        {
+                            shouldConsumeChar = true;
                             parserState = 5;
+                        }
                         else
+                        {
                             parserState = 0;
+                            shouldConsumeChar = false;
+                        }
                         break;
                     case 5:
-                        if (bufferIncData.get() == '-')
+                        if (byteToEval == '-')
+                        {
                             parserState = 6;
+                            shouldConsumeChar = true;
+                        }
                         else
+                        {
                             parserState = 0;
+                            shouldConsumeChar = false;
+                        }
                         break;
                     case 6:
-                        if (bufferIncData.get() == '-')
+                        if (byteToEval == '-')
+                        {
                             parserState = 7;
+                            shouldConsumeChar = true;
+                        }
                         else
+                        {
                             parserState = 0;
+                            shouldConsumeChar = false;
+                        }
                         break;
                     case 7:
 
-                        if (bufferIncData.get() == '-')
+                        if (byteToEval == '-')
+                        {
                             parserState = 8;
+                            shouldConsumeChar = true;
+                        }
                         else
+                        {
                             parserState = 0;
+                            shouldConsumeChar = false;
+                        }
                         break;
                     case 8:
-                        if (bufferIncData.get() == '-')
+                        if (byteToEval == '-')
+                        {
                             parserState = 9;
+                            shouldConsumeChar = true;
+                        }
                         else
+                        {
                             parserState = 0;
+                            shouldConsumeChar = false;
+                        }
                         break;
                     default:
                         if (parserState >= 9)
@@ -817,8 +921,13 @@ class Connection
                              */
                             if (incomingTransaction == null)
                             {
-                                // TODO FIXME log the fact that the incoming
+                                // log the fact that the incoming
                                 // transaction was null
+                                // TODO FIXME ?! maybe throw an exception, if we
+                                // are here it means that the protocol was
+                                // violated
+                                logger
+                                    .error("The incomingTransaction is null on the preParser in a state where it should not be (receiving binary data)!");
                             }
                             else if (incomingTransaction.getTID().length() == (parserState - 9))
                             {
@@ -827,12 +936,18 @@ class Connection
                                  * transact-id then we must lookout for a valid
                                  * continuation flag
                                  */
-                                char incChar = (char) bufferIncData.get();
+                                char incChar = (char) byteToEval;
                                 if (incChar == '+' || incChar == '$'
                                     || incChar == '#')
+                                {
+                                    shouldConsumeChar = true;
                                     parserState++;
+                                }
                                 else
+                                {
+                                    shouldConsumeChar = false;
                                     parserState = 0;
+                                }
                             }
                             else if ((parserState - 9) > incomingTransaction
                                 .getTID().length())
@@ -841,17 +956,24 @@ class Connection
                                     .getTID().length() + 1)
                                 {
                                     /* we should expect the CR here */
-                                    if (bufferIncData.get() == '\r')
+                                    if (byteToEval == '\r')
+                                    {
                                         parserState++;
+                                        shouldConsumeChar = true;
+                                    }
                                     else
+                                    {
                                         parserState = 0;
+                                        shouldConsumeChar = false;
+                                    }
                                 }
                                 else if ((parserState - 9) == incomingTransaction
                                     .getTID().length() + 2)
                                 {
                                     /* we should expect the LF here */
-                                    if (bufferIncData.get() == '\n')
+                                    if (byteToEval == '\n')
                                     {
+                                        shouldConsumeChar = true;
                                         parserState++;
                                         /*
                                          * so from now on we are on text mode
@@ -873,17 +995,27 @@ class Connection
                                         parserState = 0;
                                     }
                                     else
+                                    {
+                                        shouldConsumeChar = false;
                                         parserState = 0;
+                                    }
                                 }
                             }
 
                             else if ((incomingTransaction.getTID().length() > (parserState - 9))
-                                && bufferIncData.get() == incomingTransaction
+                                && byteToEval == incomingTransaction
                                     .getTID().charAt(parserState - 9))
+                            {
+                                shouldConsumeChar = true;
                                 parserState++;
+                            }
                             else
+                            {
+                                
+                                shouldConsumeChar = false;
                                 parserState = 0;
-                        }
+                            }
+                        }//end of default:
                         break;
                     }
 
@@ -1046,6 +1178,9 @@ class Connection
                         // Transaction(matcherTransaction
                         // .group(2),matcherTransaction.group(2));
                         tID = matcherTransactionRequest.group(2);
+                        logger
+                            .debug("recognised the transaction request with ID: "
+                                + tID);
                         TransactionType newTransactionType;
                         try
                         {
@@ -1053,12 +1188,17 @@ class Connection
                                 TransactionType
                                     .valueOf(matcherTransactionRequest.group(3)
                                         .toUpperCase());
+                            logger.debug("tID: " + tID + " of type:"
+                                + matcherTransactionRequest.group(3));
                         }
                         catch (IllegalArgumentException argExcptn)
                         {
                             // Then we have ourselves an unsupported method
                             // create an unsupported transaction and signalize
                             // it
+                            logger.warn("Unsupported type of transaction: "
+                                + matcherTransactionRequest.group(3) + " tID:"
+                                + tID);
                             newTransactionType =
                                 TransactionType.valueOf("Unsupported"
                                     .toUpperCase());
@@ -1072,13 +1212,13 @@ class Connection
                             .equals(TransactionType.UNSUPPORTED))
                         {
                             incomingTransaction.signalizeEnd('$');
+                            logger
+                                .warn("Found an unsupported type of transaction, tID: "
+                                    + tID
+                                    + " signalized the end of it and called the update");
                             setChanged();
                             notifyObservers(newTransactionType);
                         }
-
-                        // DEBUG REMOVE
-                        IOInterface.debugln("identified the following TID:"
-                            + tID);
 
                         // extract the start of transaction line
                         toParse = matcherTransactionRequest.group(4);
@@ -1088,34 +1228,35 @@ class Connection
                     else if (matcherTransactionResponse.matches())
                     {
                         receivingTransaction = true;
-                        // Encountered a response
-                        IOInterface.debugln("MSRP:"
-                            + matcherTransactionResponse.group(1) + ":MSRP");
-                        IOInterface.debugln("tID:"
-                            + matcherTransactionResponse.group(2) + ":tID");
-                        IOInterface.debugln("group3:"
-                            + matcherTransactionResponse.group(3) + ":group3");
-                        IOInterface.debugln("group4:"
-                            + matcherTransactionResponse.group(4) + ":group4");
-                        IOInterface.debugln("group5:"
-                            + matcherTransactionResponse.group(5) + ":group5");
-                        IOInterface.debugln("group6:"
-                            + matcherTransactionResponse.group(6) + ":group6");
+                        /*
+                         * TODO properly log logit // Encountered a response
+                         * logger.info("response encountered MSRP:" +
+                         * matcherTransactionResponse.group(1) + ":MSRP");
+                         * l("tID:" + matcherTransactionResponse.group(2) +
+                         * ":tID"); IOInterface.debugln("group3:" +
+                         * matcherTransactionResponse.group(3) + ":group3");
+                         * IOInterface.debugln("group4:" +
+                         * matcherTransactionResponse.group(4) + ":group4");
+                         * IOInterface.debugln("group5:" +
+                         * matcherTransactionResponse.group(5) + ":group5");
+                         * IOInterface.debugln("group6:" +
+                         * matcherTransactionResponse.group(6) + ":group6");
+                         */
 
                         tID = matcherTransactionResponse.group(2);
                         incomingTransaction =
                             transactionManager.getTransaction(tID);
                         if (incomingTransaction == null)
                         {
-                            // TODO maybe log the error!
-                            IOInterface
-                                .debugln("ERROR! received response for a not found transaction");
+                            logger
+                                .error("ERROR! received response for an unfound transaction");
                         }
 
                         // Has to encounter the end of the transaction as well
                         // (not
                         // sure this is true)
 
+                        logger.debug("Found a response to transaction: " + tID);
                         incomingTransaction
                             .gotResponse(matcherTransactionResponse.group(4));
 
@@ -1134,6 +1275,9 @@ class Connection
                         // TODO receive the exception by the connection and
                         // treat it
                         // accordingly
+                        logger
+                            .error("start of the transaction not found on thread: "
+                                + Thread.currentThread().getName());
                         throw new ConnectionParserException(
                             "Error, start of the transaction not found on thread: "
                                 + Thread.currentThread().getName());
@@ -1161,6 +1305,8 @@ class Connection
                         endTransaction.matcher(toParse);
                     if (matchEndTransaction.matches())
                     {
+                        logger
+                            .trace("found the end of the transaction: " + tID);
                         /*
                          * add all of the transaction, including the endline in
                          * the to parse and leave any eventual remaining
@@ -1191,13 +1337,20 @@ class Connection
                      * identify if this transaction has content-stuff or not by
                      * the 'Content-Type 2CRLF' on the formal syntax
                      */
+                    // TODO still the Content-type pattern isn't entirely
+                    // correct, still have to account for the fact that the
+                    // subtype * (might not exist!) eventually pass this to the
+                    // RegexMSRPFactory
+                    String tokenRegex = RegexMSRPFactory.token.pattern();
                     Pattern contentStuff =
-                        Pattern.compile("(.*)(Content-Type:) (\\p{Alnum}{1,30}"
-                            + "/\\p{Alnum}{1,30})(\r\n\r\n)(.*)",
+                        Pattern.compile("(.*)(Content-Type:) (" + tokenRegex
+                            + "/" + tokenRegex + ")(\r\n\r\n)(.*)",
                             Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
                     Matcher matchContentStuff = contentStuff.matcher(toParse);
                     if (matchContentStuff.matches())
                     {
+                        logger.trace("transaction " + tID
+                            + " was found to have contentstuff");
                         incomingTransaction.hasContentStuff = true;
                         startOfDataMark = matchContentStuff.end(4);
                     }
@@ -1217,16 +1370,28 @@ class Connection
                     // DEBUG -start here- REMOVE
                     if (matchEndTransaction.matches())
                     {
-                        IOInterface
-                            .debugln("Found the end of the transaction!!");
-                        IOInterface.debugln("Rest of the body:"
-                            + matchEndTransaction.group(1));
-                        IOInterface.debugln("end of transaction:"
-                            + matchEndTransaction.group(2));
-                        IOInterface.debugln("Continuation flag:"
-                            + matchEndTransaction.group(3));
-                        IOInterface.debugln("Rest of the message:"
-                            + matchEndTransaction.group(5));
+                        /*
+                         * log properly log all of the parts of the regex match:
+                         */
+                        String endTransactionLogDetails =
+                            "Found the end of transaction tID:" + tID
+                                + " details: ";
+                        endTransactionLogDetails =
+                            endTransactionLogDetails
+                                .concat("pre-end-line body: "
+                                    + matchEndTransaction.group(1)
+                                    + " end of line withouth C.F.:");
+                        int aux = 2;
+                        if (incomingTransaction.hasContentStuff)
+                            aux = 3;
+                        endTransactionLogDetails =
+                            endTransactionLogDetails.concat(matchEndTransaction
+                                .group(aux++)
+                                + " C.F.: "
+                                + matchEndTransaction.group(aux++)
+                                + " rest of the message: "
+                                + matchEndTransaction.group(aux++));
+                        logger.trace(endTransactionLogDetails);
                     }
                     // DEBUG -end here- REMOVE
 
@@ -1347,9 +1512,16 @@ class Connection
                             remainderReceive =
                                 remainderReceive.concat(toSaveString);
 
+                            logger
+                                .trace("trimming end of transaction characters, before was parsing: "
+                                    + toParse);
                             // trimming of the data to parse
                             toParse =
                                 toParse.substring(0, toParse.lastIndexOf('\r'));
+                            logger
+                                .trace("trimming end of transaction characters, now is parsing: "
+                                    + toParse);
+
                         }
                         try
                         {
@@ -1359,7 +1531,11 @@ class Connection
                         }
                         catch (Exception e)
                         {
-                            // TODO log it
+                            // log it
+                            logger
+                                .error(
+                                    "Got an exception while parsing data to a transaction",
+                                    e);
                             e.printStackTrace();
                         }
                         if (restTransactions.size() == 0)

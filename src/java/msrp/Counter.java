@@ -1,21 +1,30 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
+
+import java.util.BitSet;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sun.swing.internal.plaf.synth.resources.synth;
+
+import msrp.messages.IncomingMessage;
+import msrp.messages.Message;
 
 /**
  * Class to abstract the counting of the received bytes of a message there are
@@ -30,6 +39,37 @@ package msrp;
  */
 public class Counter
 {
+    /**
+     * The logger associated with this class
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(Counter.class);
+    
+    /**
+     * The array used to register the bytes
+     */
+    private short counter[];
+
+    /**
+     * the total number of bytes received by this counter
+     */
+    private long count;
+    
+    private static final short EXISTS = 1;
+
+    /**
+     * if this isn't a fixed capacity counter this is the counter's initial
+     * capacity and subsequent capacity augments will be done by adding this
+     * number to the counter's capacity
+     */
+    private static final int STEPDYNAMICCOUNTER = 1024;
+
+    /**
+     * tells if this counter has fixedCapacity or if it should be dynamic
+     */
+    private boolean fixedCapacity;
+
+
     /**
      * Creates the counter structure based on the message size
      * 
@@ -51,30 +91,7 @@ public class Counter
 
     }
 
-    /**
-     * The array used to register the bytes
-     */
-    private short counter[];
-
-    /**
-     * the total number of bytes received by this counter
-     */
-    private long count;
-
-    private static final short EXISTS = 1;
-
-    /**
-     * if this isn't a fixed capacity counter this is the counter's initial
-     * capacity and subsequent capacity augments will be done by adding this
-     * number to the counter's capacity
-     */
-    private static final int STEPDYNAMICCOUNTER = 1024;
-
-    /**
-     * tells if this counter has fixedCapacity or if it should be dynamic
-     */
-    private boolean fixedCapacity;
-
+  
     /**
      * Registers the given position as received
      * 
@@ -85,9 +102,11 @@ public class Counter
      * @return true if there was a change on the number of bytes accounted for,
      *         or false otherwise
      */
-    protected boolean register(long startingPosition, int numberBytes)
+    protected synchronized boolean register(long startingPosition,
+        int numberBytes)
     {
-        int indexStartingPosition = (int) startingPosition;
+        logger.trace("going to register: " + numberBytes
+            + " received bytes starting at position:" + startingPosition);
 
         if (!fixedCapacity && counter.length < (startingPosition + numberBytes))
         {
@@ -112,13 +131,13 @@ public class Counter
         boolean toReturn = false;
         for (int i = 0; i < numberBytes; i++)
         {
-            
-            if (counter[(int) (i+indexStartingPosition)] != EXISTS)
+
+            if (counter[(int) (i + startingPosition)] != EXISTS)
             {
                 count++;
-                toReturn=true;
+                toReturn = true;
             }
-            counter[(int) (i + indexStartingPosition)] = EXISTS;
+            counter[(int) (i + startingPosition)] = EXISTS;
         }
 
         return toReturn;
@@ -127,24 +146,26 @@ public class Counter
     /**
      * @return the count of bytes received
      */
-    protected long getCount()
+    public synchronized long getCount()
     {
         return count;
     }
-    
+
     /**
-     * This method gives the number of consecutive received bytes.
-     * e.g. if the counter array is: 111011 this method will return 3;
-     * @return the number of consecutive received bytes counted from the beginning.
+     * This method gives the number of consecutive received bytes. e.g. if the
+     * counter array is: 111011 this method will return 3;
+     * 
+     * @return the number of consecutive received bytes counted from the
+     *         beginning.
      */
-    protected long getNrConsecutiveBytes() 
+    protected synchronized long getNrConsecutiveBytes()
     {
         int i;
-        for (i=0; i < counter.length; i++)
+        for (i = 0; i < counter.length; i++)
             if (counter[i] != EXISTS)
                 return i;
         return i;
-        
+
     }
 
     /**
@@ -159,7 +180,7 @@ public class Counter
      * that the transactions could have been received in a different order *as
      * in RFC*)
      */
-    protected void receivedEndOfMessage()
+    protected synchronized void receivedEndOfMessage()
     {
         dollarContinuationFlag = true;
     }
@@ -169,14 +190,14 @@ public class Counter
      *         order for a message to be complete one needs to have received the
      *         $ continuation flag and the message must not have "holes" in it)
      */
-    protected boolean isComplete()
+    public synchronized boolean isComplete()
     {
         if (!dollarContinuationFlag)
             return false;
         /* Checking for holes */
         if (fixedCapacity)
         {
-            for (int i=0;i<counter.length;i++)
+            for (int i = 0; i < counter.length; i++)
             {
                 if (counter[i] != EXISTS)
                     return false;
@@ -185,7 +206,7 @@ public class Counter
         }
         else
         {
-            for (int i=0;i<count;i++)
+            for (int i = 0; i < count; i++)
             {
                 if (counter[i] != EXISTS)
                     return false;

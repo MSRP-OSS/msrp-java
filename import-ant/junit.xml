@@ -157,6 +157,7 @@
                          includes="${junit.batchtest.include}"
                          excludes="${junit.batchtest.exclude}" />
 			</batchtest>
+			<sysproperty key="java.util.logging.config.file" value="${lib-dir}/logging.properties"/>
 			<syspropertyset refid="junit.sysproperties" />
 			<classpath>
 				<path refid="junit.run.classpath" />

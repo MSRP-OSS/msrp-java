@@ -27,6 +27,8 @@ import org.junit.*;
 
 import msrp.utils.*;
 import msrp.Transaction.TransactionType;
+import msrp.messages.Message;
+import msrp.messages.OutgoingMessage;
 import msrp.testutils.*;
 
 /**
@@ -171,7 +173,7 @@ public class TestCorrectlyBreaksSentData
              * connect them
              */
             Message newMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
 
             /* connect the two sessions: */
 

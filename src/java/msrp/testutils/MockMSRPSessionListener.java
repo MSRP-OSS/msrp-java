@@ -18,14 +18,18 @@ package msrp.testutils;
 
 import java.util.ArrayList;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import msrp.Counter;
 import msrp.DataContainer;
-import msrp.IncomingMessage;
 import msrp.MSRPSessionListener;
 import msrp.MemoryDataContainer;
-import msrp.Message;
 import msrp.ReportMechanism;
 import msrp.Session;
 import msrp.Transaction;
+import msrp.messages.IncomingMessage;
+import msrp.messages.Message;
 
 /**
  * Class used to test the callbacks of the MSRPStack
@@ -36,6 +40,12 @@ import msrp.Transaction;
 public class MockMSRPSessionListener
     implements MSRPSessionListener
 {
+
+    /**
+     * The logger associated with this class
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(MockMSRPSessionListener.class);
 
     /* The field results of the calls: */
     private Session acceptHookSession;
@@ -55,9 +65,9 @@ public class MockMSRPSessionListener
     private Message updateSendStatusMessage;
 
     private Session abortedMessageSession;
-    
+
     private IncomingMessage abortedMessage;
-    
+
     private Boolean acceptHookResult;
 
     /**
@@ -103,39 +113,16 @@ public class MockMSRPSessionListener
         this.name = name;
     }
 
-    /**
-     * Convenience method used for debug purposes, that prints the method and
-     * the optionalStrings along with this mock name on System.out
-     * 
-     * @param method the method on which this function was called
-     * @param optionalStrings
-     */
-    private void report(String method, String[] optionalStrings)
-    {
-        /*System.out.print(method + " Mock GOT CALLED!!!!!!! mock: " + this.name);
-        if (optionalStrings == null)
-        {
-            System.out.println();
-            return;
-        }
-        for (String string : optionalStrings)
-        {
-            System.out.print(" " + string);
-        }
-        System.out.println();*/
-
-    }
-
     @Override
     public boolean acceptHook(Session session, IncomingMessage message)
     {
+        logger.trace("AcceptHook called");
         while (acceptHookResult == null)
         {
             synchronized (this)
             {
                 try
                 {
-                    report("acceptHook", null);
                     wait();
                 }
                 catch (InterruptedException e)
@@ -146,9 +133,7 @@ public class MockMSRPSessionListener
         }
         boolean toReturn = acceptHookResult.booleanValue();
 
-        String[] array =
-        { "is going to return: " + toReturn };
-        report("acceptHook", array);
+        logger.debug("AcceptHook is goint to return " + toReturn);
 
         acceptHookMessage = message;
         acceptHookSession = session;
@@ -175,7 +160,8 @@ public class MockMSRPSessionListener
     @Override
     public void receiveMessage(Session session, Message message)
     {
-        report("receiveMessage", null);
+        logger.debug("receive message called on message: "
+            + message.getMessageID());
         receiveMessage = message;
         receiveMessageSession = session;
         synchronized (this)
@@ -188,11 +174,10 @@ public class MockMSRPSessionListener
     public void receivedReport(Session session, Transaction tReport)
     {
 
-        String[] arrayStrings =
-            { "received confirmation that: " + tReport.getByteRange()[1]
-                + " bytes were sent; " + (tReport.getByteRange()[1] * 100)
-                / tReport.getTotalMessageBytes() + "% sent" };
-        report("receivedReport", arrayStrings);
+        logger.debug("Received report, confirming that: "
+            + tReport.getByteRange()[1] + " bytes were sent; "
+            + (tReport.getByteRange()[1] * 100)
+            / tReport.getTotalMessageBytes() + "% sent");
         receivedReportSession = session;
         receivedReportTransaction = tReport;
         synchronized (successReportCounter)
@@ -207,10 +192,9 @@ public class MockMSRPSessionListener
     public void updateSendStatus(Session session, Message message,
         long numberBytesSent)
     {
-        String[] arrayStrings =
-            { "sent: " + numberBytesSent + " bytes; " + (numberBytesSent * 100)
-                / message.getSize() + "% sent" };
-        report("updateSendStatus", arrayStrings);
+        logger.debug("updateSendStatus called, sent: " + numberBytesSent
+            + " bytes; " + (numberBytesSent * 100) / message.getSize()
+            + "% sent");
         updateSendStatusSession = session;
         updateSendStatusMessage = message;
         synchronized (updateSendStatusCounter)
@@ -224,19 +208,17 @@ public class MockMSRPSessionListener
     @Override
     public void abortedMessage(Session session, IncomingMessage message)
     {
-        String[] arrayStrings =
-        { "received: " + message.getReceivedBytes() + " bytes; " + (message.getReceivedBytes() * 100)
-            / message.getSize() + "% " };
-        report("abortedMessage", arrayStrings);
-        abortedMessage= message;
+        logger.debug("abortedMessage called, received: "
+            + message.getReceivedBytes() + " bytes; "
+            + (message.getReceivedBytes() * 100) / message.getSize() + "% ");
+        abortedMessage = message;
         abortedMessageSession = session;
         synchronized (abortMessageCounter)
         {
             abortMessageCounter.add(message.getReceivedBytes());
             abortMessageCounter.notifyAll();
-            
+
         }
-        
 
     }
 

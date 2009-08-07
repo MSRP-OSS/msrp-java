@@ -17,6 +17,8 @@
  */
 package msrp;
 
+import msrp.messages.Message;
+
 /**
  * Default report mechanism offered by this stack as a singleton
  * 

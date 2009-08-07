@@ -26,6 +26,9 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import msrp.exceptions.IllegalUseException;
 import msrp.exceptions.NotEnoughDataException;
 import msrp.exceptions.NotEnoughStorageException;
@@ -37,6 +40,11 @@ import msrp.exceptions.NotEnoughStorageException;
 public class FileDataContainer
     extends DataContainer
 {
+
+    /**
+     * The logger associated with this class
+     */
+    private static final Logger logger = LoggerFactory.getLogger(FileDataContainer.class);
 
     /**
      * Creates a new DataContainer based on the given file, The file must be
@@ -56,6 +64,9 @@ public class FileDataContainer
         this.file = file;
         randomAccessFile = new RandomAccessFile(file, "rw");
         fileChannel = randomAccessFile.getChannel();
+        logger.trace("Created a FileDataContainer for file: "
+            + file.getAbsolutePath());
+
     }
 
     private Long currentReadOffset = new Long(0);
@@ -312,7 +323,7 @@ public class FileDataContainer
                 throw new Exception(
                     "Something went wrong, it should have copied "
                         + bytesToCopy + " but instead copied " + result);
-            
+
             System.arraycopy(auxByteBuffer.array(), 0, dst, offset, result);
             currentReadOffset += result;
             return result;

@@ -27,7 +27,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Properties;
 
-import msrp.utils.TextUtils;
+import msrp.utils.*;
+import msrp.messages.*;
 import msrp.testutils.*;
 
 import org.junit.*;
@@ -68,7 +69,7 @@ public class TestSendingASCIIMessages
             /* Set the limit to be of 30 MB of messages allowed in memory */
             MSRPStack.setShortMessageBytes(30024 * 1024);
 
-            testProperties.load(TestReportMechanism.class
+            testProperties.load(TestSendingASCIIMessages.class
                 .getResourceAsStream("/test.properties"));
             String addressString = testProperties.getProperty("address");
             /*
@@ -132,7 +133,7 @@ public class TestSendingASCIIMessages
             TextUtils.generateRandom(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
@@ -154,7 +155,7 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -200,7 +201,7 @@ public class TestSendingASCIIMessages
             TextUtils.generateRandom(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
@@ -222,7 +223,7 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -268,7 +269,7 @@ public class TestSendingASCIIMessages
             TextUtils.generateRandom(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
@@ -290,7 +291,7 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -340,7 +341,7 @@ public class TestSendingASCIIMessages
             fileStream.close();
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
 
@@ -362,7 +363,7 @@ public class TestSendingASCIIMessages
 
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -418,7 +419,7 @@ public class TestSendingASCIIMessages
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
 
@@ -441,7 +442,7 @@ public class TestSendingASCIIMessages
 
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -498,7 +499,7 @@ public class TestSendingASCIIMessages
             smallData = null;
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
 
@@ -544,7 +545,7 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -653,7 +654,7 @@ public class TestSendingASCIIMessages
             System.gc();
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
 
@@ -699,7 +700,7 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -774,7 +775,7 @@ public class TestSendingASCIIMessages
             TextUtils.generateRandom(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
@@ -796,7 +797,7 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -842,7 +843,7 @@ public class TestSendingASCIIMessages
             TextUtils.generateRandom(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
@@ -864,7 +865,7 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -910,7 +911,7 @@ public class TestSendingASCIIMessages
             TextUtils.generateRandom(smallData);
 
             Message threeHKbMessage =
-                new Message(sendingSession, "plain/text", smallData);
+                new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
@@ -932,7 +933,7 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -982,7 +983,7 @@ public class TestSendingASCIIMessages
             fileStream.close();
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
 
@@ -1004,7 +1005,7 @@ public class TestSendingASCIIMessages
 
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -1062,7 +1063,7 @@ public class TestSendingASCIIMessages
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
 
@@ -1085,7 +1086,7 @@ public class TestSendingASCIIMessages
 
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -1142,7 +1143,7 @@ public class TestSendingASCIIMessages
             smallData = null;
 
             Message threeHKbMessage =
-                new FileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
 
@@ -1188,7 +1189,7 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -1264,7 +1265,7 @@ public class TestSendingASCIIMessages
     // byte[] smallData = new byte[10024 * 1024];
     // TextUtils.generateRandom(smallData);
     //
-    // Message threeHKbMessage = new Message(sendingSession, "plain/text",
+    // Message threeHKbMessage = new OutgoingMessage(sendingSession, "plain/text",
     // smallData);
     // threeHKbMessage.setSuccessReport(false);
     //
@@ -1287,7 +1288,7 @@ public class TestSendingASCIIMessages
     // receivingSessionListener.setDataContainer(dc);
     // receivingSessionListener.setAcceptHookResult(new Boolean(true));
     // receivingSessionListener.notify();
-    // receivingSessionListener.wait(3000);
+    // receivingSessionListener.wait(6000);
     // }
     //
     // if (receivingSessionListener.getAcceptHookMessage() == null
@@ -1326,7 +1327,7 @@ public class TestSendingASCIIMessages
     // byte[] smallData = new byte[20024 * 1024];
     // TextUtils.generateRandom(smallData);
     //
-    // Message threeHKbMessage = new Message(sendingSession, "plain/text",
+    // Message threeHKbMessage = new OutgoingMessage(sendingSession, "plain/text",
     // smallData);
     // threeHKbMessage.setSuccessReport(false);
     //
@@ -1349,7 +1350,7 @@ public class TestSendingASCIIMessages
     // receivingSessionListener.setDataContainer(dc);
     // receivingSessionListener.setAcceptHookResult(new Boolean(true));
     // receivingSessionListener.notify();
-    // receivingSessionListener.wait(3000);
+    // receivingSessionListener.wait(6000);
     // }
     //
     // if (receivingSessionListener.getAcceptHookMessage() == null
