@@ -16,15 +16,12 @@
  */
 package msrp;
 
-import java.util.BitSet;
+import java.util.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.*;
 
-import com.sun.swing.internal.plaf.synth.resources.synth;
 
-import msrp.messages.IncomingMessage;
-import msrp.messages.Message;
+import msrp.messages.*;
 
 /**
  * Class to abstract the counting of the received bytes of a message there are
@@ -48,26 +45,26 @@ public class Counter
     /**
      * The array used to register the bytes
      */
-    private short counter[];
-
-    /**
-     * the total number of bytes received by this counter
-     */
-    private long count;
+    private BitSet counter;
     
-    private static final short EXISTS = 1;
-
+    private static final short STARTINGPOSITION = 0;
+    
     /**
-     * if this isn't a fixed capacity counter this is the counter's initial
-     * capacity and subsequent capacity augments will be done by adding this
-     * number to the counter's capacity
+     * Stores the value of the index of the previous clear bit
      */
-    private static final int STEPDYNAMICCOUNTER = 1024;
-
+    private long indexPreviousClearBit;
+    
     /**
-     * tells if this counter has fixedCapacity or if it should be dynamic
+     * Stores the number of bytes that the counter has
      */
-    private boolean fixedCapacity;
+    private long count = 0;
+    
+    /**
+     * Stores the number of consecutive bytes from the start without "holes"
+     */
+    private long nrConsecutiveBytes = 0;
+
+
 
 
     /**
@@ -77,95 +74,60 @@ public class Counter
      */
     protected Counter(Message message)
     {
-        count = 0;
-        if (message.getSize() == Message.UNKNWON)
-        {
-            counter = new short[STEPDYNAMICCOUNTER];
-            fixedCapacity = false;
-        }
-        else
-        {
-            counter = new short[(int) message.getSize()];
-            fixedCapacity = true;
-        }
+            counter = new BitSet();
 
     }
 
   
     /**
      * Registers the given position as received
+     * updates the count number of bytes and the nr of consecutive bytes private variables
      * 
      * @param startingPosition the index position, in the overall message
      *            content that this count refers to
      * @param numberBytes the offset regarding the startingPosition to which one
      *            should count the byte
-     * @return true if there was a change on the number of bytes accounted for,
+     * @return true if there was a change on the number of contiguous bytes accounted for,
      *         or false otherwise
      */
-    protected synchronized boolean register(long startingPosition,
+    protected boolean register(long startingPosition,
         int numberBytes)
     {
         logger.trace("going to register: " + numberBytes
             + " received bytes starting at position:" + startingPosition);
 
-        if (!fixedCapacity && counter.length < (startingPosition + numberBytes))
-        {
-            /* if we reached the limit of this counter: */
-            /*
-             * Create the new counter given by the new found limit and add more
-             * STEPDYNAMICCOUNTER
-             */
-            short[] newCounter =
-                new short[(int) (startingPosition + numberBytes + STEPDYNAMICCOUNTER)];
-            /*
-             * Copy the old counter contents to the new one
-             */
-            for (int i = 0; i < counter.length; i++)
-                newCounter[i] = counter[i];
-
-            /*
-             * replace the old counter
-             */
-            counter = newCounter;
-        }
-        boolean toReturn = false;
-        for (int i = 0; i < numberBytes; i++)
-        {
-
-            if (counter[(int) (i + startingPosition)] != EXISTS)
-            {
-                count++;
-                toReturn = true;
-            }
-            counter[(int) (i + startingPosition)] = EXISTS;
-        }
-
+        int intStartingPosition = (int) startingPosition;
+        counter.set(intStartingPosition, intStartingPosition + numberBytes);
+        nrConsecutiveBytes = counter.nextClearBit(STARTINGPOSITION); 
+        boolean toReturn;
+        if (indexPreviousClearBit != nrConsecutiveBytes)
+            toReturn = true;
+        else
+            toReturn = false;
+        indexPreviousClearBit = nrConsecutiveBytes;
+        //update the count and nrConsecutiveBytes:
+        count = counter.cardinality();
         return toReturn;
     }
 
     /**
      * @return the count of bytes received
      */
-    public synchronized long getCount()
+    public long getCount()
     {
         return count;
     }
 
     /**
      * This method gives the number of consecutive received bytes. e.g. if the
-     * counter array is: 111011 this method will return 3;
+     * bitset is: 111011 this method will return 3;
      * 
      * @return the number of consecutive received bytes counted from the
      *         beginning.
      */
-    protected synchronized long getNrConsecutiveBytes()
+    protected long getNrConsecutiveBytes()
     {
-        int i;
-        for (i = 0; i < counter.length; i++)
-            if (counter[i] != EXISTS)
-                return i;
-        return i;
-
+        return nrConsecutiveBytes;
     }
 
     /**
@@ -180,7 +142,7 @@ public class Counter
      * that the transactions could have been received in a different order *as
      * in RFC*)
      */
-    protected synchronized void receivedEndOfMessage()
+    protected void receivedEndOfMessage()
     {
         dollarContinuationFlag = true;
     }
@@ -190,28 +152,14 @@ public class Counter
      *         order for a message to be complete one needs to have received the
      *         $ continuation flag and the message must not have "holes" in it)
      */
-    public synchronized boolean isComplete()
+    public boolean isComplete()
     {
         if (!dollarContinuationFlag)
             return false;
+        
         /* Checking for holes */
-        if (fixedCapacity)
-        {
-            for (int i = 0; i < counter.length; i++)
-            {
-                if (counter[i] != EXISTS)
-                    return false;
-            }
-            return true;
-        }
-        else
-        {
-            for (int i = 0; i < count; i++)
-            {
-                if (counter[i] != EXISTS)
-                    return false;
-            }
-            return true;
-        }
+        if (count != nrConsecutiveBytes)
+            return false;
+        return true;
     }
 }
