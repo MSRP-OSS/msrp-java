@@ -6,6 +6,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib"/>
 	<classpathentry kind="lib" path="lib/dep/slf4j-api-1.5.8.jar"/>
-	<classpathentry kind="lib" path="lib/run/slf4j-simple-1.5.8.jar"/>
+	<classpathentry kind="lib" path="lib/run/slf4j-jdk14-1.5.8.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

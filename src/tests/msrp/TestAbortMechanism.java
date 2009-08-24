@@ -219,10 +219,8 @@ public class TestAbortMechanism
             long receivedMessageSize =
                 receivingSessionListener.getAbortedMessage().getSize();
             // how much is Connection.OUTPUTBUFFERLENGTH
-            int tolerancePValue =
-                (int) (Connection.OUTPUTBUFFERLENGTH * 100 / receivedMessageSize);
-            int expectedIdealPValue = 10;
-            int expectedMaximumPValue = expectedIdealPValue + tolerancePValue;
+            long expectedIdealBValue = 10 * receivedMessageSize / 100; 
+            int expectedMaximumPValue = (int) ((expectedIdealBValue + Connection.OUTPUTBUFFERLENGTH) * 100 / receivedMessageSize);
             int obtainedPValue =
                 (int) ((int) (receivingSessionListener.getAbortedMessage()
                     .getReceivedBytes() * 100) / receivedMessageSize);
@@ -230,7 +228,7 @@ public class TestAbortMechanism
                 "Aborted message's expected size is wrong, " + "obtained: "
                     + obtainedPValue + " maximum value tolerated: "
                     + expectedMaximumPValue,
-                (obtainedPValue >= expectedIdealPValue && obtainedPValue <= expectedMaximumPValue));
+                (obtainedPValue >= 10 && obtainedPValue <= expectedMaximumPValue));
 
         }
         catch (Exception e)
