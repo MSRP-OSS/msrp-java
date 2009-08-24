@@ -611,14 +611,7 @@ public class TestSendingASCIIMessages
      * Tests sending a 20MB Message with a FileDataContainer to a
      * FileDataContainer
      * 
-     * FIXME - for later - minimize the memory took by the stack - make the
-     * counter work in a different manner (bit by bit counter)
-     * 
-     * FIXME BUG took 274,5s of which only 10s of overhead of creating the file
-     * the fix probably passes by changing the read cycle and the way it gets
-     * the data from the file, that currently is byte by byte
      */
-    @Ignore("Too big, takes too much time")
     @Test
     public void test20MBMessageFileToFile()
     {
@@ -1040,9 +1033,7 @@ public class TestSendingASCIIMessages
 
     /**
      * Tests sending a 5MB Message with a FileDataContainer
-     * FIXME test currently being ignored because of memory issues
      */
-    @Ignore("Java Heap space problems running these batch of tests if this one isn't ignored")
     @Test
     public void test5MBMessageFileToMemorySuccessReport()
     {

@@ -122,8 +122,7 @@ class Connection
 
         if (NetworkUtils.isLinkLocalIPv4Address(address))
         {
-            logger.info("Connection: given address is a local one: "
-                + address);
+            logger.info("Connection: given address is a local one: " + address);
         }
 
         // bind a socket to a local random port, if it's in use try again
@@ -631,19 +630,6 @@ class Connection
     }
 
     /**
-     * Variable that tells if this instance of the connection is currently
-     * receiving binary data or not, if it's false it's because it should be
-     * receiving US-ASCII data.
-     * 
-     * This variable is changed by the preParser method and read by the parser
-     * method.
-     * 
-     * @see PreParser#preParser(byte[])
-     * @see #parser(String)
-     */
-    private boolean receivingBinaryData = false;
-
-    /**
      * Class used to pre-parse the incoming data. The main purpose of this class
      * is to correctly set the receivingBinaryData variable so that accurately
      * it states if this connection is receiving data in binary format or not
@@ -653,6 +639,19 @@ class Connection
      */
     class PreParser
     {
+        /**
+         * Variable that tells if this instance of the connection is currently
+         * receiving binary data or not, if it's false it's because it should be
+         * receiving US-ASCII data.
+         * 
+         * This variable is changed by the preParser method and read by the
+         * parser method.
+         * 
+         * @see PreParser#preParser(byte[])
+         * @see #parser(String)
+         */
+        private boolean receivingBinaryData = false;
+
         /**
          * Variable used by the method preParser in order to ascertain the state
          * of the machine
@@ -686,7 +685,6 @@ class Connection
         private void preParse(byte[] incomingData, int length)
             throws ConnectionParserException
         {
-            boolean previousValueBinaryDataFlag = receivingBinaryData;
             ByteBuffer bufferIncData = ByteBuffer.wrap(incomingData, 0, length);
             /*
              * this variable keeps the index of the last time the data was sent
@@ -718,8 +716,6 @@ class Connection
 
             }
 
-            boolean shouldConsumeChar = false;
-            byte byteToEval = bufferIncData.get();
             while (bufferIncData.hasRemaining())
             {
 
@@ -729,45 +725,39 @@ class Connection
                  */
                 if (!receivingBinaryData)
                 {
-                    if (shouldConsumeChar)
-                        byteToEval = bufferIncData.get();
                     switch (parserState)
                     {
                     case 0:
-                        if (byteToEval == '\r')
+                        if (bufferIncData.get() == '\r')
                         {
                             parserState = 1;
                         }
-                            shouldConsumeChar = true;
                         break;
                     case 1:
-                        if (byteToEval == '\n')
+                        if (bufferIncData.get() == '\n')
                         {
                             parserState = 2;
-                            shouldConsumeChar = true;
                         }
                         else
                         {
                             parserState = 0;
-                            shouldConsumeChar = false;
-                        } 
+                            rewindOnePosition(bufferIncData);
+                        }
                         break;
                     case 2:
-                        if (byteToEval == '\r')
+                        if (bufferIncData.get() == '\r')
                         {
                             parserState = 3;
-                            shouldConsumeChar = true;
                         }
                         else
                         {
                             parserState = 0;
-                            shouldConsumeChar = false;
+                            rewindOnePosition(bufferIncData);
                         }
                         break;
                     case 3:
-                        if (byteToEval == '\n')
+                        if (bufferIncData.get() == '\n')
                         {
-                            shouldConsumeChar = true;
                             parserState = 0;
                             /*
                              * if the state (binary or text) changed since the
@@ -775,140 +765,132 @@ class Connection
                              * we should call the parser with the data we have
                              * so far
                              */
-                            parser(bufferIncData.array(), indexLastTimeChanged,
-                                bufferIncData.position() - indexLastTimeChanged);
+                            parser(
+                                bufferIncData.array(),
+                                indexLastTimeChanged,
+                                bufferIncData.position() - indexLastTimeChanged,
+                                receivingBinaryData);
                             indexLastTimeChanged = bufferIncData.position();
+                            if (incomingTransaction == null)
+                            {
+                                // TODO FIXME ?! maybe throw an exception, if we
+                                // are here it means that the protocol was
+                                // violated
+                                logger
+                                    .error("The incomingTransaction is null on the preParser in a state where it should not be (receiving binary data)!");
+                            }
 
                             receivingBinaryData = true;
                         }
                         else
                         {
-                            shouldConsumeChar = false;
+                            rewindOnePosition(bufferIncData);
                             parserState = 0;
                         }
                     }// switch (parserState)
                 }// if (!receivingBinaryData)
                 else
                 {
-                    if (shouldConsumeChar)
-                        byteToEval = bufferIncData.get();
                     /*
                      * if we are receiving binary data we should/must be in a
                      * transaction
                      */
-                    if (incomingTransaction == null)
-                    {
-                        // TODO FIXME ?! maybe throw an exception, if we
-                        // are here it means that the protocol was
-                        // violated
-                        logger
-                            .error("The incomingTransaction is null on the preParser in a state where it should not be (receiving binary data)!");
-                    }
 
                     switch (parserState)
                     {
                     case 0:
-                        if (byteToEval == '\r')
+                        if (bufferIncData.get() == '\r')
                         {
                             parserState = 1;
                         }
-                            shouldConsumeChar = true;
                         break;
                     case 1:
-                        if (byteToEval == '\n')
+                        if (bufferIncData.get() == '\n')
                         {
                             parserState = 2;
-                            shouldConsumeChar = true;
                         }
                         else
                         {
                             parserState = 0;
-                            shouldConsumeChar = false;
+                            rewindOnePosition(bufferIncData);
                         }
                         break;
                     case 2:
-                        if (byteToEval == '-')
+                        if (bufferIncData.get() == '-')
                         {
                             parserState = 3;
-                            shouldConsumeChar = true;
                         }
                         else
                         {
                             parserState = 0;
-                            shouldConsumeChar = false;
+                            rewindOnePosition(bufferIncData);
                         }
                         break;
                     case 3:
-                        if (byteToEval == '-')
+                        if (bufferIncData.get() == '-')
                         {
                             parserState = 4;
-                            shouldConsumeChar = true;
                         }
                         else
                         {
                             parserState = 0;
-                            shouldConsumeChar = false;
+                            rewindOnePosition(bufferIncData);
                         }
                         break;
                     case 4:
-                        if (byteToEval == '-')
+                        if (bufferIncData.get() == '-')
                         {
-                            shouldConsumeChar = true;
                             parserState = 5;
                         }
                         else
                         {
                             parserState = 0;
-                            shouldConsumeChar = false;
+                            rewindOnePosition(bufferIncData);
                         }
                         break;
                     case 5:
-                        if (byteToEval == '-')
+                        if (bufferIncData.get() == '-')
                         {
                             parserState = 6;
-                            shouldConsumeChar = true;
                         }
                         else
                         {
                             parserState = 0;
-                            shouldConsumeChar = false;
+                            rewindOnePosition(bufferIncData);
                         }
                         break;
                     case 6:
-                        if (byteToEval == '-')
+                        if (bufferIncData.get() == '-')
                         {
                             parserState = 7;
-                            shouldConsumeChar = true;
                         }
                         else
                         {
                             parserState = 0;
-                            shouldConsumeChar = false;
+                            rewindOnePosition(bufferIncData);
                         }
                         break;
                     case 7:
 
-                        if (byteToEval == '-')
+                        if (bufferIncData.get() == '-')
                         {
                             parserState = 8;
-                            shouldConsumeChar = true;
                         }
                         else
                         {
                             parserState = 0;
-                            shouldConsumeChar = false;
+                            rewindOnePosition(bufferIncData);
                         }
                         break;
                     case 8:
-                        if (byteToEval == '-')
+                        if (bufferIncData.get() == '-')
                         {
                             parserState = 9;
-                            shouldConsumeChar = true;
                         }
                         else
                         {
                             parserState = 0;
-                            shouldConsumeChar = false;
+                            rewindOnePosition(bufferIncData);
                         }
                         break;
                     default:
@@ -936,16 +918,15 @@ class Connection
                                  * transact-id then we must lookout for a valid
                                  * continuation flag
                                  */
-                                char incChar = (char) byteToEval;
+                                char incChar = (char) bufferIncData.get();
                                 if (incChar == '+' || incChar == '$'
                                     || incChar == '#')
                                 {
-                                    shouldConsumeChar = true;
                                     parserState++;
                                 }
                                 else
                                 {
-                                    shouldConsumeChar = false;
+                                    rewindOnePosition(bufferIncData);
                                     parserState = 0;
                                 }
                             }
@@ -956,24 +937,22 @@ class Connection
                                     .getTID().length() + 1)
                                 {
                                     /* we should expect the CR here */
-                                    if (byteToEval == '\r')
+                                    if (bufferIncData.get() == '\r')
                                     {
                                         parserState++;
-                                        shouldConsumeChar = true;
                                     }
                                     else
                                     {
                                         parserState = 0;
-                                        shouldConsumeChar = false;
+                                        rewindOnePosition(bufferIncData);
                                     }
                                 }
                                 else if ((parserState - 9) == incomingTransaction
                                     .getTID().length() + 2)
                                 {
                                     /* we should expect the LF here */
-                                    if (byteToEval == '\n')
+                                    if (bufferIncData.get() == '\n')
                                     {
-                                        shouldConsumeChar = true;
                                         parserState++;
                                         /*
                                          * so from now on we are on text mode
@@ -988,7 +967,8 @@ class Connection
                                         parser(bufferIncData.array(),
                                             indexLastTimeChanged, bufferIncData
                                                 .position()
-                                                - indexLastTimeChanged);
+                                                - indexLastTimeChanged,
+                                            receivingBinaryData);
                                         indexLastTimeChanged =
                                             bufferIncData.position();
                                         receivingBinaryData = false;
@@ -996,26 +976,25 @@ class Connection
                                     }
                                     else
                                     {
-                                        shouldConsumeChar = false;
+                                        rewindOnePosition(bufferIncData);
                                         parserState = 0;
                                     }
                                 }
                             }
 
                             else if ((incomingTransaction.getTID().length() > (parserState - 9))
-                                && byteToEval == incomingTransaction
-                                    .getTID().charAt(parserState - 9))
+                                && bufferIncData.get() == incomingTransaction.getTID()
+                                    .charAt(parserState - 9))
                             {
-                                shouldConsumeChar = true;
                                 parserState++;
                             }
                             else
                             {
-                                
-                                shouldConsumeChar = false;
+
+                                rewindOnePosition(bufferIncData);
                                 parserState = 0;
                             }
-                        }//end of default:
+                        }// end of default:
                         break;
                     }
 
@@ -1036,13 +1015,27 @@ class Connection
                 smallBuffer.put(bufferIncData.array(), offset, bufferIncData
                     .position()
                     - offset);
-                parser(bufferIncData.array(), indexLastTimeChanged, offset);
+                parser(bufferIncData.array(), indexLastTimeChanged, offset,
+                    receivingBinaryData);
             }
             else
             {
                 parser(bufferIncData.array(), indexLastTimeChanged,
-                    bufferIncData.position() - indexLastTimeChanged);
+                    bufferIncData.position() - indexLastTimeChanged,
+                    receivingBinaryData);
             }
+        }
+        
+        /**
+         * Rewinds one position in the given buffer, if possible, i.e. if it's at the beginning it will not rewind
+         * @param buffer the buffer to rewind
+         */
+        private void rewindOnePosition(ByteBuffer buffer)
+        {
+            int position = buffer.position();
+            if (position == 0)
+                return;
+            buffer.position(position-1);
         }
     }// class PreParser
 
@@ -1062,11 +1055,13 @@ class Connection
      *            consider for processing
      * @param length the number of bytes to process starting from the offset
      *            position
+     * @param receivingBinaryData true if it is receiving binary data false
+     *            otherwise
      * @throws ConnectionParserException Generic error exception TODO specialize
      *             in the future
      */
-    private void parser(byte[] incomingBytes, int offset, int length)
-        throws ConnectionParserException
+    private void parser(byte[] incomingBytes, int offset, int length,
+        boolean receivingBinaryData) throws ConnectionParserException
     {
         /*
          * TODO/Cleanup With the introduction of the preparser this method could
