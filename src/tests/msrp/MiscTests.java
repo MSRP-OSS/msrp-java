@@ -48,6 +48,7 @@ import sun.misc.HexDumpEncoder;
 
 import msrp.*;
 import msrp.Transaction.*;
+import msrp.event.MessageAbortedEvent;
 import msrp.messages.IncomingMessage;
 import msrp.messages.Message;
 import msrp.messages.OutgoingMessage;
@@ -488,22 +489,22 @@ public class MiscTests
 
     public static void main(String[] args)
     {
-        // testURLandSockets();
-        // testUsingLocalAddress();
+         testURLandSockets();
+         testUsingLocalAddress();
 
         try
         {
-            address = InetAddress.getByName("192.168.1.64");
+            address = InetAddress.getByName("192.168.20.20");
             testMessageExchange();
-            // testSocketChannelsAndTransactionID();
-            // testSocketAndURI();
+             testSocketChannelsAndTransactionID();
+             testSocketAndURI();
         }
         catch (Exception e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        // testRandomStringGenerator();
+         testRandomStringGenerator();
     }
 
     public void receiveMessage(Session session, Message message)
@@ -928,6 +929,13 @@ public class MiscTests
 
     @Override
     public void abortedMessage(Session session, IncomingMessage message)
+    {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public void abortedMessageEvent(MessageAbortedEvent abortEvent)
     {
         // TODO Auto-generated method stub
         

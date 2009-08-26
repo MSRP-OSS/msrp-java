@@ -16,17 +16,12 @@
  */
 package msrp;
 
-import msrp.Connection;
-import msrp.Connections;
-import msrp.Transaction;
-import msrp.MSRPStack;
 import msrp.Transaction.TransactionType;
-import msrp.exceptions.ImplementationException;
-import msrp.exceptions.InternalErrorException;
-import msrp.messages.Message;
-import msrp.utils.TextUtils;
+import msrp.exceptions.*;
+import msrp.messages.*;
+import msrp.utils.*;
 
-import java.net.URI;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -588,11 +583,13 @@ public class TransactionManager
      */
     protected void generateTransactionsToSend()
     {
-        if (messageBeingSent == null)
+        if (messageBeingSent == null
+            || messageBeingSent.getDirection() != Message.OUT)
             return;
 
         Transaction newTransaction =
-            new Transaction(TransactionType.SEND, messageBeingSent, this);
+            new Transaction(TransactionType.SEND,
+                (OutgoingMessage) messageBeingSent, this);
 
         // Add the transaction to the known list of existing transactions
         // this is used to generate unique TIDs in the connection and to
@@ -1001,7 +998,7 @@ public class TransactionManager
                  * reporting the sent update status seen that this is an
                  * outgoing send request
                  */
-                Message transactionMessage = t.getMessage();
+                OutgoingMessage transactionMessage = (OutgoingMessage) t.getMessage();
                 if (transactionMessage != null)
                 {
                     transactionMessage.reportMechanism.countSentBodyBytes(
@@ -1126,7 +1123,7 @@ public class TransactionManager
                  * reporting the sent update status seen that this is an
                  * outgoing send request
                  */
-                Message transactionMessage = t.getMessage();
+                OutgoingMessage transactionMessage = (OutgoingMessage) t.getMessage();
                 if (transactionMessage != null)
                 {
                     transactionMessage.reportMechanism.countSentBodyBytes(
@@ -1208,6 +1205,10 @@ public class TransactionManager
         {
             // There are no transaction to send, just add the one given
             addTransactionToSend(transaction, UNIMPORTANT);
+        }
+        catch (IllegalUseException e)
+        {
+            throw new InternalErrorException(e);
         }
     }
 

@@ -21,8 +21,7 @@ import java.util.HashSet;
 
 import javax.xml.ws.handler.MessageContext;
 
-import msrp.messages.IncomingMessage;
-import msrp.messages.Message;
+import msrp.messages.*;
 
 /**
  * Public "interface" that allows one to define it's own report mechanisms of
@@ -116,14 +115,9 @@ public abstract class ReportMechanism
      * @throws IllegalArgumentException if this method was called with an
      *             incoming message as argument
      */
-    protected final void countSentBodyBytes(Message outgoingMessage,
+    protected final void countSentBodyBytes(OutgoingMessage outgoingMessage,
         int numberBytesSent)
     {
-        if (outgoingMessage instanceof IncomingMessage)
-            throw new IllegalArgumentException("This method must be "
-                + "called with an outgoing message and not an incoming one "
-                + "origination thread: " + Thread.currentThread().getName());
-
         Session session = outgoingMessage.getSession();
         if (shouldTriggerSentHook(outgoingMessage, session,
             outgoingMessage.lastCallSentData))

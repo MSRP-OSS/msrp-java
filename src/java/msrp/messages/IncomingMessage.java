@@ -147,4 +147,10 @@ public class IncomingMessage
      */
     public int result = 413;
 
+    @Override
+    public int getDirection()
+    {
+        return IN;
+    }
+
 }

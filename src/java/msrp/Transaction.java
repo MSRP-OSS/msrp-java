@@ -29,8 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import msrp.exceptions.*;
-import msrp.messages.IncomingMessage;
-import msrp.messages.Message;
+import msrp.messages.*;
 
 /**
  * TODO (?) the most adequate name here would be Request TODO(?) and the
@@ -328,7 +327,7 @@ public class Transaction
      * @param messageBeingSent
      * @param manager
      */
-    public Transaction(TransactionType send, Message messageBeingSent,
+    public Transaction(TransactionType send, OutgoingMessage messageBeingSent,
         TransactionManager manager)
     {
         transactionType = send;
@@ -372,8 +371,9 @@ public class Transaction
              * bytes + 1 because the first field is the number of the first byte
              * being sent:
              */
-            long numberFirstByteChunk = messageBeingSent.bytesSent() + 1;
-            if (headerBytes.length + (message.getSize() - message.bytesSent())
+            long numberFirstByteChunk = messageBeingSent.getSentBytes() + 1;
+            if (headerBytes.length
+                + (message.getSize() - messageBeingSent.getSentBytes())
                 + (7 + tID.length() + 1) > MSRPStack.MAXIMUMUNINTERRUPTIBLE)
             {
                 interruptible = true;
@@ -2264,18 +2264,20 @@ public class Transaction
      * Interrupts this transaction by setting the internal flag and appropriate
      * continuation flag (+)
      * 
-     * @throws InternalErrorException if this method was unapropriately called
+     * @throws IllegalUseException if this method was unapropriately called
+     *             (meaning the transaction can't be interrupted either because
+     *             it's not an OutgoingMessage or is not interruptible)
      * 
      */
-    public void interrupt() throws InternalErrorException
+    public void interrupt() throws IllegalUseException
     {
-        if (!isInterruptible())
+        if (!isInterruptible() || message.getDirection() != Message.OUT)
         {
-            throw new InternalErrorException(
-                "interrupt method of transaction: " + tID
-                    + " was called on a non interruptible transaction");
+            throw new IllegalUseException("interrupt method of transaction: "
+                + tID + " was called on a non interruptible transaction");
         }
-        if (this.message.bytesSent() != message.getSize())
+        if (((OutgoingMessage) this.message).getSentBytes() != message
+            .getSize())
         {
             // FIXME (?!) TODO check to see if there can be the case where the
             // message when gets interrupted has no remaining bytes left to be

@@ -20,6 +20,7 @@ package msrp.messages;
 import java.io.File;
 import java.io.FileNotFoundException;
 
+import msrp.FileDataContainer;
 import msrp.ReportMechanism;
 import msrp.Session;
 
@@ -31,7 +32,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class OutgoingFileMessage
-    extends FileMessage
+    extends OutgoingMessage 
 {
 
     /**
@@ -39,20 +40,55 @@ public class OutgoingFileMessage
      */
     private static final Logger logger =
         LoggerFactory.getLogger(OutgoingFileMessage.class);
+    
     public OutgoingFileMessage(Session session, String contentType,
         File filePath, ReportMechanism reportMechanism)
         throws FileNotFoundException,
         SecurityException
     {
-        super(session, contentType, filePath, reportMechanism);
+        this(session, contentType, filePath);
+        constructorAssociateReport(reportMechanism);
+        logger
+            .trace("Outgoing File Message with custom report mechanism " +
+            		"created. Associated objects, Session: "
+                + session.getURI()
+                + " contentType: "
+                + contentType
+                + " File: "
+                + filePath.getAbsolutePath());
     }
     public OutgoingFileMessage(Session session, String contentType,
-        File filePath)
+        File file)
         throws FileNotFoundException,
         SecurityException
     {
-        super(session, contentType, filePath);
+        this.session = session;
+        dataContainer = new FileDataContainer(file);
+        size = dataContainer.size();
+        messageId = session.generateMessageID();
+        this.session.addMessageToSend(this);
+        constructorAssociateReport(reportMechanism);
+        this.contentType = contentType;
+        logger
+            .trace("File Message with normal (default) report mechanism created. Associated objects, Session: "
+                + session.getURI()
+                + " contentType: "
+                + contentType
+                + " File: "
+                + file.getAbsolutePath());
     }
+    
+    
+    /**
+     * Returns the sent bytes determined by the offset of the data container
+     * @return the number of sent bytes 
+     */
+    public long getSentBytes()
+    {
+        return dataContainer.currentReadOffset();
+        
+    }
+    
 
 
     /* (non-Javadoc)
@@ -61,7 +97,12 @@ public class OutgoingFileMessage
     @Override
     public boolean isComplete()
     {
-        return outgoingIsComplete();
+        return outgoingIsComplete(getSentBytes());
+    }
+    @Override
+    public int getDirection()
+    {
+        return OUT;
     }
 
 }
