@@ -25,14 +25,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import msrp.*;
-import msrp.exceptions.IllegalUseException;
-import msrp.exceptions.InternalErrorException;
-import msrp.exceptions.NotEnoughDataException;
-import msrp.messages.FileMessage;
-import msrp.messages.IncomingMessage;
-import msrp.messages.Message;
-import msrp.messages.OutgoingFileMessage;
-import msrp.messages.OutgoingMessage;
+import msrp.event.MessageAbortedEvent;
+import msrp.exceptions.*;
+import msrp.messages.*;
 
 /**
  * This class is used to demonstrate examples of all the functionalities that
@@ -375,6 +370,13 @@ public class FirstMilestoneFunctionalities
 
         @Override
         public void abortedMessage(Session session, IncomingMessage message)
+        {
+            //Deprecated, use abortedMessageEvent
+            
+        }
+
+        @Override
+        public void abortedMessageEvent(MessageAbortedEvent abortEvent)
         {
             // TODO Auto-generated method stub
             

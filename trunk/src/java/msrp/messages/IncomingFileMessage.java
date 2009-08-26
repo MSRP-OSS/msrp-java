@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import msrp.FileDataContainer;
 import msrp.ReportMechanism;
 import msrp.Session;
 
@@ -30,7 +31,7 @@ import msrp.Session;
  * 
  */
 public class IncomingFileMessage
-    extends FileMessage
+    extends Message
 {
 
     /**
@@ -43,7 +44,21 @@ public class IncomingFileMessage
         throws FileNotFoundException,
         SecurityException
     {
-        super(session, contentType, file);
+        this.session = session;
+        dataContainer = new FileDataContainer(file);
+        size = dataContainer.size();
+        messageId = session.generateMessageID();
+        this.session.addMessageToSend(this);
+        constructorAssociateReport(reportMechanism);
+        this.contentType = contentType;
+        logger
+            .trace("File Message with normal (default) report mechanism created. Associated objects, Session: "
+                + session.getURI()
+                + " contentType: "
+                + contentType
+                + " File: "
+                + file.getAbsolutePath());
+       
     }
 
     public IncomingFileMessage(Session session, String contentType, File file,
@@ -51,7 +66,16 @@ public class IncomingFileMessage
         throws FileNotFoundException,
         SecurityException
     {
-        super(session, contentType, file, customReport);
+        this(session, contentType, file);
+        constructorAssociateReport(reportMechanism);
+        logger
+            .trace("Outgoing File Message with custom report mechanism " +
+                    "created. Associated objects, Session: "
+                + session.getURI()
+                + " contentType: "
+                + contentType
+                + " File: "
+                + file.getAbsolutePath());
     }
 
     /*
@@ -67,6 +91,12 @@ public class IncomingFileMessage
             + getCounter().getCount() + " message size: " + size
             + " going to return: " + toReturn);
         return toReturn;
+    }
+
+    @Override
+    public int getDirection()
+    {
+        return IN;
     }
 
 }

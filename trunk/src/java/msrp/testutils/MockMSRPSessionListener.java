@@ -28,8 +28,10 @@ import msrp.MemoryDataContainer;
 import msrp.ReportMechanism;
 import msrp.Session;
 import msrp.Transaction;
+import msrp.event.MessageAbortedEvent;
 import msrp.messages.IncomingMessage;
 import msrp.messages.Message;
+import msrp.messages.OutgoingMessage;
 
 /**
  * Class used to test the callbacks of the MSRPStack
@@ -66,7 +68,7 @@ public class MockMSRPSessionListener
 
     private Session abortedMessageSession;
 
-    private IncomingMessage abortedMessage;
+    private Message abortedMessage;
 
     private Boolean acceptHookResult;
 
@@ -206,19 +208,47 @@ public class MockMSRPSessionListener
     }
 
     @Override
-    public void abortedMessage(Session session, IncomingMessage message)
+    public void abortedMessageEvent(MessageAbortedEvent abortEvent)
     {
-        logger.debug("abortedMessage called, received: "
-            + message.getReceivedBytes() + " bytes; "
-            + (message.getReceivedBytes() * 100) / message.getSize() + "% ");
-        abortedMessage = message;
-        abortedMessageSession = session;
+        boolean incoming = false;
+        if (abortEvent.getMessage().getDirection() == Message.IN)
+        {
+            incoming = true;
+
+            IncomingMessage message = (IncomingMessage) abortEvent.getMessage();
+            logger
+                .debug("abortedMessageEvent called, received: "
+                    + message.getReceivedBytes() + " bytes; "
+                    + (message.getReceivedBytes() * 100) / message.getSize()
+                    + "% ");
+        }
+        else if (abortEvent.getMessage().getDirection() == Message.OUT)
+        {
+            OutgoingMessage message = (OutgoingMessage) abortEvent.getMessage();
+            logger.debug("abortedMessageEvent called " + "sent:"
+                + message.getSentBytes() + " bytes; "
+                + (message.getSentBytes() * 100) / message.getSize() + "% ");
+        }
+        abortedMessage = abortEvent.getMessage();
+        abortedMessageSession = abortEvent.getSession();
         synchronized (abortMessageCounter)
         {
-            abortMessageCounter.add(message.getReceivedBytes());
+            if (incoming)
+                abortMessageCounter.add(((IncomingMessage) abortedMessage)
+                    .getReceivedBytes());
+            else
+                abortMessageCounter.add(((OutgoingMessage) abortedMessage)
+                    .getSentBytes());
             abortMessageCounter.notifyAll();
 
         }
+
+    }
+
+    @Override
+    public void abortedMessage(Session session, IncomingMessage message)
+    {
+        // Deprecated
 
     }
 
@@ -297,7 +327,7 @@ public class MockMSRPSessionListener
     /**
      * @return the abortedMessage
      */
-    public IncomingMessage getAbortedMessage()
+    public Message getAbortedMessage()
     {
         return abortedMessage;
     }

@@ -41,7 +41,24 @@ public class OutgoingMessage
     {
         super(sendingSession, string, someData);
     }
+    
+    /**
+     * Constructor used internally
+     */
+    protected OutgoingMessage()
+    {
+        
+    }
 
+    /**
+     * Returns the sent bytes determined by the offset of the data container
+     * @return the number of sent bytes 
+     */
+    public long getSentBytes()
+    {
+        return dataContainer.currentReadOffset();
+        
+    }
     /*
      * (non-Javadoc)
      * 
@@ -50,8 +67,14 @@ public class OutgoingMessage
     @Override
     public boolean isComplete()
     {
-        return outgoingIsComplete();
+        return outgoingIsComplete(getSentBytes());
       
+    }
+
+    @Override
+    public int getDirection()
+    {
+        return OUT;
     }
 
 }

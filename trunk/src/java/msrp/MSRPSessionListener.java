@@ -18,6 +18,7 @@ package msrp;
 
 import java.util.EventListener;
 
+import msrp.event.MessageAbortedEvent;
 import msrp.messages.IncomingMessage;
 import msrp.messages.Message;
 
@@ -65,10 +66,17 @@ public interface MSRPSessionListener
     /**
      * Method used by the API to signal the application of an aborted message
      * 
+     * @deprecated use abortedMessageEvent instead
      * @param session the session associated with the message
      * @param message the IncomingMessage that was aborted
      */
     void abortedMessage(Session session, IncomingMessage message);
+    /**
+     * Method used by the API to signal the application of an aborted message
+     * 
+     * @param abortEvent the Message aborted event used
+     */
+    void abortedMessageEvent(MessageAbortedEvent abortEvent);
 
     /**
      * Used by the stack to notify the using app of updates on the sending

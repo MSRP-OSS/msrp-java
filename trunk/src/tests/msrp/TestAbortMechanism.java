@@ -16,15 +16,13 @@
  */
 package msrp;
 
-import msrp.messages.Message;
-import msrp.messages.OutgoingFileMessage;
+import msrp.messages.*;
 import msrp.testutils.*;
+
 import java.net.*;
 import java.util.*;
 import java.io.*;
 
-import msrp.testutils.*;
-import msrp.utils.*;
 
 import static org.junit.Assert.*;
 
@@ -222,7 +220,7 @@ public class TestAbortMechanism
             long expectedIdealBValue = 10 * receivedMessageSize / 100; 
             int expectedMaximumPValue = (int) ((expectedIdealBValue + Connection.OUTPUTBUFFERLENGTH) * 100 / receivedMessageSize);
             int obtainedPValue =
-                (int) ((int) (receivingSessionListener.getAbortedMessage()
+                (int) ((int) (((IncomingMessage) receivingSessionListener.getAbortedMessage())
                     .getReceivedBytes() * 100) / receivedMessageSize);
             assertTrue(
                 "Aborted message's expected size is wrong, " + "obtained: "

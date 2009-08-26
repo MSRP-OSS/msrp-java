@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.Channels;
@@ -983,8 +984,8 @@ class Connection
                             }
 
                             else if ((incomingTransaction.getTID().length() > (parserState - 9))
-                                && bufferIncData.get() == incomingTransaction.getTID()
-                                    .charAt(parserState - 9))
+                                && bufferIncData.get() == incomingTransaction
+                                    .getTID().charAt(parserState - 9))
                             {
                                 parserState++;
                             }
@@ -1012,9 +1013,24 @@ class Connection
                 int offset =
                     (bufferIncData.position() - parserState)
                         - indexLastTimeChanged;
-                smallBuffer.put(bufferIncData.array(), offset, bufferIncData
-                    .position()
-                    - offset);
+                // try added to catch an overflow bug! Issue #
+                try
+                {
+                    smallBuffer.put(bufferIncData.array(), offset,
+                        bufferIncData.position() - offset);
+                }
+                catch (BufferOverflowException e)
+                {
+                    logger.error("PreParser smallBuffer Overflow, trying to "
+                        + "put: " + (bufferIncData.position() - offset)
+                        + " bytes, offset: " + offset + " bufferIncData "
+                        + "position:" + bufferIncData.position()
+                        + " smallbuffer content:"
+                        + new String(smallBuffer.array(), usascii)
+                        + "|end of content excluding the | char");
+                    throw e;
+
+                }
                 parser(bufferIncData.array(), indexLastTimeChanged, offset,
                     receivingBinaryData);
             }
@@ -1025,9 +1041,11 @@ class Connection
                     receivingBinaryData);
             }
         }
-        
+
         /**
-         * Rewinds one position in the given buffer, if possible, i.e. if it's at the beginning it will not rewind
+         * Rewinds one position in the given buffer, if possible, i.e. if it's
+         * at the beginning it will not rewind
+         * 
          * @param buffer the buffer to rewind
          */
         private void rewindOnePosition(ByteBuffer buffer)
@@ -1035,7 +1053,7 @@ class Connection
             int position = buffer.position();
             if (position == 0)
                 return;
-            buffer.position(position-1);
+            buffer.position(position - 1);
         }
     }// class PreParser
 

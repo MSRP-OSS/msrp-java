@@ -16,11 +16,10 @@
  */
 package msrp;
 
-import msrp.exceptions.ImplementationException;
-import msrp.exceptions.InternalErrorException;
-import msrp.messages.IncomingMessage;
-import msrp.messages.Message;
+import msrp.exceptions.*;
+import msrp.messages.*;
 import msrp.utils.*;
+import msrp.event.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -725,11 +724,36 @@ public class Session
      * @see MSRPSessionListener
      */
     protected void triggerUpdateSendStatus(Session session,
-        Message outgoingMessage)
+        OutgoingMessage outgoingMessage)
     {
         logger.trace("Called the triggerUpdateSendStatus hook");
         msrpSessionListener.updateSendStatus(session, outgoingMessage,
-            outgoingMessage.bytesSent());
+            outgoingMessage.getSentBytes());
+    }
+
+    /**
+     * Creates an MessageAbortedEvent and fires it
+     * 
+     * @param message the msrp message that was aborted
+     * @param reason the reason
+     * @param extraReasonInfo the extra information about the reason if any is
+     *            present (it can be transported on the body of a REPORT
+     *            request)
+     * @see MessageAbortedEvent
+     */
+    public void fireMessageAbortedEvent(Message message, int reason,
+        String extraReasonInfo)
+    {
+        logger.trace("Called the fireMessageAbortedEvent");
+        MessageAbortedEvent abortedEvent =
+            new MessageAbortedEvent(message, this, reason, extraReasonInfo);
+        MSRPSessionListener sessionListener;
+        synchronized (msrpSessionListener)
+        {
+            sessionListener = msrpSessionListener;
+        }
+        sessionListener.abortedMessageEvent(abortedEvent);
+
     }
 
     /**
@@ -739,13 +763,17 @@ public class Session
      * 
      * trigger for the registered MSRPSessionListener callback abortedMessage
      * 
+     * @deprecated use MessageAbortedEvents instead, this one only works for
+     *             incoming messages that get a ABORT in the CONTINUATION FLAG
+     * 
      * 
      */
-    public void triggerAbortedMessage(Session session,
-        IncomingMessage message)
+    public void triggerAbortedMessage(Session session, IncomingMessage message)
     {
         logger.trace("Called the triggerAbortedMessage hook");
         msrpSessionListener.abortedMessage(session, message);
+        fireMessageAbortedEvent(message, MessageAbortedEvent.CONTINUATIONFLAG,
+            null);
 
     }
 

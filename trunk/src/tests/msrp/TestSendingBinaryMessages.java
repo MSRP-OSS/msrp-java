@@ -26,11 +26,7 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-import msrp.utils.TextUtils;
-import msrp.messages.FileMessage;
-import msrp.messages.Message;
-import msrp.messages.OutgoingFileMessage;
-import msrp.messages.OutgoingMessage;
+import msrp.messages.*;
 import msrp.testutils.*;
 
 import org.junit.*;
