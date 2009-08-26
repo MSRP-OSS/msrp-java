@@ -27,6 +27,8 @@ import msrp.exceptions.*;
 
 import org.slf4j.*;
 
+import sun.security.action.GetBooleanAction;
+
 /**
  * Class that represents a message with it's data on memory It must:
  * 
@@ -40,6 +42,15 @@ public abstract class Message
      * The logger associated with this class
      */
     private static final Logger logger = LoggerFactory.getLogger(Message.class);
+    /**
+     * Message is incoming.
+     */
+    public static final int IN = 1;
+
+    /**
+     * Message is outgoing.
+     */
+    public static final int OUT = 2;
 
     /* Constructors: */
 
@@ -111,6 +122,11 @@ public abstract class Message
     {
     }
 
+    /**
+     * The file transfer direction.
+     * @return returns the direction of the file transfer : IN or OUT.
+     */
+    public abstract int getDirection();
     /**
      * The field that contains the data associated with this message (it allows
      * abstraction on the actual container of the data)
@@ -249,6 +265,7 @@ public abstract class Message
         }
 
     }
+    
 
     /**
      * Method that is called by the OutgoingMessages when their isComplete() is
@@ -257,10 +274,9 @@ public abstract class Message
      * @see #isComplete()
      * @return true if the message is completely sent
      */
-    protected boolean outgoingIsComplete()
+    protected boolean outgoingIsComplete(long sentBytes)
     {
         boolean toReturn;
-        long sentBytes = bytesSent();
         if (sentBytes == size)
             toReturn = true;
         else
@@ -316,7 +332,14 @@ public abstract class Message
             if (transaction.transactionType.equals(TransactionType.SEND)
                 && transaction.getMessage().equals(this)
                 && transaction.isInterruptible())
-                transaction.interrupt();
+                try
+                {
+                    transaction.interrupt();
+                }
+                catch (IllegalUseException e)
+                {
+                    throw new InternalErrorException(e);
+                }
         }
 
         session.addMessageOnTop(this);
@@ -725,13 +748,6 @@ public abstract class Message
         content2 = content;
     }
 
-    /**
-     * @return the number of sent bytes that belong to this message
-     */
-    public long bytesSent()
-    {
-        return dataContainer.currentReadOffset();
-    }
 
     /**
      * Retrieves the associated data container of the message
@@ -783,5 +799,20 @@ public abstract class Message
     public boolean wasAborted()
     {
         return aborted;
+    }
+
+    /**
+     * This creates and fires a MessageAbortEvent
+     * 
+     * @param reason the reason for the Abort
+     * @param extraReasonInfo eventually the String that was carried in the
+     *            REPORT request that triggered this event, or null if none
+     *            exists or is being considered
+     * @see MessageAbortEvent
+     */
+    protected void fireMessageAbortedEvent(int reason, String extraReasonInfo)
+    {
+        session.fireMessageAbortedEvent(this, reason, extraReasonInfo);
+
     }
 }
