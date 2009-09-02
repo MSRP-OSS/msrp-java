@@ -23,36 +23,36 @@ import msrp.exceptions.*;
 import msrp.messages.*;
 
 /**
- * Class used as a specific implementation of a Success report that comes from
+ * Class used as a specific implementation of a Failure report that comes from
  * the general transaction
  * 
  * @author João André Pereira Antunes 2008
  * 
  */
-public class SuccessReport
+public class FailureReport
     extends ReportTransaction
 {
     /**
-     * This constructor creates an outgoing success report based on the success
-     * report rules defined in the RFC
+     * This constructor creates a failure report based on the failure report
+     * rules defined in the RFC
      * 
      * @param message the message associated to the report
      * @param session the session associated with the report
      * @param transaction the transaction that originally triggered this success
      *            report or null if the message is complete
+     * @param namespace the three digit namespace associated with the status
+     * @param responseCode one of: 400; 403; 408; 413; 415; 423; 481; 501; 506
      * @param comment the optional comment as defined in RFC 4975 syntax. If
      *            null it's not included
-     * @throws NonValidSessionSuccessReportException if the constructor was
-     *             called without having a "valid" session
      * @throws InternalErrorException if the objects used have invalid states or
      *             any other kind of internal error
      * @throws IllegalUseException if something like trying to send success
      *             reports on messages that don't want them is done or also if
      *             the arguments are invalid
-     * 
      */
-    public SuccessReport(Message message, Session session,
-        Transaction transaction, String comment)
+    public FailureReport(Message message, Session session,
+        Transaction transaction, String namespace, int responseCode,
+        String comment)
         throws IllegalUseException,
         InternalErrorException
     {
@@ -66,20 +66,23 @@ public class SuccessReport
         }
         /* sanity checks: */
         if (!session.equals(message.getSession()))
-            throw new IllegalUseException("Generating a success report: "
-                + "the session and the one associated with the message differ!");
+            throw new InternalErrorException("Generating a failure report: "
+                + "the session and the one associated with the message"
+                + " differ!");
 
         if (transaction != null
-            && transaction.getSuccessReport() != message.getSuccessReport())
+            && !transaction.getFailureReport().equals(
+                message.getSuccessReport()))
             throw new InternalErrorException(
-                "The value of success report of the originating transaction and of the message differ");
+                "The value of failure report of the originating transaction"
+                    + " and of the message differ");
 
-        if (!message.getSuccessReport())
-            throw new IllegalUseException(
-                "It was called the successreport constructor for a message that doesn't request success reports");
+        if (message.getFailureReport().equals(Message.NO))
+            throw new InternalErrorException(
+                "It was called the failure report constructor for a message"
+                    + " that explicitly doesn't want failure reports");
         /* end sanity checks */
 
-        this.direction = OUT;
         offsetRead[HEADERINDEX] = offsetRead[ENDLINEINDEX] = 0;
         transactionType = TransactionType.REPORT;
 
@@ -119,7 +122,7 @@ public class SuccessReport
         long totalBytes = transaction.getTotalMessageBytes();
         if (totalBytes == Message.UNINTIALIZED)
             throw new InternalErrorException(
-                "Generating the success report, the total number of bytes of this message was unintialized");
+                "Generating the failure report, the total number of bytes of this message was unintialized");
         if (totalBytes == Message.UNKNWON)
         {
             header = header.concat("*\r\n");
@@ -128,14 +131,23 @@ public class SuccessReport
             header = header.concat(totalBytes + "\r\n");
 
         /* Status header (rest of headers) */
+        // TODO validate the namespace with a reg. exp. pattern in
+        // RegexMSRPFactory. If it's not valid, send an IllegalUseException
+        if (responseCode != 400 && responseCode != 403 && responseCode != 408
+            && responseCode != 413 && responseCode != 415
+            && responseCode != 423 && responseCode != 481
+            && responseCode != 501 && responseCode != 506)
+            throw new IllegalUseException("Wrong response code! it must be "
+                + "a valid response code as defined in RFC 4975");
+        header = header.concat("Status: " + namespace + " " + responseCode);
         if (comment == null)
-            header = header.concat("Status: 000 200\r\n");
+            header = header.concat("\r\n");
         else
         {
             // TODO validate the comment with a reg. exp. pattern in
             // RegexMSRPFactory that validates that comment is utf8text, if it's
             // not, log it and use comment=null
-            header.concat("Status: 000 200 " + comment + "\r\n");
+            header.concat(" " + comment + "\r\n");
         }
 
         headerBytes = header.getBytes(usascii);

@@ -19,7 +19,7 @@ package msrp;
 import msrp.exceptions.*;
 import msrp.messages.*;
 import msrp.utils.*;
-import msrp.event.*;
+import msrp.events.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -56,6 +56,110 @@ public class Session
     private MSRPSessionListener msrpSessionListener;
 
     // TODO alter the constructors to use the this(argument) call
+
+    /*
+     * TODO: remove these lines
+     * 
+     * @param tls says if this is a secure connection or not.
+     * 
+     * @param failureReport sets the failure-report value
+     * 
+     * @param relays says if this sessions uses relays or not
+     * 
+     * @return Session the newly created session with the failureport altered
+     * 
+     * public Session(boolean tls, boolean failureReport, boolean relays) {
+     * super(); }
+     * 
+     * /**
+     * 
+     * @param tls tells if this session goes through a seucure connection or not
+     * 
+     * @param successReport sets the value of the success-Report field
+     * 
+     * @param failureReport sets the failure-report value
+     * 
+     * @param relays does this session uses relays
+     * 
+     * @return a newly created session
+     * 
+     * public Session(boolean tls, boolean successReport, boolean failureReport,
+     * boolean relays) { super(); }
+     */
+
+    private MSRPStack stackInstance = MSRPStack.getInstance();
+
+    private ArrayList<URI> uris = new ArrayList<URI>();
+
+    private TransactionManager transactionManager;
+
+    private InetAddress address;
+
+    /**
+     * @desc the connection associated with this session
+     * @uml.property name="_connectoin"
+     * @uml.associationEnd inverse="_session:msrp.Connection"
+     */
+    private msrp.Connection connection = null;
+
+    /**
+     * @uml.property name="_failureReport"
+     */
+    private boolean report = true;
+
+    /**
+     * @uml.property name="_successReport"
+     */
+    private boolean report1;
+
+    /**
+     * This field contains the queue of messages to be sent
+     * 
+     * @uml.property name="messagesToSend"
+     */
+    private ArrayList<Message> messagesToSend = new ArrayList<Message>();
+
+    /**
+     * @uml.property name="_messagesSent" stores the sent/being sended messages
+     *               according to the Success-Report field
+     */
+    private HashMap<String, Message> messagesSentOrSending =
+        new HashMap<String, Message>();
+
+    /**
+     * contains the messages being received
+     */
+    private HashMap<String, Message> messagesReceive =
+        new HashMap<String, Message>();
+
+    /**
+     * @uml.property name="_relays"
+     */
+    private boolean relays;
+
+    /**
+     * @uml.property name="_URI" the URI that identifies this session
+     */
+    private URI uri = null;
+
+    /**
+     * @uml.property name="_sessionManager"
+     * @uml.associationEnd multiplicity="(1 1)"
+     *                     inverse="_sessions:msrp.SessionManager"
+     */
+    private msrp.SessionManager manager = null;
+
+    /**
+     * this field points to the report mechanism associated with this session
+     * the report mechanism basically is used to decide upon the granularity of
+     * the success reports
+     * 
+     * it will use the DefaultReportMechanism
+     * 
+     * @see DefaultReportMechanism
+     */
+    private ReportMechanism reportMechanism =
+        DefaultReportMechanism.getInstance();
 
     /**
      * Constructor used to define the report mechanism for all messages (wrapper
@@ -196,48 +300,6 @@ public class Session
      * boolean relays) { super(); }
      */
 
-    private MSRPStack stackInstance = MSRPStack.getInstance();
-
-    /**
-     * @param connection the connection to add adds the connection to the
-     *            session and to the MSRPStack
-     */
-    private void setConnection(Connection conn)
-    {
-        if (conn == null)
-            logger
-                .error("Error, tried to add a null connection to the session!");
-
-        MSRPStack.getInstance().delConnection(connection);
-        connection = conn;
-        MSRPStack.getInstance().addConnection(connection);
-    }
-
-    private ArrayList<URI> uris = new ArrayList<URI>();
-
-    private TransactionManager transactionManager;
-
-    /**
-     * Method that should only be called by the transaction manager addSession
-     * method
-     * 
-     * @param transactionManager the transactionManager to set
-     */
-    protected void setTransactionManager(TransactionManager transactionManager)
-    {
-        this.transactionManager = transactionManager;
-    }
-
-    /**
-     * @return the transactionManager
-     */
-    public TransactionManager getTransactionManager()
-    {
-        return transactionManager;
-    }
-
-    private InetAddress address;
-
     /**
      * Adds the given uri and establishes the connection according to the
      * connection model specified in the RFC
@@ -283,24 +345,6 @@ public class Session
     }
 
     /**
-     * Convenience method (that probably will disappear when the message id
-     * generation is corrected) that searches for the given messageID on the
-     * queue of messages to send
-     * 
-     * @param messageID String representing the messageID to search for
-     * @return true if it exists on the queue or false otherwise
-     */
-    private boolean existsInMessagesToSend(String messageID)
-    {
-        for (Message message : messagesToSend)
-        {
-            if (message.getMessageID().equals(messageID))
-                return true;
-        }
-        return false;
-    }
-
-    /**
      * Generates a new unique message-ID relative to this session FIXME Issue #7
      * TODO do this by the method advised on the RFC so that the message-ID is
      * always unique!
@@ -330,13 +374,6 @@ public class Session
     }
 
     /**
-     * @desc the connection associated with this session
-     * @uml.property name="_connectoin"
-     * @uml.associationEnd inverse="_session:msrp.Connection"
-     */
-    private msrp.Connection connection = null;
-
-    /**
      * Getter of the property <tt>_connectoin</tt>
      * 
      * @return Returns the _connectoin.
@@ -346,11 +383,6 @@ public class Session
     {
         return connection;
     }
-
-    /**
-     * @uml.property name="_failureReport"
-     */
-    private boolean report = true;
 
     /**
      * Getter of the property <tt>_failureReport</tt>
@@ -375,11 +407,6 @@ public class Session
     }
 
     /**
-     * @uml.property name="_successReport"
-     */
-    private boolean report1;
-
-    /**
      * Getter of the property <tt>_successReport</tt>
      * 
      * @return Returns the report1.
@@ -402,26 +429,6 @@ public class Session
     }
 
     /**
-     * This field contains the queue of messages to be sent
-     * 
-     * @uml.property name="messagesToSend"
-     */
-    private ArrayList<Message> messagesToSend = new ArrayList<Message>();
-
-    /**
-     * @uml.property name="_messagesSent" stores the sent/being sended messages
-     *               according to the Success-Report field
-     */
-    private HashMap<String, Message> messagesSentOrSending =
-        new HashMap<String, Message>();
-
-    /**
-     * contains the messages being received
-     */
-    private HashMap<String, Message> messagesReceive =
-        new HashMap<String, Message>();
-
-    /**
      * Getter of the property <tt>_message</tt>
      * 
      * @return Returns the _message.
@@ -431,11 +438,6 @@ public class Session
     {
         return messagesReceive;
     }
-
-    /**
-     * @uml.property name="_relays"
-     */
-    private boolean relays;
 
     /**
      * Getter of the property <tt>_relays</tt>
@@ -460,11 +462,6 @@ public class Session
     }
 
     /**
-     * @uml.property name="_URI" the URI that identifies this session
-     */
-    private URI uri = null;
-
-    /**
      * Getter of the property <tt>_URI</tt>
      * 
      * @return Returns the URI that uniquely identifies this session
@@ -485,25 +482,6 @@ public class Session
     {
         this.connection = connection;
     }
-
-    /**
-     * @uml.property name="_sessionManager"
-     * @uml.associationEnd multiplicity="(1 1)"
-     *                     inverse="_sessions:msrp.SessionManager"
-     */
-    private msrp.SessionManager manager = null;
-
-    /**
-     * this field points to the report mechanism associated with this session
-     * the report mechanism basically is used to decide upon the granularity of
-     * the success reports
-     * 
-     * it will use the DefaultReportMechanism
-     * 
-     * @see DefaultReportMechanism
-     */
-    private ReportMechanism reportMechanism =
-        DefaultReportMechanism.getInstance();
 
     /**
      * Getter of the property <tt>_sessionManager</tt>
@@ -587,22 +565,6 @@ public class Session
     }
 
     /**
-     * FIXME Warning: this name is misleading:
-     * 
-     * retrieves a message from the sentMessages The sentMessages array may have
-     * messages that are currently being sent they are only stored for REPORT
-     * purposes.
-     * 
-     * @param messageID of the message to retrieve
-     * @return the message associated with the messageID
-     */
-    protected Message getSentOrSendingMessage(String messageID)
-    {
-        return messagesSentOrSending.get(messageID);
-
-    }
-
-    /**
      * Returns and removes the first message of the top of the messagesToSend
      * array.
      * 
@@ -617,6 +579,206 @@ public class Session
         Message messageToReturn = messagesToSend.get(0);
         messagesToSend.remove(messageToReturn);
         return messageToReturn;
+    }
+
+    /*
+     * TODO: remove these lines
+     * 
+     * @param tls says if this is a secure connection or not.
+     * 
+     * @param failureReport sets the failure-report value
+     * 
+     * @param relays says if this sessions uses relays or not
+     * 
+     * @return Session the newly created session with the failureport altered
+     * 
+     * public Session(boolean tls, boolean failureReport, boolean relays) {
+     * super(); }
+     * 
+     * /**
+     * 
+     * @param tls tells if this session goes through a seucure connection or not
+     * 
+     * @param successReport sets the value of the success-Report field
+     * 
+     * @param failureReport sets the failure-report value
+     * 
+     * @param relays does this session uses relays
+     * 
+     * @return a newly created session
+     * 
+     * public Session(boolean tls, boolean successReport, boolean failureReport,
+     * boolean relays) { super(); }
+     */
+
+    /**
+     * Creates an MessageAbortedEvent and fires it
+     * 
+     * @param message the msrp message that was aborted
+     * @param reason the reason
+     * @param extraReasonInfo the extra information about the reason if any is
+     *            present (it can be transported on the body of a REPORT
+     *            request)
+     * @param transaction the transaction associated with the abort event
+     * @see MessageAbortedEvent
+     */
+    public void fireMessageAbortedEvent(Message message, int reason,
+        String extraReasonInfo, Transaction transaction)
+    {
+        logger.trace("Called the fireMessageAbortedEvent");
+        MessageAbortedEvent abortedEvent =
+            new MessageAbortedEvent(message, this, reason, extraReasonInfo,
+                transaction);
+        MSRPSessionListener sessionListener;
+        synchronized (msrpSessionListener)
+        {
+            sessionListener = msrpSessionListener;
+        }
+        sessionListener.abortedMessageEvent(abortedEvent);
+
+    }
+
+    /**
+     * This function is only used so that we have a central point to eventually
+     * do any cleanup before the real callback. (for instance with the Stack
+     * itself, at this moment nothing is being done though).
+     * 
+     * trigger for the registered MSRPSessionListener callback abortedMessage
+     * 
+     * @deprecated use MessageAbortedEvents instead, this one only works for
+     *             incoming messages that get a ABORT in the CONTINUATION FLAG
+     * 
+     * 
+     */
+    public void triggerAbortedMessage(Session session, IncomingMessage message,
+        Transaction transaction)
+    {
+        logger.trace("Called the triggerAbortedMessage hook");
+        msrpSessionListener.abortedMessage(session, message);
+        fireMessageAbortedEvent(message, MessageAbortedEvent.CONTINUATIONFLAG,
+            null, transaction);
+
+    }
+
+    /*
+     * End of triggers to the Listener
+     */
+
+    /**
+     * @return the reportMechanism associated with this session
+     */
+    public ReportMechanism getReportMechanism()
+    {
+        return reportMechanism;
+    }
+
+    /**
+     * This method releases all of the resources associated with this session.
+     * It could eventually, but not necessarily, close connections conforming to
+     * the Connection Model on RFC 4975 TODO work in progress
+     */
+    public void tearDown()
+    {
+    }
+
+    /**
+     * at this point this is used by the generation of the success report to
+     * assert if it should be sent or not quoting the RFC:
+     * 
+     * "Endpoints SHOULD NOT send REPORT requests if they have reason to believe
+     * the request will not be delivered. For example, they SHOULD NOT send a
+     * REPORT request for a session that is no longer valid."
+     * 
+     * 
+     * @return true or false depending if this is a "valid" (active?!) session
+     *         or not
+     */
+    public boolean isActive()
+    {
+        // TODO Auto-generated method stub
+        return true;
+    }
+
+    /**
+     * Method that receives a message to be deleted from the queue of messages
+     * to being sent This method was created meant only to be called by the
+     * Message.abortSend()
+     * 
+     * @see Message#abortSend()
+     * @param message
+     */
+    public void delMessageToSend(Message message)
+    {
+        messagesToSend.remove(message);
+
+    }
+
+    /*
+     * TODO: remove these lines
+     * 
+     * @param tls says if this is a secure connection or not.
+     * 
+     * @param failureReport sets the failure-report value
+     * 
+     * @param relays says if this sessions uses relays or not
+     * 
+     * @return Session the newly created session with the failureport altered
+     * 
+     * public Session(boolean tls, boolean failureReport, boolean relays) {
+     * super(); }
+     * 
+     * /**
+     * 
+     * @param tls tells if this session goes through a seucure connection or not
+     * 
+     * @param successReport sets the value of the success-Report field
+     * 
+     * @param failureReport sets the failure-report value
+     * 
+     * @param relays does this session uses relays
+     * 
+     * @return a newly created session
+     * 
+     * public Session(boolean tls, boolean successReport, boolean failureReport,
+     * boolean relays) { super(); }
+     */
+
+    /**
+     * FIXME This method shouldn't usually be used by the user, but it is
+     * required due to the package structure.. related with Issue #27
+     * 
+     * @return the transactionManager
+     */
+    public TransactionManager getTransactionManager()
+    {
+        return transactionManager;
+    }
+
+    /**
+     * Method that should only be called by the transaction manager addSession
+     * method
+     * 
+     * @param transactionManager the transactionManager to set
+     */
+    protected void setTransactionManager(TransactionManager transactionManager)
+    {
+        this.transactionManager = transactionManager;
+    }
+
+    /**
+     * FIXME Warning: this name is misleading:
+     * 
+     * retrieves a message from the sentMessages The sentMessages array may have
+     * messages that are currently being sent they are only stored for REPORT
+     * purposes.
+     * 
+     * @param messageID of the message to retrieve
+     * @return the message associated with the messageID
+     */
+    protected Message getSentOrSendingMessage(String messageID)
+    {
+        return messagesSentOrSending.get(messageID);
+
     }
 
     // public void addUriToIdentify(URI uri)
@@ -732,91 +894,6 @@ public class Session
     }
 
     /**
-     * Creates an MessageAbortedEvent and fires it
-     * 
-     * @param message the msrp message that was aborted
-     * @param reason the reason
-     * @param extraReasonInfo the extra information about the reason if any is
-     *            present (it can be transported on the body of a REPORT
-     *            request)
-     * @see MessageAbortedEvent
-     */
-    public void fireMessageAbortedEvent(Message message, int reason,
-        String extraReasonInfo)
-    {
-        logger.trace("Called the fireMessageAbortedEvent");
-        MessageAbortedEvent abortedEvent =
-            new MessageAbortedEvent(message, this, reason, extraReasonInfo);
-        MSRPSessionListener sessionListener;
-        synchronized (msrpSessionListener)
-        {
-            sessionListener = msrpSessionListener;
-        }
-        sessionListener.abortedMessageEvent(abortedEvent);
-
-    }
-
-    /**
-     * This function is only used so that we have a central point to eventually
-     * do any cleanup before the real callback. (for instance with the Stack
-     * itself, at this moment nothing is being done though).
-     * 
-     * trigger for the registered MSRPSessionListener callback abortedMessage
-     * 
-     * @deprecated use MessageAbortedEvents instead, this one only works for
-     *             incoming messages that get a ABORT in the CONTINUATION FLAG
-     * 
-     * 
-     */
-    public void triggerAbortedMessage(Session session, IncomingMessage message)
-    {
-        logger.trace("Called the triggerAbortedMessage hook");
-        msrpSessionListener.abortedMessage(session, message);
-        fireMessageAbortedEvent(message, MessageAbortedEvent.CONTINUATIONFLAG,
-            null);
-
-    }
-
-    /*
-     * End of triggers to the Listener
-     */
-
-    /**
-     * @return the reportMechanism associated with this session
-     */
-    public ReportMechanism getReportMechanism()
-    {
-        return reportMechanism;
-    }
-
-    /**
-     * This method releases all of the resources associated with this session.
-     * It could eventually, but not necessarily, close connections conforming to
-     * the Connection Model on RFC 4975 TODO work in progress
-     */
-    public void tearDown()
-    {
-    }
-
-    /**
-     * at this point this is used by the generation of the success report to
-     * assert if it should be sent or not quoting the RFC:
-     * 
-     * "Endpoints SHOULD NOT send REPORT requests if they have reason to believe
-     * the request will not be delivered. For example, they SHOULD NOT send a
-     * REPORT request for a session that is no longer valid."
-     * 
-     * 
-     * @return true or false depending if this is a "valid" (active?!) session
-     *         or not
-     */
-    public boolean isActive()
-    {
-        // TODO Auto-generated method stub
-        return true;
-    }
-
-    /**
      * Adds a message to the sent message list the message is stored because of
      * expected subsequent REPORT requests on this message
      * 
@@ -825,20 +902,6 @@ public class Session
     protected void addSentOrSendingMessage(Message message)
     {
         messagesSentOrSending.put(message.getMessageID(), message);
-
-    }
-
-    /**
-     * Method that receives a message to be deleted from the queue of messages
-     * to being sent This method was created meant only to be called by the
-     * Message.abortSend()
-     * 
-     * @see Message#abortSend()
-     * @param message
-     */
-    public void delMessageToSend(Message message)
-    {
-        messagesToSend.remove(message);
 
     }
 
@@ -859,6 +922,39 @@ public class Session
              */
         }
 
+    }
+
+    /**
+     * @param connection the connection to add adds the connection to the
+     *            session and to the MSRPStack
+     */
+    private void setConnection(Connection conn)
+    {
+        if (conn == null)
+            logger
+                .error("Error, tried to add a null connection to the session!");
+
+        MSRPStack.getInstance().delConnection(connection);
+        connection = conn;
+        MSRPStack.getInstance().addConnection(connection);
+    }
+
+    /**
+     * Convenience method (that probably will disappear when the message id
+     * generation is corrected) that searches for the given messageID on the
+     * queue of messages to send
+     * 
+     * @param messageID String representing the messageID to search for
+     * @return true if it exists on the queue or false otherwise
+     */
+    private boolean existsInMessagesToSend(String messageID)
+    {
+        for (Message message : messagesToSend)
+        {
+            if (message.getMessageID().equals(messageID))
+                return true;
+        }
+        return false;
     }
 
     /*

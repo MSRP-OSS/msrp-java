@@ -94,8 +94,12 @@ public class StatusHeader
 
     }
     
-    protected int getStatusCode() 
+    public int getStatusCode() 
     {
         return statusCode;
+    }
+    public int getNamespace() 
+    {
+        return namespace;
     }
 }

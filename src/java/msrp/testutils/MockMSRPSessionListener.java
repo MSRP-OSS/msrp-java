@@ -28,7 +28,7 @@ import msrp.MemoryDataContainer;
 import msrp.ReportMechanism;
 import msrp.Session;
 import msrp.Transaction;
-import msrp.event.MessageAbortedEvent;
+import msrp.events.MessageAbortedEvent;
 import msrp.messages.IncomingMessage;
 import msrp.messages.Message;
 import msrp.messages.OutgoingMessage;
@@ -179,7 +179,9 @@ public class MockMSRPSessionListener
         logger.debug("Received report, confirming that: "
             + tReport.getByteRange()[1] + " bytes were sent; "
             + (tReport.getByteRange()[1] * 100)
-            / tReport.getTotalMessageBytes() + "% sent");
+            / tReport.getTotalMessageBytes() + "% sent " + "TType: "
+            + tReport.transactionType + " Status code:"
+            + tReport.getStatusHeader().getStatusCode());
         receivedReportSession = session;
         receivedReportTransaction = tReport;
         synchronized (successReportCounter)

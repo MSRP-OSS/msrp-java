@@ -16,18 +16,9 @@
  */
 package msrp;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.nio.BufferOverflowException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
+import java.io.*;
+import java.net.*;
+import java.nio.*;
 import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
@@ -44,12 +35,11 @@ import org.slf4j.LoggerFactory;
 
 import msrp.Connections;
 import msrp.Session;
-import msrp.Transaction;
-import msrp.TransactionManager;
 import msrp.Transaction.TransactionType;
 import msrp.exceptions.ConnectionParserException;
 import msrp.exceptions.ConnectionReadException;
 import msrp.exceptions.ConnectionWriteException;
+import msrp.exceptions.IllegalUseException;
 import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InvalidHeaderException;
 import msrp.messages.Message;
@@ -83,7 +73,7 @@ class Connection
                 socket.getLocalPort(), null, null, null);
         localURI = newLocalURI;
         transactionManager = new TransactionManager(this);
-        this.addObserver(transactionManager);
+        //this.addObserver(transactionManager);
 
     }
 
@@ -154,7 +144,7 @@ class Connection
             new URI("msrp", null, address.getHostAddress(), socket
                 .getLocalPort(), null, null, null);
         localURI = newLocalURI;
-        this.addObserver(transactionManager);
+        //this.addObserver(transactionManager);
     }
 
     private TransactionManager transactionManager;
@@ -342,22 +332,11 @@ class Connection
     }
 
     /**
-     * @uml.property name="_transactions"
-     * @uml.associationEnd multiplicity="(1 1)"
-     *                     inverse="_connection:msrp.Transaction"
-     */
-    private msrp.Transaction _transactions = null;
-
-    /**
      * Getter of the property <tt>_transactions</tt>
      * 
      * @return Returns the _transactions.
      * @uml.property name="_transactions"
      */
-    public msrp.Transaction get_transactions()
-    {
-        return _transactions;
-    }
 
     /**
      */
@@ -392,17 +371,6 @@ class Connection
      */
     public void sessionClose(Session session)
     {
-    }
-
-    /**
-     * Setter of the property <tt>_transactions</tt>
-     * 
-     * @param _transactions The _transactions to set.
-     * @uml.property name="_transactions"
-     */
-    public void set_transactions(msrp.Transaction _transactions)
-    {
-        this._transactions = _transactions;
     }
 
     /**
@@ -509,7 +477,7 @@ class Connection
     private void readCycle() throws ConnectionReadException
     {
 
-        byte[] inData = new byte[2048];
+        byte[] inData = new byte[OUTPUTBUFFERLENGTH];
         ByteBuffer inByteBuffer = ByteBuffer.wrap(inData);
         int readNrBytes = 0;
         while (readNrBytes != -1)
@@ -1217,9 +1185,17 @@ class Connection
                                     .toUpperCase());
                         }
 
-                        incomingTransaction =
-                            new Transaction(tID, newTransactionType,
-                                transactionManager);
+                        try
+                        {
+                            incomingTransaction =
+                                new Transaction(tID, newTransactionType,
+                                    transactionManager, Transaction.IN);
+                        }
+                        catch (IllegalUseException e)
+                        {
+                            logger.error("Implementation error creating "
+                                + "an incoming transaction", e);
+                        }
 
                         if (newTransactionType
                             .equals(TransactionType.UNSUPPORTED))
@@ -1270,8 +1246,23 @@ class Connection
                         // sure this is true)
 
                         logger.debug("Found a response to transaction: " + tID);
-                        incomingTransaction
-                            .gotResponse(matcherTransactionResponse.group(4));
+                        try
+                        {
+                            Transaction trResponse = new TransactionResponse(incomingTransaction,
+                                Integer.parseInt(matcherTransactionResponse
+                                    .group(4)), Transaction.IN);
+                            incomingTransaction = trResponse;
+                        }
+                        catch (NumberFormatException e)
+                        {
+                            throw new ConnectionParserException(
+                                "Creating transaction response", e);
+                        }
+                        catch (IllegalUseException e)
+                        {
+                            throw new ConnectionParserException(
+                                "Creating transaction response", e);
+                        }
 
                         // transactionManager.gotResponse(foundTransaction,
                         // matcherTransactionResponse.group(4));

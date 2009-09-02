@@ -20,6 +20,7 @@ import msrp.Transaction.TransactionType;
 import msrp.exceptions.*;
 import msrp.messages.*;
 import msrp.utils.*;
+import msrp.*;
 
 import java.net.*;
 import java.util.ArrayList;
@@ -103,7 +104,8 @@ public class TransactionManager
      * 
      * @param transaction
      */
-    private void proccessResponse(Transaction transaction, int responseCode)
+    private void proccessResponse(Transaction transaction, int responseCode,
+        String responseComment)
     {
 
         logger.trace("Response being sent for Transaction tId: "
@@ -123,17 +125,26 @@ public class TransactionManager
             else
             {
                 // Generate transaction response
-                transaction.generateResponse(responseCode);
-            }
 
-            try
-            {
-                addPriorityTransaction(transaction);
-            }
-            catch (InternalErrorException e)
-            {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                try
+                {
+                    transaction.generateAndQueueResponse(responseCode,
+                        responseComment);
+                }
+                catch (InternalErrorException e)
+                {
+                    logger.error("Generating a 200 response for transaction: "
+                        + transaction.toString(), e);
+                }
+                catch (IllegalUseException e)
+                {
+                    ImplementationException exception =
+                        new ImplementationException(
+                            "In the processResponse of TransactionManager", e);
+                    logger.error(
+                        "Implementation error generating response for "
+                            + "transaction: " + transaction, exception);
+                }
             }
 
         }
@@ -154,11 +165,8 @@ public class TransactionManager
     }
 
     /**
+     * private String uniqueTransaction() { return ""; }
      */
-    private String uniqueTransaction()
-    {
-        return "";
-    }
 
     /**
      * Getter of the property <tt>_message</tt>
@@ -237,91 +245,85 @@ public class TransactionManager
      * 
      * @param transaction
      */
-    protected void r200(Transaction transaction)
+    protected void r200ProcessRequest(Transaction transaction)
     {
         logger.trace("called the r200 with transaction:" + transaction.getTID()
             + " message-id:" + transaction.getMessageID()
             + " Connection (localURI) associated: " + connection.getLocalURI());
 
-        if (!transaction.isIncomingResponse())
+        if (transaction.getTransactionType().equals(TransactionType.SEND))
         {
-            // since it's not a response, it is a request
+            proccessResponse(transaction, 200, null);
 
-            if (transaction.getTransactionType().equals(TransactionType.SEND))
+            long[] byteRange = transaction.getByteRange();
+            long totalBytes = transaction.getTotalMessageBytes();
+            Message associatedMessage = transaction.getMessage();
+            if (associatedMessage != null && associatedMessage.isComplete())
             {
-                // if this is a SEND request
-                proccessResponse(transaction, 200);
 
-                long[] byteRange = transaction.getByteRange();
-                long totalBytes = transaction.getTotalMessageBytes();
-                Message associatedMessage = transaction.getMessage();
-                if (associatedMessage != null && associatedMessage.isComplete())
-                {
+                logger.trace("transaction: tId" + transaction.getTID()
+                    + " has an associated message message-id:"
+                    + transaction.getMessageID() + " that is complete");
+                /*
+                 * if we have a complete message
+                 */
+                // if we have a complete message with content
+                // get the associated session
+                Session session = getAssociatedSession(transaction);
 
-                    logger.trace("transaction: tId" + transaction.getTID()
-                        + " has an associated message message-id:"
-                        + transaction.getMessageID() + " that is complete");
-                    /*
-                     * if we have a complete message
-                     */
-                    // if we have a complete message with content
-                    // get the associated session
-                    Session session = getAssociatedSession(transaction);
+                // TODO sanity check: check to see if message already
+                // exists
+                // (?!
+                // no use atm also think twice about
+                // maintaining the receivedMessages on Session)
 
-                    // TODO sanity check: check to see if message already
-                    // exists
-                    // (?!
-                    // no use atm also think twice about
-                    // maintaining the receivedMessages on Session)
-
-                    try
-                    {
-                        long callCount =
-                            associatedMessage.getCounter().getCount();
-
-                        associatedMessage.getReportMechanism()
-                            .triggerSuccessReport(associatedMessage,
-                                transaction,
-                                associatedMessage.lastCallReportCount,
-                                callCount);
-                        associatedMessage.lastCallReportCount = callCount;
-                        Message message = transaction.getMessage();
-                        /**
-                         *TODO Validate the content of the message?! with the
-                         * validator?!
-                         */
-                        session.triggerReceiveMessage(message);
-                    }
-                    catch (Exception e)
-                    {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
-                    // TODO parse the content-type of the message
-                }
-            }
-            if (transaction.getTransactionType().equals(TransactionType.REPORT))
-            {
-                String statusCodeString =
-                    Integer.toString(transaction.getStatusHeader()
-                        .getStatusCode());
-                logger.trace("transaction:" + transaction.getTID()
-                    + " is a report! Status code: " + statusCodeString);
-
-                transaction.gotResponse(statusCodeString);
-                // REMOVE FIXME TODO the implementation exception should
-                // be handled like this?!
                 try
                 {
-                    transaction.getSession().triggerReceivedReport(transaction);
+                    long callCount = associatedMessage.getCounter().getCount();
+
+                    associatedMessage.getReportMechanism()
+                        .triggerSuccessReport(associatedMessage, transaction,
+                            associatedMessage.lastCallReportCount, callCount);
+                    associatedMessage.lastCallReportCount = callCount;
+                    Message message = transaction.getMessage();
+                    /**
+                     *TODO Validate the content of the message?! with the
+                     * validator?!
+                     */
+                    session.triggerReceiveMessage(message);
                 }
-                catch (ImplementationException e)
+                catch (Exception e)
                 {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
 
+                // TODO parse the content-type of the message
+            }
+        }
+        if (transaction.getTransactionType().equals(TransactionType.REPORT))
+        {
+            StatusHeader transactionStatusHeader =
+                transaction.getStatusHeader();
+            String statusCodeString =
+                Integer.toString(transactionStatusHeader.getStatusCode());
+            logger.trace("transaction:" + transaction.getTID()
+                + " is a report! Status code: " + statusCodeString);
+
+            /*
+             * at the moment just trigger the report, doesn't save it or send
+             * it:
+             */
+            // if (transactionStatusHeader.getNamespace() == 0)
+            // REMOVE FIXME TODO the implementation exception should
+            // be handled like this?!
+            try
+            {
+                transaction.getSession().triggerReceivedReport(transaction);
+            }
+            catch (ImplementationException e)
+            {
+                logger.error("Calling triggerReceivedReport", e);
             }
 
         }
@@ -414,6 +416,7 @@ public class TransactionManager
     protected TransactionManager(Connection connection)
     {
         this.connection = connection;
+        connection.deleteObservers();
         connection.addObserver(this);
     }
 
@@ -453,9 +456,6 @@ public class TransactionManager
         // TODO Check to see if the associated transaction belongs to this
         // session
         // Sanity check, check if this is the right type of object
-        logger
-            .trace("Called the UPDATE of the Transaction Manager. received a transaction, associated connection (localURI): "
-                + connection.getLocalURI());
 
         if (connectionObservable.getClass().getName() != "msrp.Connection")
         {
@@ -464,7 +464,8 @@ public class TransactionManager
             return;
         }
         // Sanity check, check if this is the right type of Observable
-        if (transactionObject.getClass().getName() != "msrp.Transaction")
+        if (transactionObject.getClass().getName() != "msrp.Transaction"
+            && transactionObject.getClass().getName() != "msrp.TransactionResponse")
         {
             logger
                 .error("Error! TransactionManager was notified with the wrong observable type");
@@ -474,10 +475,14 @@ public class TransactionManager
         Connection connection = (Connection) connectionObservable;
         Transaction transaction = (Transaction) transactionObject;
 
+        logger.trace("Called the UPDATE of the Transaction Manager. received"
+            + " a transaction, associated connection (localURI): "
+            + connection.getLocalURI() + " Transaction: " + transaction);
         /*
          * If the transaction is an incoming response, atm do nothing. TODO(?!)
          */
-        if (transaction.isIncomingResponse())
+        if (transaction.getTransactionType().equals(
+            TransactionType.SENDRESPONSE))
         {
             logger
                 .trace("Transaction tID: "
@@ -503,11 +508,11 @@ public class TransactionManager
         }
 
         /*
-         * if it's a valid transaction call the r200 method otherwise ignore
-         * this call
+         * if it's a valid transaction call and a response hasn't been generated
+         * yet, generate the r200 method otherwise ignore this call
          */
-        if (transaction.isValid())
-            r200(transaction);
+        if (transaction.isValid() && transaction.isRequest())
+            r200ProcessRequest(transaction);
         logger
             .trace("Transaction tID: "
                 + transaction.getTID()
@@ -579,7 +584,8 @@ public class TransactionManager
 
     /**
      * method used to generate the transactions to be sent based on the message
-     * queue
+     * also updates the reference in the Message of the lastSendTransaction of
+     * the newly created transaction
      */
     protected void generateTransactionsToSend()
     {
@@ -597,6 +603,9 @@ public class TransactionManager
         existingTransactions.put(newTransaction.getTID(), newTransaction);
         addTransactionToSend(newTransaction, UNIMPORTANT);
         // possibly split the message into several transactions
+
+        // change the reference to the lastSendTransaction of the message
+        messageBeingSent.setLastSendTransaction(newTransaction);
 
     }
 
@@ -908,7 +917,7 @@ public class TransactionManager
             {
                 if (t.hasData())
                 {// if we are still transmitting data
-                    int result = t.get(outData, byteCounter);
+                    int result = t.getData(outData, byteCounter);
                     byteCounter += result;
                     bytesToAccount += result;
 
@@ -998,7 +1007,8 @@ public class TransactionManager
                  * reporting the sent update status seen that this is an
                  * outgoing send request
                  */
-                OutgoingMessage transactionMessage = (OutgoingMessage) t.getMessage();
+                OutgoingMessage transactionMessage =
+                    (OutgoingMessage) t.getMessage();
                 if (transactionMessage != null)
                 {
                     transactionMessage.reportMechanism.countSentBodyBytes(
@@ -1123,7 +1133,8 @@ public class TransactionManager
                  * reporting the sent update status seen that this is an
                  * outgoing send request
                  */
-                OutgoingMessage transactionMessage = (OutgoingMessage) t.getMessage();
+                OutgoingMessage transactionMessage =
+                    (OutgoingMessage) t.getMessage();
                 if (transactionMessage != null)
                 {
                     transactionMessage.reportMechanism.countSentBodyBytes(
@@ -1167,17 +1178,25 @@ public class TransactionManager
      * 
      * It's responsible for appropriate queuing of REPORT and responses
      * 
+     * FIXME This probably at this point shouldn't be public, solving of Issue
+     * #27
+     * 
      * @param transaction the REPORT or response transaction
-     * @throws InternalErrorException if transaction does not contain a response
+     * @throws IllegalUseException if the transaction argument is invalid
      */
-    protected void addPriorityTransaction(Transaction transaction)
-        throws InternalErrorException
+    public void addPriorityTransaction(Transaction transaction)
+        throws IllegalUseException
     {
         // sanity check, shouldn't be needed:
-        if (!transaction.hasResponse()
+        if (transaction.getTransactionType() != TransactionType.SENDRESPONSE
             && transaction.getTransactionType() != TransactionType.REPORT)
-            throw new InternalErrorException("the addTransactionResponse"
-                + "was called with a transaction that isn't a response/REPORT");
+            throw new IllegalUseException("the addPriorityTransaction was"
+                + " called with a transaction that isn't a response/REPORT");
+        if (transaction.getDirection() != Transaction.OUT)
+            throw new IllegalUseException(" the addPriorityTransaction was"
+                + "called with an invalid direction transaction, "
+                + "direction: " + transaction.getDirection());
+
         try
         {
             /*
@@ -1205,10 +1224,6 @@ public class TransactionManager
         {
             // There are no transaction to send, just add the one given
             addTransactionToSend(transaction, UNIMPORTANT);
-        }
-        catch (IllegalUseException e)
-        {
-            throw new InternalErrorException(e);
         }
     }
 

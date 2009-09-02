@@ -178,7 +178,7 @@ public abstract class ReportMechanism
                  * if there was a change in the number of bytes accounted for
                  */
 
-                MSRPStack.generateAndSendSuccessReport(message, transaction);
+                MSRPStack.generateAndSendSuccessReport(message, transaction, null);
             }
 
         }

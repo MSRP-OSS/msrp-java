@@ -18,7 +18,7 @@ package msrp;
 
 import java.util.EventListener;
 
-import msrp.event.MessageAbortedEvent;
+import msrp.events.*;
 import msrp.messages.IncomingMessage;
 import msrp.messages.Message;
 
