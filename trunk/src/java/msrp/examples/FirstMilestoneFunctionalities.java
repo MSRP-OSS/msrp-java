@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp.examples;
 
@@ -25,7 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import msrp.*;
-import msrp.event.MessageAbortedEvent;
+import msrp.events.MessageAbortedEvent;
 import msrp.exceptions.*;
 import msrp.messages.*;
 
@@ -148,8 +147,8 @@ public class FirstMilestoneFunctionalities
             try
             {
                 Message exampleFileMessage =
-                    new OutgoingFileMessage(sendingSession, "MIMEType/MIMEsubType",
-                        someFile);
+                    new OutgoingFileMessage(sendingSession,
+                        "MIMEType/MIMEsubType", someFile);
             }
             catch (FileNotFoundException e)
             {
@@ -228,20 +227,31 @@ public class FirstMilestoneFunctionalities
                 // if we feel like it, or have a better reason to, we can reject
                 // the message
                 int validCode = 0;
-                // this message doesn't get accepted and therefore the method
-                // returns false
-                // we can always set the response code to deny the reason, if
-                // this isn't specified the default is 413, see RFC 4975
-                // Response Codes section for more information about this.
+                /*
+                 * this message doesn't get accepted and therefore the method
+                 * returns false we can always set the response code with the
+                 * reason, see RFC 4975 Response Codes section for more
+                 * information about this, or MessageAbortEvent. The extra info
+                 * corresponds to the comment as defined by the formal syntax
+                 * and An extra info of null corresponds to not including the
+                 * comment as the comment is always defined as optional on RFC
+                 * 4975
+                 */
                 try
                 {
-                    message.reject(validCode);
+                    message.abort(MessageAbortedEvent.RESPONSE413, null);
+                    // we also have a convenience method that is equivalent to
+                    // the above call
+                    message.reject();
+                }
+                catch (InternalErrorException e)
+                {
+                    // if something went wrong while aborting
+                    e.printStackTrace();
                 }
                 catch (IllegalUseException e)
                 {
-                    // oh no no no no no!, we must put a valid core up there,
-                    // consult Message.reject(int) javadoc and RFC 4975 for more
-                    // information
+                    //if the abort was called with erroneous arguments
                     e.printStackTrace();
                 }
                 return false;
@@ -371,15 +381,15 @@ public class FirstMilestoneFunctionalities
         @Override
         public void abortedMessage(Session session, IncomingMessage message)
         {
-            //Deprecated, use abortedMessageEvent
-            
+            // Deprecated, use abortedMessageEvent
+
         }
 
         @Override
         public void abortedMessageEvent(MessageAbortedEvent abortEvent)
         {
             // TODO Auto-generated method stub
-            
+
         }
 
     }

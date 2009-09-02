@@ -31,7 +31,7 @@ import msrp.Session;
  * 
  */
 public class IncomingFileMessage
-    extends Message
+    extends IncomingMessage
 {
 
     /**

@@ -29,6 +29,8 @@ import static org.junit.Assert.*;
 import msrp.*;
 import msrp.testutils.*;
 import msrp.Transaction.TransactionType;
+import msrp.exceptions.ConnectionParserException;
+import msrp.exceptions.IllegalUseException;
 import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InternalErrorException;
 import msrp.exceptions.InvalidHeaderException;
@@ -111,12 +113,12 @@ public class TestTransaction
     @Test
     public void testParsingCompleteBody()
         throws InvalidHeaderException,
-        ImplementationException
+        ImplementationException, IllegalUseException, ConnectionParserException
     {
 
         Transaction newTransaction =
             new Transaction(tID, TransactionType.REPORT,
-                dummyTransactionManager);
+                dummyTransactionManager, Transaction.IN);
         newTransaction.parse(completeSendTransaction.getBytes(usascii), 0,
             completeSendTransaction.length(), false);
         newTransaction.signalizeEnd('$');
@@ -136,12 +138,12 @@ public class TestTransaction
     @Test
     public void testParsingEmptySendHeaders()
         throws InvalidHeaderException,
-        ImplementationException
+        ImplementationException, IllegalUseException, ConnectionParserException
     {
 
         Transaction newTransaction =
             new Transaction(tID, TransactionType.REPORT,
-                dummyTransactionManager);
+                dummyTransactionManager, Transaction.IN);
         newTransaction.parse(emptyCompleteSendTransaction.getBytes(usascii), 0,
             emptyCompleteSendTransaction.length(), false);
         newTransaction.signalizeEnd('$');

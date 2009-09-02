@@ -1,37 +1,33 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
 import java.net.InetAddress;
 import java.net.URI;
-import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Random;
 
-import msrp.exceptions.ImplementationException;
-import msrp.exceptions.InternalErrorException;
-import msrp.exceptions.NonValidSessionSuccessReportException;
-import msrp.exceptions.ProtocolViolationException;
-import msrp.messages.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import msrp.exceptions.*;
+import msrp.messages.*;
 
 /**
  * @author D
@@ -40,6 +36,12 @@ import msrp.messages.Message;
 public class MSRPStack
     implements Observer
 {
+
+    /**
+     * The logger associated with this class
+     */
+    private static final Logger logger =
+        LoggerFactory.getLogger(MSRPStack.class);
 
     // Protected constructor is sufficient to suppress unauthorized calls to the
     // constructor
@@ -65,7 +67,6 @@ public class MSRPStack
      */
     private static HashMap<InetAddress, Connections> addressConnections =
         new HashMap<InetAddress, Connections>();
-
 
     private static Random test = new Random();
 
@@ -103,36 +104,31 @@ public class MSRPStack
      * 
      */
     protected static void generateAndSendSuccessReport(Message message,
-        Transaction transaction)
+        Transaction transaction, String comment)
     {
         try
         {
             Session session = transaction.getSession();
             Transaction successReport =
                 new SuccessReport(message, transaction.getSession(),
-                    transaction);
+                    transaction, comment);
             session.getTransactionManager().addPriorityTransaction(
                 successReport);
 
         }
-        catch (NonValidSessionSuccessReportException e)
-        {
-            e.printStackTrace();
-        }
         catch (InternalErrorException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("InternalError "
+                + "while trying to send a success report", e);
         }
         catch (ImplementationException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("ImplementationException "
+                + "while trying to send a success report", e);
         }
-        catch (ProtocolViolationException e)
+        catch (IllegalUseException e)
         {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.error("IllegalUse of success report", e);
         }
 
     }
@@ -142,16 +138,15 @@ public class MSRPStack
         activeSessions.put(session.getURI(), session);
     }
 
-
     private HashMap<String, Transaction> transactions;
 
-    
     /**
      * The default value for the "short" message bytes
      * 
      * "short" messages are the ones that can be put in memory
      */
-    protected static final int DEFAULTSHORTMESSAGEBYTES = 1025*1024;
+    protected static final int DEFAULTSHORTMESSAGEBYTES = 1025 * 1024;
+
     /**
      * Maximum number of bytes per un-interruptible transaction
      */
@@ -161,37 +156,35 @@ public class MSRPStack
      * Field that has the number of bytes of the short message
      */
     private static int shortMessageBytes = DEFAULTSHORTMESSAGEBYTES;
-    
+
     /**
      * Method used to set the short message bytes of this stack.
      * 
-     * A "short" message is a message that can be put in memory.
-     * the definition of this short message parameter is used to allow the
-     * stack to handle safely messages without storing them in file and 
-     * without consuming too much memory.
-     * To note: that ATM the number of received messages that need to be stored
-     * (which success report = yes) has no way of being controlled FIXME
-     *
+     * A "short" message is a message that can be put in memory. the definition
+     * of this short message parameter is used to allow the stack to handle
+     * safely messages without storing them in file and without consuming too
+     * much memory. To note: that ATM the number of received messages that need
+     * to be stored (which success report = yes) has no way of being controlled
+     * FIXME
+     * 
      * @param newValue the new int value of the short message
      */
-    public static void setShortMessageBytes (int newValue)
+    public static void setShortMessageBytes(int newValue)
     {
         shortMessageBytes = newValue;
     }
-    
+
     /**
-     * Getter for the value shortMessageBytes
-     * see the field or the setter for a definition of a short message
+     * Getter for the value shortMessageBytes see the field or the setter for a
+     * definition of a short message
+     * 
      * @return an int that has the actual shortMessageBytes
      */
     public static int getShortMessageBytes()
     {
         return shortMessageBytes;
     }
-    
-    
-    
-    
+
     /**
      * 
      * @param connection adds the received connection into the connections list
