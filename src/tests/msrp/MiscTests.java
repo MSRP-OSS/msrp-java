@@ -1,19 +1,18 @@
-/* Copyright © João Antunes 2008
- This file is part of MSRP Java Stack.
-
-    MSRP Java Stack is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    MSRP Java Stack is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with MSRP Java Stack.  If not, see <http://www.gnu.org/licenses/>.
-
+/*
+ * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * 
+ * MSRP Java Stack is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Lesser General Public License as published by the
+ * Free Software Foundation, either version 3 of the License, or (at your
+ * option) any later version.
+ * 
+ * MSRP Java Stack is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+ * for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
 package msrp;
 
@@ -48,7 +47,7 @@ import sun.misc.HexDumpEncoder;
 
 import msrp.*;
 import msrp.Transaction.*;
-import msrp.event.MessageAbortedEvent;
+import msrp.events.MessageAbortedEvent;
 import msrp.messages.IncomingMessage;
 import msrp.messages.Message;
 import msrp.messages.OutgoingMessage;
@@ -397,9 +396,10 @@ public class MiscTests
             // Create a new message and place it on the toSendQueue of the
             // session
             Message newMessage =
-                new OutgoingMessage(sessionSend, "plain/text", ("this is just a simple"
-                    + "test to see if this message can get through")
-                    .getBytes(usascii));
+                new OutgoingMessage(sessionSend, "plain/text",
+                    ("this is just a simple"
+                        + "test to see if this message can get through")
+                        .getBytes(usascii));
             ArrayList<URI> uris = new ArrayList<URI>();
             uris.add(sessionReceive.getURI());
             // Enable the sessionSend on sessionReceive
@@ -489,22 +489,22 @@ public class MiscTests
 
     public static void main(String[] args)
     {
-         testURLandSockets();
-         testUsingLocalAddress();
+        testURLandSockets();
+        testUsingLocalAddress();
 
         try
         {
             address = InetAddress.getByName("192.168.20.20");
             testMessageExchange();
-             testSocketChannelsAndTransactionID();
-             testSocketAndURI();
+            testSocketChannelsAndTransactionID();
+            testSocketAndURI();
         }
         catch (Exception e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-         testRandomStringGenerator();
+        testRandomStringGenerator();
     }
 
     public void receiveMessage(Session session, Message message)
@@ -546,7 +546,7 @@ public class MiscTests
     {
         System.out.println("Debug: on: " + session.toString()
             + " Received a status update for the message:"
-            + message.getMessageID()+" with total nr bytes:"
+            + message.getMessageID() + " with total nr bytes:"
             + totalNumberBytesSent);
 
     }
@@ -741,7 +741,8 @@ public class MiscTests
                     }
                     TransactionManager dummyManager = new TransactionManager();
                     incomingTransaction =
-                        new Transaction(tID, newTransactionType, dummyManager);
+                        new Transaction(tID, newTransactionType, dummyManager,
+                            Transaction.IN);
                     if (newTransactionType.equals(TransactionType.UNSUPPORTED))
                         incomingTransaction.signalizeEnd('$');
 
@@ -833,9 +834,11 @@ public class MiscTests
                 // if we have a complete end of transaction:
                 if (matchEndTransaction.matches())
                 {
-                    incomingTransaction.parse(matchEndTransaction.group(1).getBytes(usascii),0,matchEndTransaction.group(1).length(),false);
-                    incomingTransaction.signalizeEnd(matchEndTransaction
-                        .group(3).charAt(0));
+                    incomingTransaction.parse(matchEndTransaction.group(1)
+                        .getBytes(usascii), 0, matchEndTransaction.group(1)
+                        .length(), false);
+                    incomingTransaction.signalizeEnd(matchEndTransaction.group(
+                        3).charAt(0));
                     receivingTransaction = false;
                     // parse the rest of the received data extracting the
                     // already parsed parts
@@ -906,7 +909,8 @@ public class MiscTests
                         toParse =
                             toParse.substring(0, toParse.lastIndexOf('\r'));
                     }
-                    incomingTransaction.parse(toParse.getBytes(usascii),0,toParse.length(),false);
+                    incomingTransaction.parse(toParse.getBytes(usascii), 0,
+                        toParse.length(), false);
                     complete = true;
                 }
             }
@@ -922,7 +926,8 @@ public class MiscTests
     public boolean acceptHook(Session session, IncomingMessage message)
     {
         /* By default accept all messages */
-        MemoryDataContainer mDC = new MemoryDataContainer((int)message.getSize());
+        MemoryDataContainer mDC =
+            new MemoryDataContainer((int) message.getSize());
         message.setDataContainer(mDC);
         return true;
     }
@@ -931,14 +936,14 @@ public class MiscTests
     public void abortedMessage(Session session, IncomingMessage message)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
     @Override
     public void abortedMessageEvent(MessageAbortedEvent abortEvent)
     {
         // TODO Auto-generated method stub
-        
+
     }
 
 }// end of class

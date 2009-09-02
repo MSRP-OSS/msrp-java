@@ -16,8 +16,15 @@
  */
 package msrp.messages;
 
+import java.util.ArrayList;
+
+import msrp.MSRPSessionListener;
 import msrp.Session;
+import msrp.Transaction;
+import msrp.TransactionManager;
+import msrp.Transaction.TransactionType;
 import msrp.exceptions.IllegalUseException;
+import msrp.exceptions.InternalErrorException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,28 +44,102 @@ public class OutgoingMessage
         LoggerFactory.getLogger(OutgoingMessage.class);
 
     public OutgoingMessage(Session sendingSession, String string,
-        byte[] someData) throws IllegalUseException
+        byte[] someData)
+        throws IllegalUseException
     {
         super(sendingSession, string, someData);
     }
-    
+
     /**
      * Constructor used internally
      */
     protected OutgoingMessage()
     {
-        
+
+    }
+
+    /**
+     * This method is intended to abort a message's send process. If the message
+     * is not being sent it won't be anymore. If the message is being sent, the
+     * current SEND transaction will end with the # continuation-flag char and
+     * further data belonging to the message will not be sent. On the other end,
+     * if the message is being sent, receiving the # continuation-flag will
+     * trigger a call to the abortedMessageEvent method on MSRPSessionListener
+     * binded to the session.
+     * 
+     * @param reason Irrelevant for an OutgoingMessage
+     * @param extraReasonInfo Irrelevant for an OutgoingMessage
+     * 
+     * @throws InternalErrorException If we have a failure on the sanity checks
+     * 
+     * @see MSRPSessionListener#abortedMessageEvent(msrp.event.MessageAbortedEvent)
+     */
+    public void abort(int reason, String extraReasonInfo)
+        throws InternalErrorException
+    {
+        /*
+         * Sanity checks:
+         */
+        if (this.isComplete())
+            throw new InternalErrorException("The pause method"
+                + " was called on a complete message!");
+        if (session == null)
+            throw new InternalErrorException(
+                "The session on this message is null"
+                    + " and the pause method was called upon it");
+        TransactionManager transactionManager = session.getTransactionManager();
+        if (transactionManager == null)
+            throw new InternalErrorException("The transaction manager "
+                + "associated with this message is null"
+                + " and the pause method was called upon it");
+        /*
+         * End of sanity checks.
+         */
+
+        /* internally signal this message as aborted */
+        aborted = true;
+
+        /* remove this message from the list of messages to send of the session */
+        session.delMessageToSend(this);
+
+        /*
+         * find the first transaction belonging to a SEND of this message and
+         * abort it, remove eventually other transactions that serve the purpose
+         * of sending this message
+         */
+        ArrayList<Transaction> transactionsToSend =
+            transactionManager.getTransactionsToSend();
+        boolean firstTransactionFound = false;
+        for (Transaction transaction : transactionsToSend)
+        {
+            if (transaction.transactionType.equals(TransactionType.SEND)
+                && transaction.getMessage().equals(this))
+            {
+                if (!firstTransactionFound)
+                {
+                    transaction.abort();
+                    firstTransactionFound = true;
+                }
+                else
+                {
+                    transactionsToSend.remove(transaction);
+                }
+            }
+        }
+
     }
 
     /**
      * Returns the sent bytes determined by the offset of the data container
-     * @return the number of sent bytes 
+     * 
+     * @return the number of sent bytes
      */
     public long getSentBytes()
     {
         return dataContainer.currentReadOffset();
-        
+
     }
+
     /*
      * (non-Javadoc)
      * 
@@ -68,7 +149,7 @@ public class OutgoingMessage
     public boolean isComplete()
     {
         return outgoingIsComplete(getSentBytes());
-      
+
     }
 
     @Override

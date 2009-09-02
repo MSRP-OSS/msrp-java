@@ -42,6 +42,7 @@ public abstract class Message
      * The logger associated with this class
      */
     private static final Logger logger = LoggerFactory.getLogger(Message.class);
+
     /**
      * Message is incoming.
      */
@@ -52,7 +53,100 @@ public abstract class Message
      */
     public static final int OUT = 2;
 
+    public static final int UNINTIALIZED = -2;
+
+    public static final int UNKNWON = -1;
+
+    public static final String YES = "yes";
+
+    public static final String NO = "no";
+
+    public static final String PARTIAL = "partial";
+
+    /**
+     * Variable that contains the size of this message as indicated on the
+     * byte-range header field
+     */
+    public long size = UNINTIALIZED;
+
+    /**
+     * @uml.property name="failureReport"
+     */
+    private String failureReport = YES;
+
+    /**
+     * Field used to conserve the abortion state of the message
+     */
+    protected boolean aborted = false;
+
+    /**
+     * The field that contains the data associated with this message (it allows
+     * abstraction on the actual container of the data)
+     */
+    protected DataContainer dataContainer;
+
+    /**
+     * a field that contains the number of bytes sent on the last call made to
+     * the shouldTriggerSentHook in Report Mechanism status
+     * 
+     * @see ReportMechanism#shouldTriggerSentHook(Message, Session)
+     *      ReportMechanism.shouldTriggerSentHook(..)
+     */
+    public long lastCallSentData = 0;
+
+    /**
+     * a field that contains the number of bytes sent on the last call made to
+     * the shouldGenerateReport in Report Mechanism status
+     * 
+     * @see ReportMechanism#shouldGenerateReport(Message, long)
+     *      ReportMechanism.shouldGenerateReport(Message, long)
+     */
+    public long lastCallReportCount = 0;
+
+    /**
+     * this field points to the report mechanism associated with this message
+     * the report mechanism basicly is used to decide upon the granularity of
+     * the success reports
+     */
+    public ReportMechanism reportMechanism;
+
+    /**
+     * Field to be used by the prioritizer.
+     * 
+     * Default value of 0 means no special priority
+     * 
+     * As an advice use the range -20 to 20 from higher priority to lowest (as
+     * in UNIX processes)
+     */
+    protected short priority = 0;
+
+    /**
+     * @uml.property name="_contentType"
+     */
+    protected String contentType = null;
+
     /* Constructors: */
+
+    /**
+     * @uml.property name="messageId"
+     */
+    protected String messageId;
+
+    /**
+     * @uml.property name="_session"
+     */
+    protected Session session = null;
+
+    /**
+     * @uml.property name="successReport"
+     */
+    private boolean successReport = false;
+
+    /**
+     * This field keeps a reference to the last SEND transaction associated with
+     * this message
+     */
+    protected Transaction lastSendTransaction = null;
 
     /* Wrappers for reportMechanism : */
     // TODO generate the javadoc using the other constructors javadoc
@@ -124,14 +218,10 @@ public abstract class Message
 
     /**
      * The file transfer direction.
+     * 
      * @return returns the direction of the file transfer : IN or OUT.
      */
     public abstract int getDirection();
-    /**
-     * The field that contains the data associated with this message (it allows
-     * abstraction on the actual container of the data)
-     */
-    public DataContainer dataContainer;
 
     /**
      * This method must be used by the acceptHook on the listener in order to
@@ -145,13 +235,6 @@ public abstract class Message
         logger.trace("Altered the data container of Message: " + messageId
             + " to:" + dataContainer.getClass().getCanonicalName());
     }
-
-    /**
-     * this field points to the report mechanism associated with this message
-     * the report mechanism basicly is used to decide upon the granularity of
-     * the success reports
-     */
-    public ReportMechanism reportMechanism;
 
     /**
      * @return the reportMechanism
@@ -182,92 +265,6 @@ public abstract class Message
     }
 
     /**
-     * a field that contains the number of bytes sent on the last call made to
-     * the shouldTriggerSentHook in Report Mechanism status
-     * 
-     * @see ReportMechanism#shouldTriggerSentHook(Message, Session)
-     *      ReportMechanism.shouldTriggerSentHook(..)
-     */
-    public long lastCallSentData = 0;
-
-    /**
-     * a field that contains the number of bytes sent on the last call made to
-     * the shouldGenerateReport in Report Mechanism status
-     * 
-     * @see ReportMechanism#shouldGenerateReport(Message, long)
-     *      ReportMechanism.shouldGenerateReport(Message, long)
-     */
-    public long lastCallReportCount = 0;
-
-    /**
-     * This method is intended to abort a message's send process. If the message
-     * is not being sent it won't be anymore. If the message is being sent, the
-     * current SEND transaction will end with the # continuation-flag char and
-     * further data belonging to the message will not be sent. On the other end,
-     * if the message is being sent, receiving the # continuation-flag will
-     * trigger a call to the abortedMessage method on MSRPSessionListener binded
-     * to the session.
-     * 
-     * @throws InternalErrorException If we have a failure on the sanity checks
-     * 
-     * @see MSRPSessionListener#abortedMessage(Session, Message)
-     */
-    public void abortSend() throws InternalErrorException
-    {
-        /*
-         * Sanity checks:
-         */
-        if (this.isComplete())
-            throw new InternalErrorException("The pause method"
-                + " was called on a complete message!");
-        if (session == null)
-            throw new InternalErrorException(
-                "The session on this message is null"
-                    + " and the pause method was called upon it");
-        TransactionManager transactionManager = session.getTransactionManager();
-        if (transactionManager == null)
-            throw new InternalErrorException("The transaction manager "
-                + "associated with this message is null"
-                + " and the pause method was called upon it");
-        /*
-         * End of sanity checks.
-         */
-
-        /* internally signal this message as aborted */
-        aborted = true;
-
-        /* remove this message from the list of messages to send of the session */
-        session.delMessageToSend(this);
-
-        /*
-         * find the first transaction belonging to a SEND of this message and
-         * abort it, remove eventually other transactions that serve the purpose
-         * of sending this message
-         */
-        ArrayList<Transaction> transactionsToSend =
-            transactionManager.getTransactionsToSend();
-        boolean firstTransactionFound = false;
-        for (Transaction transaction : transactionsToSend)
-        {
-            if (transaction.transactionType.equals(TransactionType.SEND)
-                && transaction.getMessage().equals(this))
-            {
-                if (!firstTransactionFound)
-                {
-                    transaction.abort();
-                    firstTransactionFound = true;
-                }
-                else
-                {
-                    transactionsToSend.remove(transaction);
-                }
-            }
-        }
-
-    }
-    
-
-    /**
      * Method that is called by the OutgoingMessages when their isComplete() is
      * called
      * 
@@ -287,11 +284,6 @@ public abstract class Message
         return toReturn;
 
     }
-
-    /**
-     * Field used to conserve the abortion state of the message
-     */
-    private boolean aborted = false;
 
     /**
      * This method interrupts all of the existing and interruptible SEND request
@@ -345,16 +337,6 @@ public abstract class Message
         session.addMessageOnTop(this);
 
     }
-
-    /**
-     * Field to be used by the prioritizer.
-     * 
-     * Default value of 0 means no special priority
-     * 
-     * As an advice use the range -20 to 20 from higher priority to lowest (as
-     * in UNIX processes)
-     */
-    protected short priority = 0;
 
     /**
      * TODO WORKINPROGRESS Method to be used by the MessagePrioritizer by now
@@ -481,16 +463,6 @@ public abstract class Message
 
     }
 
-    public static final int UNINTIALIZED = -2;
-
-    public static final int UNKNWON = -1;
-
-    /**
-     * Variable that contains the size of this message as indicated on the
-     * byte-range header field
-     */
-    public long size = UNINTIALIZED;
-
     /**
      * Handy method to retrieve the associated counter of this message
      * 
@@ -508,11 +480,6 @@ public abstract class Message
      */
 
     /**
-     * @uml.property name="_contentType"
-     */
-    protected String contentType = "null";
-
-    /**
      * Getter of the property <tt>contentType</tt>
      * 
      * @return Returns the type.
@@ -522,17 +489,6 @@ public abstract class Message
     {
         return contentType;
     }
-
-    protected static final String YES = "yes";
-
-    protected static final String NO = "no";
-
-    protected static final String PARTIAL = "partial";
-
-    /**
-     * @uml.property name="failureReport"
-     */
-    private String failureReport = YES;
 
     /**
      * Getter of the property <tt>_failureReport</tt>
@@ -544,38 +500,6 @@ public abstract class Message
     {
         return failureReport;
     }
-
-    /**
-     * @uml.property name="_fileNameContent"
-     */
-    private String nameContent = "null";
-
-    /**
-     * Getter of the property <tt>_fileNameContent</tt>
-     * 
-     * @return Returns the nameContent.
-     * @uml.property name="_fileNameContent"
-     */
-    public String get_fileNameContent()
-    {
-        return nameContent;
-    }
-
-    /**
-     * Setter of the property <tt>_fileNameContent</tt>
-     * 
-     * @param _fileNameContent The nameContent to set.
-     * @uml.property name="_fileNameContent"
-     */
-    public void set_fileNameContent(String nameContent)
-    {
-        this.nameContent = nameContent;
-    }
-
-    /**
-     * @uml.property name="messageId"
-     */
-    protected String messageId;
 
     /**
      * Getter of the property <tt>_messageID</tt>
@@ -596,11 +520,6 @@ public abstract class Message
     {
         return messageId;
     }
-
-    /**
-     * @uml.property name="_session"
-     */
-    protected Session session = null;
 
     /**
      * 
@@ -651,65 +570,6 @@ public abstract class Message
     }
 
     /**
-     * @uml.property name="_status"
-     */
-    private String _status = "null";
-
-    /**
-     * Getter of the property <tt>_status</tt>
-     * 
-     * @return Returns the _status.
-     * @uml.property name="_status"
-     */
-    public String get_status()
-    {
-        return _status;
-    }
-
-    /**
-     * Setter of the property <tt>_status</tt>
-     * 
-     * @param _status The _status to set.
-     * @uml.property name="_status"
-     */
-    public void set_status(String _status)
-    {
-        this._status = _status;
-    }
-
-    /**
-     * @uml.property name="_streamContent"
-     */
-    private Stream content1 = null;
-
-    /**
-     * Getter of the property <tt>_streamContent</tt>
-     * 
-     * @return Returns the content1.
-     * @uml.property name="_streamContent"
-     */
-    public Stream get_streamContent()
-    {
-        return content1;
-    }
-
-    /**
-     * Setter of the property <tt>_streamContent</tt>
-     * 
-     * @param _streamContent The content1 to set.
-     * @uml.property name="_streamContent"
-     */
-    public void set_streamContent(Stream content)
-    {
-        content1 = content;
-    }
-
-    /**
-     * @uml.property name="successReport"
-     */
-    private boolean successReport = false;
-
-    /**
      * Getter of the property <tt>successReport</tt> that represents the
      * Success-Report field.
      * 
@@ -722,34 +582,6 @@ public abstract class Message
     }
 
     /**
-     * @uml.property name="_typeContent"
-     */
-    private String content2 = "null";
-
-    /**
-     * Getter of the property <tt>_typeContent</tt>
-     * 
-     * @return Returns the content2.
-     * @uml.property name="_typeContent"
-     */
-    public String get_typeContent()
-    {
-        return content2;
-    }
-
-    /**
-     * Setter of the property <tt>_typeContent</tt>
-     * 
-     * @param _typeContent The content2 to set.
-     * @uml.property name="_typeContent"
-     */
-    public void set_typeContent(String content)
-    {
-        content2 = content;
-    }
-
-
-    /**
      * Retrieves the associated data container of the message
      * 
      * @return DataContainer associated with this message
@@ -757,6 +589,22 @@ public abstract class Message
     public DataContainer getDataContainer()
     {
         return dataContainer;
+    }
+
+    /**
+     * @param lastSendTransaction the lastSendTransaction to set
+     */
+    public void setLastSendTransaction(Transaction lastSendTransaction)
+    {
+        this.lastSendTransaction = lastSendTransaction;
+    }
+
+    /**
+     * @return the lastSendTransaction
+     */
+    public Transaction getLastSendTransaction()
+    {
+        return lastSendTransaction;
     }
 
     /**
@@ -769,6 +617,24 @@ public abstract class Message
     public abstract boolean isComplete();
 
     /**
+     * Aborts the Outgoing or incoming message note, both arguments are
+     * irrelevant if this is an Outgoing message (as it's aborted with the #
+     * continuation flag and is no way to transmit the reason)
+     * 
+     * @param reason the Reason for the abort, only important if this is an
+     *            Incoming message
+     * @param reasonExtraInfo the extra info about the abort, or null if it
+     *            doesn't exist, this will be sent on the REPORT if we are
+     *            aborting an Incoming message
+     * @throws InternalErrorException if by any Internal error, the message
+     *             couldn't be aborted
+     * @throws IllegalUseException if any of the arguments is invalid
+     */
+    public abstract void abort(int reason, String reasonExtraInfo)
+        throws InternalErrorException,
+        IllegalUseException;
+
+    /**
      * Method called by the Transaction when it wants to notify a message that
      * it got aborted.
      * 
@@ -779,12 +645,14 @@ public abstract class Message
      * with this message or not. Could be done with a variable associated with
      * the stack, in some cases it may be useful to keep the data. ATM it
      * disposes the DataContainer associated with it
+     * 
+     * @param transaction the transaction that is associated with the abort
      */
-    public void gotAborted()
+    public void gotAborted(Transaction transaction)
     {
         aborted = true;
         dataContainer.dispose();
-        session.triggerAbortedMessage(session, (IncomingMessage) this);
+        session.triggerAbortedMessage(session, (IncomingMessage) this, transaction);
 
     }
 
@@ -810,9 +678,9 @@ public abstract class Message
      *            exists or is being considered
      * @see MessageAbortEvent
      */
-    protected void fireMessageAbortedEvent(int reason, String extraReasonInfo)
+    protected void fireMessageAbortedEvent(int reason, String extraReasonInfo, Transaction transaction)
     {
-        session.fireMessageAbortedEvent(this, reason, extraReasonInfo);
+        session.fireMessageAbortedEvent(this, reason, extraReasonInfo, transaction);
 
     }
 }

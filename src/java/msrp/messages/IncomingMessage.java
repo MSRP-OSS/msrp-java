@@ -19,10 +19,14 @@ package msrp.messages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import msrp.FailureReport;
 import msrp.ReportMechanism;
 import msrp.Session;
+import msrp.TransactionManager;
+import msrp.events.MessageAbortedEvent;
 import msrp.exceptions.IllegalUseException;
 import msrp.exceptions.ImplementationException;
+import msrp.exceptions.InternalErrorException;
 
 /**
  * This class is used to generate incoming messages
@@ -89,28 +93,10 @@ public class IncomingMessage
     }
 
     /**
-     * Method used to reject an incoming message
-     * 
-     * @param code one of 400, 403, 408, 413, 415. (see RFC 4975 for details on
-     *            the meaning of each one)
-     * @throws IllegalUseException if this method was called with an invalid
-     *             response code
+     * Constructor used internally
      */
-    public void reject(int code) throws IllegalUseException
+    protected IncomingMessage()
     {
-        switch (code)
-        {
-        case 403:
-        case 400:
-        case 413:
-        case 415:
-            result = code;
-            break;
-        default:
-            throw new IllegalUseException(
-                "Non-valid response code given when calling Message.reject(code)");
-
-        }
     }
 
     /**
@@ -153,4 +139,76 @@ public class IncomingMessage
         return IN;
     }
 
+    /**
+     * Convenience method used to reject an incoming message. Its equivalent to
+     * call abort with response 413
+     * 
+     * @throws InternalErrorException if abort also throws it
+     */
+    public void reject() throws InternalErrorException
+    {
+
+        try
+        {
+            abort(MessageAbortedEvent.RESPONSE413, null);
+        }
+        catch (IllegalUseException e)
+        {
+            logger.error("Implementation error! abort called internally with"
+                + " invalid arguments", e);
+        }
+
+    }
+
+    /**
+     * If the last transaction hasn't yet a given response given, a response is
+     * generated, otherwise a REPORT request with the namespace 000 (equivalent
+     * to a response) is generated
+     * 
+     * @param reason one of <tt>MessageAbortEvent</tt> response codes except
+     *            CONTINUATIONFLAG
+     * @param reasonExtraInfo corresponds to the comment as defined on RFC 4975
+     *            formal syntax. If null, it isn't sent any comment.
+     * @throws InternalErrorException if any object is in an invalid state which
+     *             prevents this function to abort the message
+     * @throws IllegalUseException if the arguments are invalid
+     */
+    @Override
+    public void abort(int reason, String reasonExtraInfo)
+        throws InternalErrorException,
+        IllegalUseException
+    {
+        // sanity checks:
+        if (lastSendTransaction == null)
+            throw new InternalErrorException(
+                "abort was called on an incoming message without "
+                    + "an assigned Transaction!");
+        if (reason != MessageAbortedEvent.RESPONSE400
+            && reason != MessageAbortedEvent.RESPONSE403
+            && reason != MessageAbortedEvent.RESPONSE413
+            && reason != MessageAbortedEvent.RESPONSE415
+            && reason != MessageAbortedEvent.RESPONSE481)
+            throw new IllegalUseException(
+                "The reason must be one of the"
+                    + " response codes on MessageAbortedEvent excluding the continuation flag reason");
+        // let's check to see if we already responded to the transaction being
+        // received/last transaction known
+        if (!lastSendTransaction.hasResponse())
+            lastSendTransaction.generateAndQueueResponse(reason,
+                reasonExtraInfo);
+        else
+        // let's generate the REPORT
+        {
+            FailureReport failureReport =
+                new FailureReport(this, session, lastSendTransaction, "000",
+                    reason, reasonExtraInfo);
+            // send it
+            TransactionManager transactionManager =
+                session.getTransactionManager();
+            transactionManager.addPriorityTransaction(failureReport);
+        }
+        // mark this message as aborted
+        aborted = true;
+
+    }
 }
