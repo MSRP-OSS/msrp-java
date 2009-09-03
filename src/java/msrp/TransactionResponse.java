@@ -64,6 +64,7 @@ public class TransactionResponse
                 + transaction.toPath[transaction.toPath.length - 1] + "\r\n"
                 + "-------" + transaction.tID + "$\r\n";
         // copy the values from the original transaction to this one
+        this.message = transaction.message;
         this.transactionManager = transaction.transactionManager;
         this.tID = transaction.tID;
         this.fromPath = transaction.toPath;
@@ -100,6 +101,7 @@ public class TransactionResponse
         this.direction = direction;
         this.responseCode = responseCode;
         //copy the values:
+        this.message = incomingTransaction.message;
         this.tID = incomingTransaction.tID;
         this.transactionManager = incomingTransaction.transactionManager;
         

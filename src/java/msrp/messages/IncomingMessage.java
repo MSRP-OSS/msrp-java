@@ -194,8 +194,8 @@ public class IncomingMessage
         // let's check to see if we already responded to the transaction being
         // received/last transaction known
         if (!lastSendTransaction.hasResponse())
-            lastSendTransaction.generateAndQueueResponse(reason,
-                reasonExtraInfo);
+            lastSendTransaction.getTransactionManager().generateResponse(
+                lastSendTransaction, reason, reasonExtraInfo);
         else
         // let's generate the REPORT
         {

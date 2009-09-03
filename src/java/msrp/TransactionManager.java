@@ -17,6 +17,7 @@
 package msrp;
 
 import msrp.Transaction.TransactionType;
+import msrp.events.MessageAbortedEvent;
 import msrp.exceptions.*;
 import msrp.messages.*;
 import msrp.utils.*;
@@ -99,19 +100,58 @@ public class TransactionManager
     protected String presetTID;
 
     /**
-     * generates and queues the response of the given transaction based on the
-     * Report header fields.
+     * Generates and queues the TransactionResponse with the given response code
      * 
-     * @param transaction
+     * @param responseCode one of the response codes listed in RFC 4975
+     * @param optionalComment the comment as defined in RFC 4975 formal syntax,
+     *            as the comment is optional, it can also be null if no comment
+     *            is desired
+     * @throws InternalErrorException if queuing the response got us an error
+     * @throws IllegalUseException if the arguments are invalid
      */
-    private void proccessResponse(Transaction transaction, int responseCode,
-        String responseComment)
+    private void generateAndQueueResponse(Transaction originalTransaction,
+        int responseCode, String optionalComment)
+        throws InternalErrorException,
+        IllegalUseException
+    {
+
+        TransactionResponse trResponse =
+            new TransactionResponse(originalTransaction, responseCode,
+                optionalComment, Transaction.OUT);
+        originalTransaction.setResponse(trResponse);
+        addPriorityTransaction(trResponse);
+
+    }
+
+    /**
+     * generates and queues the response of the given transaction, taking into
+     * account the Report header fields.
+     * 
+     * 
+     * @param transaction the transaction that we are responding to
+     * @param responseCode the response code to respond with
+     * @param responseComment the optional string 'comment' as specified in rfc
+     *            4975 syntax
+     * 
+     * @throws InternalErrorException if queuing the response got us an error
+     * @throws IllegalUseException if the arguments or their state is invalid
+     */
+    public void generateResponse(Transaction transaction, int responseCode,
+        String responseComment) throws IllegalUseException
     {
 
         logger.trace("Response being sent for Transaction tId: "
             + transaction.tID + " response code: " + responseCode);
         String failureReport = transaction.getFailureReport();
 
+        if (responseCode != 200 && responseCode != 400 && responseCode != 403
+            && responseCode != 408 && responseCode != 413
+            && responseCode != 415 && responseCode != 423
+            && responseCode != 481 && responseCode != 501
+            && responseCode != 506)
+            throw new IllegalUseException("Invalid response code");
+        // TODO FIXME validate the comment based on the utf8text regex pattern
+        // that will be defined in RegexMSRPFactory
         // TODO generate the responses based on the success report field
 
         // generate the responses based on the failure report field
@@ -121,19 +161,22 @@ public class TransactionManager
             if (failureReport != null
                 && failureReport.equalsIgnoreCase("partial")
                 && responseCode == 200)
+            {
                 return;
+            }
             else
             {
                 // Generate transaction response
 
                 try
                 {
-                    transaction.generateAndQueueResponse(responseCode,
+                    generateAndQueueResponse(transaction, responseCode,
                         responseComment);
                 }
                 catch (InternalErrorException e)
                 {
-                    logger.error("Generating a 200 response for transaction: "
+                    logger.error("Generating a " + responseCode
+                        + " response for transaction: "
                         + transaction.toString(), e);
                 }
                 catch (IllegalUseException e)
@@ -253,7 +296,15 @@ public class TransactionManager
 
         if (transaction.getTransactionType().equals(TransactionType.SEND))
         {
-            proccessResponse(transaction, 200, null);
+            try
+            {
+                generateResponse(transaction, 200, null);
+            }
+            catch (IllegalUseException e1)
+            {
+                logger.error("Generating a success report for transaction: "
+                    + transaction);
+            }
 
             long[] byteRange = transaction.getByteRange();
             long totalBytes = transaction.getTotalMessageBytes();
@@ -328,75 +379,6 @@ public class TransactionManager
 
         }
 
-    }
-
-    /**
-     * TODO generates and dispatches a 400 response based on the failure report
-     * field
-     * 
-     * @param transaction
-     */
-    protected boolean r400(Transaction transaction)
-    {
-        return false;
-    }
-
-    /**
-     */
-    protected boolean r403()
-    {
-        return false;
-    }
-
-    /**
-     * @param transaction
-     */
-    protected boolean r408(Transaction transaction)
-    {
-        return false;
-    }
-
-    /**
-     */
-    protected boolean r413()
-    {
-        return false;
-    }
-
-    /**
-     */
-    protected boolean r415()
-    {
-        return false;
-    }
-
-    /**
-     */
-    protected boolean r423()
-    {
-        return false;
-    }
-
-    /**
-     */
-    protected boolean r481(Transaction transaction)
-    {
-        return false;
-    }
-
-    /**
-     */
-    protected boolean r501()
-    {
-        return false;
-    }
-
-    /**
-     * @param transaction
-     */
-    protected boolean r506(Transaction transaction)
-    {
-        return false;
     }
 
     /**
@@ -484,11 +466,14 @@ public class TransactionManager
         if (transaction.getTransactionType().equals(
             TransactionType.SENDRESPONSE))
         {
+            TransactionResponse transactionResponse =
+                (TransactionResponse) transaction;
             logger
                 .trace("Transaction tID: "
                     + transaction.getTID()
                     + " is an incoming response and has been processed by the transactionManager for connection localURI: "
                     + this.connection.getLocalURI());
+            processResponse(transactionResponse);
             return;
         }
         if (transaction.getTransactionType()
@@ -503,7 +488,7 @@ public class TransactionManager
                     + transaction.getTID()
                     + " is not supported and has been processed by the transactionManager for connection localURI: "
                     + this.connection.getLocalURI());
-            r501();
+            // TODO r501();
             return;
         }
 
@@ -518,6 +503,42 @@ public class TransactionManager
                 + transaction.getTID()
                 + " has been processed by the transactionManager for connection localURI: "
                 + this.connection.getLocalURI());
+    }
+
+    /**
+     * This method generates the appropriate actions inside the stack
+     * 
+     * @param transactionResponse the transaction that contains the response
+     *            being processed
+     */
+    private void processResponse(TransactionResponse transactionResponse)
+    {
+        // let's see if this response is worthy of a abort event
+        if (transactionResponse.responseCode == MessageAbortedEvent.RESPONSE400
+            || transactionResponse.responseCode == MessageAbortedEvent.RESPONSE403
+            || transactionResponse.responseCode == MessageAbortedEvent.RESPONSE413
+            || transactionResponse.responseCode == MessageAbortedEvent.RESPONSE415
+            || transactionResponse.responseCode == MessageAbortedEvent.RESPONSE481)
+        {
+            try
+            {
+                transactionResponse.getMessage().abort(
+                    MessageAbortedEvent.CONTINUATIONFLAG, null);
+            }
+            catch (InternalErrorException e)
+            {
+                logger.error("Exception caught aborting the message: "
+                    + transactionResponse.getMessage(), e);
+            }
+            catch (IllegalUseException e)
+            {
+                logger.error("Exception caught aborting the message: "
+                    + transactionResponse.getMessage(), e);
+            }
+            // TODO support the comment Issue #29
+            transactionResponse.getMessage().fireMessageAbortedEvent(
+                transactionResponse.responseCode, null, transactionResponse);
+        }
     }
 
     /**
