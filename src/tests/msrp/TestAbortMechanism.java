@@ -22,6 +22,7 @@ import msrp.events.*;
 
 import java.net.*;
 import java.util.*;
+import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
 import java.io.*;
 
 import static org.junit.Assert.*;
@@ -221,17 +222,163 @@ public class TestAbortMechanism
             long expectedIdealBValue = 10 * receivedMessageSize / 100;
             int expectedMaximumPValue =
                 (int) ((expectedIdealBValue + Connection.OUTPUTBUFFERLENGTH) * 100 / receivedMessageSize);
-            //quickfix of issue #28:
+            // quickfix of issue #28:
             expectedMaximumPValue += 2;
             int obtainedPValue =
                 (int) ((int) (((IncomingMessage) receivingSessionListener
                     .getAbortedMessage()).getReceivedBytes() * 100) / receivedMessageSize);
             assertTrue(
-                "Aborted message's expected size is wrong, " + "obtained: "
-                    + obtainedPValue + " maximum value tolerated: "
-                    + expectedMaximumPValue + " in bytes: expected: "+ (expectedIdealBValue+Connection.OUTPUTBUFFERLENGTH) + " obtained: " + (((IncomingMessage) receivingSessionListener
+                "Aborted message's expected size is wrong, "
+                    + "obtained: "
+                    + obtainedPValue
+                    + " maximum value tolerated: "
+                    + expectedMaximumPValue
+                    + " in bytes: expected: "
+                    + (expectedIdealBValue + Connection.OUTPUTBUFFERLENGTH)
+                    + " obtained: "
+                    + (((IncomingMessage) receivingSessionListener
                         .getAbortedMessage()).getReceivedBytes()),
                 (obtainedPValue >= 10 && obtainedPValue <= expectedMaximumPValue));
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            fail("Catched an exception that shouldn't occur:" + e.getMessage());
+        }
+
+    }
+
+    /**
+     * This test is used to test that the abortion of a message currently being
+     * received is working well, with the new abortedMessageEvent mechanism and
+     * code 413
+     */
+    @Test
+    public void testAbortSendingMessage()
+    {
+        try
+        {
+            Long startTime = System.currentTimeMillis();
+            /* transfer the 5MB bytes message: */
+            byte[] bigData = new byte[5 * 1024 * 1024];
+            binaryRandom.nextBytes(bigData);
+            FileOutputStream fileStream = new FileOutputStream(tempFile);
+            fileStream.write(bigData);
+            fileStream.flush();
+            fileStream.close();
+            System.out.println("Stoped generating and writing 5MB "
+                + "of random data took: "
+                + ((System.currentTimeMillis() - startTime) / 1000) + "s");
+
+            Message fiveMegaByteMessage =
+                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
+            fiveMegaByteMessage.setSuccessReport(false);
+
+            /* connect the two sessions: */
+
+            ArrayList<URI> toPathSendSession = new ArrayList<URI>();
+            toPathSendSession.add(receivingSession.getURI());
+
+            sendingSession.addToPath(toPathSendSession);
+
+            /*
+             * message should be transfered or in the process of being
+             * completely transfered
+             */
+
+            /* make the mocklistener accept the message */
+            synchronized (receivingSessionListener)
+            {
+                DataContainer dc = new MemoryDataContainer(5 * 1024 * 1024);
+                receivingSessionListener.setDataContainer(dc);
+                receivingSessionListener.setAcceptHookResult(new Boolean(true));
+                receivingSessionListener.notify();
+                receivingSessionListener.wait(6000);
+            }
+
+            if (receivingSessionListener.getAcceptHookMessage() == null
+                || receivingSessionListener.getAcceptHookSession() == null)
+                fail("The Mock didn't worked and the message didn't got "
+                    + "accepted");
+            synchronized (sendingSessionListener.updateSendStatusCounter)
+            {
+                /*
+                 * Wait for the first updateSendStatusCounter (that should be
+                 * done at the 10% [more or less the buffer size in %])
+                 */
+                sendingSessionListener.updateSendStatusCounter.wait();
+            }
+            /* abort the message */
+            receivingSessionListener.getAcceptHookMessage().abort(
+                MessageAbortedEvent.RESPONSE413, null);
+            /*
+             * wait for the sending part to be notified by the library of the
+             * abortion of the message
+             */
+            synchronized (sendingSessionListener.abortMessageCounter)
+            {
+                sendingSessionListener.abortMessageCounter.wait(6000);
+            }
+
+            /* confirm that we have an aborted message */
+            assertEquals("We didn't got a call from the library to the "
+                + "abortMessage", 1, sendingSessionListener.abortMessageCounter
+                .size());
+            /*
+             * wait for the receiving part to be notified by the library of the
+             * abortion of the message
+             */
+            synchronized (receivingSessionListener.abortMessageCounter)
+            {
+                receivingSessionListener.abortMessageCounter.wait(6000);
+            }
+            /* confirm that we have an aborted message */
+            assertEquals("We didn't got a call from the library to the "
+                + "abortMessage", 1, receivingSessionListener.abortMessageCounter
+                .size());
+            MessageAbortedEvent receivingAbortEvent = receivingSessionListener.messageAbortEvents.get(0);
+            // let's wait for the event on the receive end to get the #
+            // continuation flag
+            assertTrue("Error, reason code different from #, got: "
+                + receivingAbortEvent.getReason(),
+                receivingAbortEvent.getReason() == MessageAbortedEvent.CONTINUATIONFLAG);
+
+
+            /*
+             * confirm that the aborted message size received before it was
+             * aborted is on the 10% + buffer size%
+             */
+            long sendingMessageSize =
+                sendingSessionListener.getAbortedMessage().getSize();
+            // how much is Connection.OUTPUTBUFFERLENGTH
+            long expectedIdealBValue = 10 * sendingMessageSize / 100;
+            int expectedMaximumPValue =
+                (int) ((expectedIdealBValue + Connection.OUTPUTBUFFERLENGTH) * 100 / sendingMessageSize);
+            // quickfix of issue #28, let's be happy with values under 20
+            expectedMaximumPValue = 19;
+            int obtainedPValue =
+                (int) ((int) (((OutgoingMessage) sendingSessionListener
+                    .getAbortedMessage()).getSentBytes() * 100) / sendingMessageSize);
+            assertTrue(
+                "Aborted message's expected size is wrong, "
+                    + "obtained: "
+                    + obtainedPValue
+                    + " maximum value tolerated: "
+                    + expectedMaximumPValue
+                    + " in bytes: expected: "
+                    + (expectedIdealBValue + Connection.OUTPUTBUFFERLENGTH)
+                    + " obtained: "
+                    + (((OutgoingMessage) sendingSessionListener
+                        .getAbortedMessage()).getSentBytes()),
+                (obtainedPValue >= 10 && obtainedPValue <= expectedMaximumPValue));
+
+            MessageAbortedEvent abortEvent =
+                sendingSessionListener.messageAbortEvents.get(0);
+            assertTrue("Error, reason code different from 413, got: "
+                + abortEvent.getReason(),
+                abortEvent.getReason() == MessageAbortedEvent.RESPONSE413);
+
 
         }
         catch (Exception e)
