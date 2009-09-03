@@ -678,7 +678,7 @@ public abstract class Message
      *            exists or is being considered
      * @see MessageAbortEvent
      */
-    protected void fireMessageAbortedEvent(int reason, String extraReasonInfo, Transaction transaction)
+    public void fireMessageAbortedEvent(int reason, String extraReasonInfo, Transaction transaction)
     {
         session.fireMessageAbortedEvent(this, reason, extraReasonInfo, transaction);
 

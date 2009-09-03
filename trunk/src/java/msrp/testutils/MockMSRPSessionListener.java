@@ -104,6 +104,9 @@ public class MockMSRPSessionListener
      */
     public ArrayList<Long> abortMessageCounter = new ArrayList<Long>();
 
+    public ArrayList<MessageAbortedEvent> messageAbortEvents =
+    new ArrayList<MessageAbortedEvent>();
+
     /**
      * Constructor of the mock session listener
      * 
@@ -176,6 +179,13 @@ public class MockMSRPSessionListener
     public void receivedReport(Session session, Transaction tReport)
     {
 
+        if (tReport.getStatusHeader().getStatusCode() != 200)
+        {
+            logger.debug("Received a report with code different from 200"
+                + ", with code: " + tReport.getStatusHeader().getStatusCode()
+                + " returning");
+            return;
+        }
         logger.debug("Received report, confirming that: "
             + tReport.getByteRange()[1] + " bytes were sent; "
             + (tReport.getByteRange()[1] * 100)
@@ -212,6 +222,7 @@ public class MockMSRPSessionListener
     @Override
     public void abortedMessageEvent(MessageAbortedEvent abortEvent)
     {
+        messageAbortEvents.add(abortEvent);
         boolean incoming = false;
         if (abortEvent.getMessage().getDirection() == Message.IN)
         {

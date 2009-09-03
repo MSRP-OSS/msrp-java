@@ -735,15 +735,8 @@ public class Transaction
                         // FIXME ?! give a 400 response?!
                         try
                         {
-                            this.generateAndQueueResponse(400,
+                            transactionManager.generateResponse(this, 400,
                                 "Parsing exception: " + e.getMessage());
-                        }
-                        catch (InternalErrorException e1)
-                        {
-                            logger.error(
-                                "caught an exception while responding with "
-                                    + "a 400 to tID: " + tID, e1);
-                            e1.printStackTrace();
                         }
                         catch (IllegalUseException e2)
                         {
@@ -873,15 +866,8 @@ public class Transaction
                     try
                     {
 
-                        this.generateAndQueueResponse(400,
+                        transactionManager.generateResponse(this, 400,
                             "Parsing exception: " + e.getMessage());
-                    }
-                    catch (InternalErrorException e1)
-                    {
-                        logger.error(
-                            "caught an exception while responding with "
-                                + "a 400 to tID: " + tID, e1);
-                        e1.printStackTrace();
                     }
                     catch (IllegalUseException e2)
                     {
@@ -1103,8 +1089,6 @@ public class Transaction
      */
     public boolean hasEndLine()
     {
-        if (hasResponse() && !isIncomingResponse())
-            return false;
         if (hasData())
             return false;
         if (offsetRead[ENDLINEINDEX] > (7 + tID.length() + 2))
@@ -1124,8 +1108,6 @@ public class Transaction
      */
     public boolean hasData()
     {
-        if (hasResponse())
-            return response.hasData();
         if (interrupted)
             return false;
         if (offsetRead[HEADERINDEX] >= headerBytes.length && !message.hasData())
@@ -1179,10 +1161,6 @@ public class Transaction
 
             if (offset > (outData.length - 1))
                 throw new IndexOutOfBoundsException();
-            if (hasResponse())
-            {
-                return response.getData(outData, offset);
-            }
 
             if (offsetRead[HEADERINDEX] < headerBytes.length)
             { // if we are processing the header
@@ -1268,35 +1246,6 @@ public class Transaction
     }
 
     /**
-     * Generates and queues the TransactionResponse with the given response code
-     * 
-     * @param responseCode one of the response codes listed in RFC 4975
-     * @param optionalComment the comment as defined in RFC 4975 formal syntax,
-     *            as the comment is optional, it can also be null if no comment
-     *            is desired
-     * @throws InternalErrorException if queuing the response got us an error
-     * @throws IllegalUseException if the arguments are invalid
-     */
-    public void generateAndQueueResponse(int responseCode,
-        String optionalComment)
-        throws InternalErrorException,
-        IllegalUseException
-    {
-        if (responseCode != 200 && responseCode != 400 && responseCode != 403
-            && responseCode != 408 && responseCode != 413
-            && responseCode != 415 && responseCode != 423
-            && responseCode != 481 && responseCode != 501
-            && responseCode != 506)
-            throw new IllegalUseException("Invalid response code");
-        // TODO FIXME validate the comment based on the utf8text regex pattern
-        // that will be defined in RegexMSRPFactory
-        response =
-            new TransactionResponse(this, responseCode, optionalComment, OUT);
-        transactionManager.addPriorityTransaction(response);
-
-    }
-
-    /**
      * Interrupts this transaction by setting the internal flag and appropriate
      * continuation flag (+)
      * 
@@ -1330,8 +1279,11 @@ public class Transaction
      */
     public void abort()
     {
+        logger.info("Aborting transaction: " + this);
         continuationFlagByte = ABORTMESSAGE;
         interrupted = true;
+        //let's wake up the write thread
+        transactionManager.getConnection().notifyWriteThread();
     }
 
     /**
@@ -1573,7 +1525,7 @@ public class Transaction
      * @return Returns the manager.
      * @uml.property name="_transactionManager"
      */
-    protected msrp.TransactionManager getTransactionManager()
+    public msrp.TransactionManager getTransactionManager()
     {
         return transactionManager;
     }
@@ -1766,7 +1718,15 @@ public class Transaction
         /* make sure that a message is valid (originates 400 responses) */
         if (!isValid())
         {
-            transactionManager.r400(this);
+            try
+            {
+                transactionManager.generateResponse(this, 400,
+                    "Transaction found invalid");
+            }
+            catch (IllegalUseException e)
+            {
+                e.printStackTrace();
+            }
         }
 
         if (transactionManager.associatedSession((getToPath())[0]) == null)
@@ -1791,11 +1751,25 @@ public class Transaction
                  */
                 if (instanceStack.isActive((getToPath())[0]))
                 {
-                    transactionManager.r506(this);
+                    try
+                    {
+                        transactionManager.generateResponse(this, 506, null);
+                    }
+                    catch (IllegalUseException e)
+                    {
+                        logger.error("Generating 506 response", e);
+                    }
                 }
                 else
                 {
-                    transactionManager.r481(this);
+                    try
+                    {
+                        transactionManager.generateResponse(this, 481, null);
+                    }
+                    catch (IllegalUseException e)
+                    {
+                        logger.error("Generating 481 response", e);
+                    }
 
                 }
             }
@@ -1810,7 +1784,15 @@ public class Transaction
                      * but also with another, then give the r506 response and
                      * log this rare event! (that shouldn't have happened)
                      */
-                    transactionManager.r506(this);
+                    try
+                    {
+                        transactionManager.generateResponse(this, 506, null);
+                    }
+                    catch (IllegalUseException e)
+                    {
+                        logger.error("Generating 506 response", e);
+
+                    }
 
                     logger.error("Error! received a request"
                         + " that is yet to identify and is associated with"
@@ -1935,12 +1917,8 @@ public class Transaction
                     this.completeTransaction = true;
                     try
                     {
-                        this.generateAndQueueResponse(incomingMessage.result,
-                            "Message rejected by user");
-                    }
-                    catch (InternalErrorException e)
-                    {
-                        logger.error("generating a response", e);
+                        transactionManager.generateResponse(this,
+                            incomingMessage.result, "Message rejected by user");
                     }
                     catch (IllegalUseException e)
                     {
@@ -1950,16 +1928,14 @@ public class Transaction
                             .warn("Tried to use an invalid response code as a response, gone with the default 413");
                         try
                         {
-                            this.generateAndQueueResponse(413,
+                            transactionManager.generateResponse(this, 413,
                                 "Message rejected by user");
-                        }
-                        catch (InternalErrorException e1)
-                        {
-                            logger.error("generating a response", e1);
                         }
                         catch (IllegalUseException e1)
                         {
-                            // it shouldn't happen, if it did, one should
+                            logger.error(
+                                "Exception caught generating 413 response for transaction: "
+                                    + this, e1);
                         }
 
                     }
