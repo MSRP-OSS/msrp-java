@@ -345,6 +345,21 @@ public class Transaction
      * @param messageBeingSent
      * @param manager
      */
+    /**
+     * @param send
+     * @param messageBeingSent
+     * @param manager
+     */
+    /**
+     * @param send
+     * @param messageBeingSent
+     * @param manager
+     */
+    /**
+     * @param send
+     * @param messageBeingSent
+     * @param manager
+     */
     public Transaction(TransactionType send, OutgoingMessage messageBeingSent,
         TransactionManager manager)
     {
@@ -379,38 +394,33 @@ public class Transaction
                         + messageBeingSent.getFailureReport() + "\r\n");
 
             /*
-             * assert if either we are in the case of an interruptible
-             * transaction or not and fill the Byte-Range fields and other
-             * internal fields accordingly
-             */
-            /*
              * first value of the Byte-Range header field is the
              * currentReadOffset + 1, or the current number of already sent
              * bytes + 1 because the first field is the number of the first byte
              * being sent:
              */
             long numberFirstByteChunk = messageBeingSent.getSentBytes() + 1;
-            if (headerBytes.length
-                + (message.getSize() - messageBeingSent.getSentBytes())
-                + (7 + tID.length() + 1) > MSRPStack.MAXIMUMUNINTERRUPTIBLE)
-            {
-                interruptible = true;
-                headerString =
-                    headerString.concat("Byte-Range: " + numberFirstByteChunk
-                        + "-*" + "/" + messageBeingSent.getStringTotalSize()
-                        + "\r\n" + "Content-Type: "
-                        + messageBeingSent.getContentType() + "\r\n\r\n");
-            }
-            else
-            {
-                headerString =
-                    headerString.concat("Byte-Range: " + numberFirstByteChunk
-                        + "-" + messageBeingSent.getStringTotalSize() + "/"
-                        + messageBeingSent.getStringTotalSize() + "\r\n"
-                        + "Content-Type: " + messageBeingSent.getContentType()
-                        + "\r\n\r\n");
+            // now all of the transactions are interruptible, solving Issue #25
+            // if ((message.getSize() - ((OutgoingMessage)message).getSize()) >
+            // MSRPStack.MAXIMUMUNINTERRUPTIBLE)
+            // {
+            interruptible = true;
+            headerString =
+                headerString.concat("Byte-Range: " + numberFirstByteChunk
+                    + "-*" + "/" + messageBeingSent.getStringTotalSize()
+                    + "\r\n" + "Content-Type: "
+                    + messageBeingSent.getContentType() + "\r\n\r\n");
+            // }
+            // else
+            // {
+            // headerString =
+            // headerString.concat("Byte-Range: " + numberFirstByteChunk
+            // + "-" + messageBeingSent.getStringTotalSize() + "/"
+            // + messageBeingSent.getStringTotalSize() + "\r\n"
+            // + "Content-Type: " + messageBeingSent.getContentType()
+            // + "\r\n\r\n");
 
-            }
+            // }
             headerBytes = headerString.getBytes(usascii);
 
             /* by default have the continuation flag to be the end of message */
@@ -1282,7 +1292,7 @@ public class Transaction
         logger.info("Aborting transaction: " + this);
         continuationFlagByte = ABORTMESSAGE;
         interrupted = true;
-        //let's wake up the write thread
+        // let's wake up the write thread
         transactionManager.getConnection().notifyWriteThread();
     }
 
