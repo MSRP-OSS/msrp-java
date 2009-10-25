@@ -23,10 +23,13 @@ import msrp.messages.IncomingMessage;
 import msrp.messages.Message;
 
 /**
+ * Interface used for callbacks by the MSRP stack.
+ * 
+ * It provides callbacks for events at a message level (associated with some
+ * action regarding a message) in the session that is associated with the class
+ * that implements this interface.
+ * 
  * @author João André Pereira Antunes
- * 
- *         Gives the class that is going to be used by the client application
- * 
  */
 public interface MSRPSessionListener
     extends EventListener
@@ -71,6 +74,7 @@ public interface MSRPSessionListener
      * @param message the IncomingMessage that was aborted
      */
     void abortedMessage(Session session, IncomingMessage message);
+
     /**
      * Method used by the API to signal the application of an aborted message
      * 

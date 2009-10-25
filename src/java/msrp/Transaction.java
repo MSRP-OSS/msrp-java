@@ -32,9 +32,12 @@ import msrp.exceptions.*;
 import msrp.messages.*;
 
 /**
- * TODO (?) the most adequate name here would be Request TODO(?) and the
- * transaction response solely as RequestResponse or Response TODO(?) from
- * transactionType change to requestType
+ * Class that represents a MSRP Transaction (either request or response,
+ * incoming or outgoing). It is responsible for parsing all of the data related
+ * with the transaction (either incoming or outgoing). When enough data is
+ * received to take action upon, it notifies the TransactionManager and the
+ * global MSRPStack classes (The communication between these classes is done via
+ * the Observer design pattern)
  * 
  * @author João André Pereira Antunes
  */

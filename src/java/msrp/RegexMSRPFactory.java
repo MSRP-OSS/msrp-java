@@ -19,12 +19,12 @@ package msrp;
 import java.util.regex.Pattern;
 
 /**
- * This class will make the parses comply with the MSRP specification ( more
+ * This class will make the parsers comply with the MSRP specification (more
  * specifically with the formal syntax and will solve Issue #16). All of the
  * regex patterns used by the parsers must come from this class.
  * 
  * TODO the majority of the formal syntax of the MSRP rfc should be represented
- * here
+ * here, which isn't done yet.
  * 
  * @author João André Pereira Antunes
  * 

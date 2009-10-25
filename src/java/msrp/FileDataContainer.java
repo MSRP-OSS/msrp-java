@@ -34,6 +34,11 @@ import msrp.exceptions.NotEnoughDataException;
 import msrp.exceptions.NotEnoughStorageException;
 
 /**
+ * An implementation of the data container class.
+ * 
+ * It uses a file read from/write to the data associated with an MSRP message
+ * @see DataContainer
+ * 
  * @author João André Pereira Antunes 2008
  * 
  */
@@ -44,7 +49,8 @@ public class FileDataContainer
     /**
      * The logger associated with this class
      */
-    private static final Logger logger = LoggerFactory.getLogger(FileDataContainer.class);
+    private static final Logger logger =
+        LoggerFactory.getLogger(FileDataContainer.class);
 
     /**
      * Creates a new DataContainer based on the given file, The file must be

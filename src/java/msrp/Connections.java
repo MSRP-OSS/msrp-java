@@ -41,6 +41,9 @@ import msrp.Connection;
 import msrp.utils.NetworkUtils;
 
 /**
+ * This is the class responsible for accepting incoming TCP connection requests
+ * and generating the Connection object.
+ * 
  * @author João André Pereira Antunes
  */
 public class Connections
@@ -79,9 +82,8 @@ public class Connections
 
             if (NetworkUtils.isLinkLocalIPv4Address(address))
             {
-                logger
-                    .info("Connections: given address is a local one: "
-                        + address);
+                logger.info("Connections: given address is a local one: "
+                    + address);
             }
             serverSocketChannel =
                 SelectorProvider.provider().openServerSocketChannel();
@@ -105,7 +107,9 @@ public class Connections
                 {
 
                     logger
-                        .error("Error! the connections hanged and didn't got a socket associated");
+                        .error(
+                            "Error! the connections hanged and didn't got a socket associated",
+                            e);
                     // do nothing
                 }
             }
@@ -203,7 +207,8 @@ public class Connections
         }
         catch (Exception e)
         {
-                logger.error("Error! the connections hanged and didn't got a socket associated");
+            logger
+                .error("Error! the connections hanged and didn't got a socket associated");
         }
         return this;
     }

@@ -35,7 +35,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author D
+ * This class is responsible for managing the transactions associated with a
+ * connection (that can have many sessions).
+ * 
+ * It generates the automatic responses, and also triggers some reporting
+ * mechanisms and some of the callbacks on the MSRPSessionListener
+ * 
+ * @author João André Pereira Antunes
  */
 public class TransactionManager
     implements Observer

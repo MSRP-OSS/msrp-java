@@ -20,7 +20,8 @@ import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InternalErrorException;
 
 /**
- * A generic class that represents the transactions for the REPORT requests
+ * A class that inherits from the Transaction to represent the transactions for
+ * the REPORT requests
  * 
  * @author João André Pereira Antunes
  * 

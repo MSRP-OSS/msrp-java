@@ -129,12 +129,15 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[300 * 1024];
             TextUtils.generateRandom(smallData);
 
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -170,6 +173,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+"ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -197,6 +202,8 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[1024 * 1024];
             TextUtils.generateRandom(smallData);
 
@@ -204,6 +211,7 @@ public class TestSendingASCIIMessages
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
 
+            Long startTime = System.currentTimeMillis();
             /* connect the two sessions: */
 
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
@@ -238,6 +246,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime) + " ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -265,13 +275,22 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
+            Long startTime = System.currentTimeMillis();
+            System.out.println("Starting generating and writing 5MB "
+                + "of random data for 5MB Memory2Memory");
             byte[] smallData = new byte[5024 * 1024];
             TextUtils.generateRandom(smallData);
+            System.out.println("Stoped generating and writing 5MB "
+                + "of random data took: "
+                + (System.currentTimeMillis() - startTime)  + "ms");
 
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
 
+            startTime = System.currentTimeMillis();
             /* connect the two sessions: */
 
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
@@ -306,6 +325,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime) + "ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -333,6 +354,8 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[300 * 1024];
             FileOutputStream fileStream = new FileOutputStream(tempFile);
             TextUtils.generateRandom(smallData);
@@ -344,6 +367,7 @@ public class TestSendingASCIIMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -378,6 +402,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+"ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -405,9 +431,11 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             Long startTime = System.currentTimeMillis();
             System.out.println("Starting generating and writing 5MB "
-                + "of random data");
+                + "of random data for 5MB File2Memory");
             byte[] smallData = new byte[5024 * 1024];
             FileOutputStream fileStream = new FileOutputStream(tempFile);
             TextUtils.generateRandom(smallData);
@@ -416,10 +444,11 @@ public class TestSendingASCIIMessages
             fileStream.close();
             System.out.println("Stoped generating and writing 5MB "
                 + "of random data took: "
-                + ((System.currentTimeMillis() - startTime) / 1000) + "s");
+                + (System.currentTimeMillis() - startTime)  + "ms");
 
             Message threeHKbMessage =
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
+            startTime = System.currentTimeMillis();
 
             threeHKbMessage.setSuccessReport(false);
 
@@ -457,6 +486,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+"ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -485,6 +516,9 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
+            Long startTime = System.currentTimeMillis();
             /*
              * generate random data and fill the new tempFile created before any
              * test starts:
@@ -560,6 +594,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+"ms");
 
             /*
              * compare the two files content byte by byte:
@@ -618,6 +654,8 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             /*
              * generate random data and fill the new tempFile created before any
              * test starts:
@@ -650,6 +688,7 @@ public class TestSendingASCIIMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
+            startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -708,6 +747,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+"ms");
 
             /*
              * compare the two files content byte by byte:
@@ -764,12 +805,16 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[300 * 1024];
             TextUtils.generateRandom(smallData);
 
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
+
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -805,6 +850,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+"ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -832,12 +879,15 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[1024 * 1024];
             TextUtils.generateRandom(smallData);
 
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -873,6 +923,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -899,10 +951,18 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
+            Long startTime = System.currentTimeMillis();
+            System.out.println("Starting generating and writing 5MB "
+                + "of random data for 5MB Memory2Memory w/ success report");
             byte[] smallData = new byte[5024 * 1024];
             TextUtils.generateRandom(smallData);
+            System.out.println("Stoped generating and writing 5MB "
+                + "of random data took: "
+                + (System.currentTimeMillis() - startTime) + "ms");
 
+            startTime = System.currentTimeMillis();
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
@@ -941,6 +1001,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+"ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -968,6 +1030,8 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[300 * 1024];
             FileOutputStream fileStream = new FileOutputStream(tempFile);
             TextUtils.generateRandom(smallData);
@@ -979,6 +1043,7 @@ public class TestSendingASCIIMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -1013,6 +1078,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -1040,9 +1107,11 @@ public class TestSendingASCIIMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             Long startTime = System.currentTimeMillis();
             System.out.println("Starting generating and writing 5MB "
-                + "of random data");
+                + "of random data for 5MB File2Memory w/ success report");
             byte[] smallData = new byte[5024 * 1024];
             FileOutputStream fileStream = new FileOutputStream(tempFile);
             TextUtils.generateRandom(smallData);
@@ -1051,11 +1120,12 @@ public class TestSendingASCIIMessages
             fileStream.close();
             System.out.println("Stoped generating and writing 5MB "
                 + "of random data took: "
-                + ((System.currentTimeMillis() - startTime) / 1000) + "s");
+                + (System.currentTimeMillis() - startTime) + "ms");
 
             Message threeHKbMessage =
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
+            startTime = System.currentTimeMillis();
             threeHKbMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
@@ -1092,6 +1162,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+"ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -1119,6 +1191,8 @@ public class TestSendingASCIIMessages
     {
         try
         {
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
 
             /*
              * generate random data and fill the new tempFile created before any
@@ -1137,6 +1211,7 @@ public class TestSendingASCIIMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -1195,6 +1270,8 @@ public class TestSendingASCIIMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+"ms");
 
             /*
              * compare the two files content byte by byte:
@@ -1256,7 +1333,8 @@ public class TestSendingASCIIMessages
     // byte[] smallData = new byte[10024 * 1024];
     // TextUtils.generateRandom(smallData);
     //
-    // Message threeHKbMessage = new OutgoingMessage(sendingSession, "plain/text",
+    // Message threeHKbMessage = new OutgoingMessage(sendingSession,
+    // "plain/text",
     // smallData);
     // threeHKbMessage.setSuccessReport(false);
     //
@@ -1318,7 +1396,8 @@ public class TestSendingASCIIMessages
     // byte[] smallData = new byte[20024 * 1024];
     // TextUtils.generateRandom(smallData);
     //
-    // Message threeHKbMessage = new OutgoingMessage(sendingSession, "plain/text",
+    // Message threeHKbMessage = new OutgoingMessage(sendingSession,
+    // "plain/text",
     // smallData);
     // threeHKbMessage.setSuccessReport(false);
     //
