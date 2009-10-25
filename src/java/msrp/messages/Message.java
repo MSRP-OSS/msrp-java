@@ -30,11 +30,12 @@ import org.slf4j.*;
 import sun.security.action.GetBooleanAction;
 
 /**
- * Class that represents a message with it's data on memory It must:
+ * Class that represents a generic MSRP message.
  * 
- * - Always have a ReportMechanism associated!
  * 
- * @author D
+ * 
+ * 
+ * @author João André Pereira Antunes
  */
 public abstract class Message
 {
@@ -148,15 +149,6 @@ public abstract class Message
      */
     protected Transaction lastSendTransaction = null;
 
-    /* Wrappers for reportMechanism : */
-    // TODO generate the javadoc using the other constructors javadoc
-    public Message(Session session, String contentType, Stream stream,
-        ReportMechanism reportMechanism)
-    {
-        this(session, contentType, stream);
-        constructorAssociateReport(reportMechanism);
-    }
-
     public Message(Session session, String contentType, byte[] data,
         ReportMechanism reportMechanism)
         throws Exception
@@ -166,16 +158,6 @@ public abstract class Message
     }
 
     /* End of wrappers for report mechanism */
-
-    /**
-     * @param session the session associated with the message
-     * @param contentType the content type of this message
-     * @param stream the stream associated with this message's content
-     * @returns the newly generated message
-     */
-    public Message(Session session, String contentType, Stream stream)
-    {
-    }
 
     /**
      * @param session the session associated with the message

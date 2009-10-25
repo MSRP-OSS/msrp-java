@@ -24,7 +24,7 @@ import msrp.messages.*;
 
 /**
  * Class used as a specific implementation of a Success report that comes from
- * the general transaction
+ * the general transaction class.
  * 
  * @author João André Pereira Antunes 2008
  * 

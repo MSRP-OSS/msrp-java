@@ -131,6 +131,8 @@ public class TestSendingBinaryMessages
     {
         try
         {
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
 
             byte[] smallData = new byte[300 * 1024];
 
@@ -139,6 +141,7 @@ public class TestSendingBinaryMessages
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -174,6 +177,8 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -201,12 +206,15 @@ public class TestSendingBinaryMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[1024 * 1024];
             randomGenerator.nextBytes(smallData);
 
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -243,6 +251,9 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.wait();
             }
 
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
+
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
                     .get(0, 0);
@@ -268,6 +279,8 @@ public class TestSendingBinaryMessages
     {
         try
         {
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
 
             byte[] smallData = new byte[5024 * 1024];
             randomGenerator.nextBytes(smallData);
@@ -275,6 +288,7 @@ public class TestSendingBinaryMessages
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(false);
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -310,6 +324,8 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -336,6 +352,8 @@ public class TestSendingBinaryMessages
     {
         try
         {
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
 
             byte[] smallData = new byte[300 * 1024];
             FileOutputStream fileStream = new FileOutputStream(tempFile);
@@ -348,6 +366,7 @@ public class TestSendingBinaryMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -382,6 +401,9 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -409,6 +431,8 @@ public class TestSendingBinaryMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             Long startTime = System.currentTimeMillis();
             System.out.println("Starting generating and writing 5MB "
                 + "of random data");
@@ -426,6 +450,8 @@ public class TestSendingBinaryMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
+
+            startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -461,6 +487,8 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -489,6 +517,8 @@ public class TestSendingBinaryMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             /*
              * generate random data and fill the new tempFile created before any
              * test starts:
@@ -511,6 +541,8 @@ public class TestSendingBinaryMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
+
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -569,6 +601,8 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             /*
              * compare the two files content byte by byte:
@@ -626,6 +660,8 @@ public class TestSendingBinaryMessages
     {
         try
         {
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
 
             /*
              * generate random data and fill the new tempFile created before any
@@ -659,6 +695,8 @@ public class TestSendingBinaryMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(false);
+
+            startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -717,6 +755,8 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             /*
              * compare the two files content byte by byte:
@@ -772,6 +812,8 @@ public class TestSendingBinaryMessages
     {
         try
         {
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
 
             byte[] smallData = new byte[300 * 1024];
             randomGenerator.nextBytes(smallData);
@@ -779,6 +821,8 @@ public class TestSendingBinaryMessages
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
+
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -814,6 +858,8 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -840,6 +886,8 @@ public class TestSendingBinaryMessages
     {
         try
         {
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
 
             byte[] smallData = new byte[1024 * 1024];
             randomGenerator.nextBytes(smallData);
@@ -847,6 +895,8 @@ public class TestSendingBinaryMessages
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
+
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -883,6 +933,9 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.wait();
             }
 
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
+
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
                     .get(0, 0);
@@ -908,6 +961,8 @@ public class TestSendingBinaryMessages
     {
         try
         {
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
 
             byte[] smallData = new byte[5024 * 1024];
             randomGenerator.nextBytes(smallData);
@@ -915,6 +970,7 @@ public class TestSendingBinaryMessages
             Message threeHKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
             threeHKbMessage.setSuccessReport(true);
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -950,6 +1006,8 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+"ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -977,6 +1035,8 @@ public class TestSendingBinaryMessages
         try
         {
 
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[300 * 1024];
             FileOutputStream fileStream = new FileOutputStream(tempFile);
             randomGenerator.nextBytes(smallData);
@@ -988,6 +1048,8 @@ public class TestSendingBinaryMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
+
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -1022,6 +1084,9 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -1041,13 +1106,15 @@ public class TestSendingBinaryMessages
     }
 
     /**
-     * Tests sending a 5MB Message with a FileDataContainer 
+     * Tests sending a 5MB Message with a FileDataContainer
      */
     @Test
     public void test5MBMessageFileToMemorySuccessReport()
     {
         try
         {
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
 
             Long startTime = System.currentTimeMillis();
             System.out.println("Starting generating and writing 5MB "
@@ -1066,6 +1133,7 @@ public class TestSendingBinaryMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
+            startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -1101,6 +1169,8 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -1128,6 +1198,8 @@ public class TestSendingBinaryMessages
     {
         try
         {
+            String methodName =
+                new Exception().getStackTrace()[0].getMethodName();
 
             /*
              * generate random data and fill the new tempFile created before any
@@ -1146,6 +1218,8 @@ public class TestSendingBinaryMessages
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
             threeHKbMessage.setSuccessReport(true);
+
+            Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
 
@@ -1204,6 +1278,8 @@ public class TestSendingBinaryMessages
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(methodName + " took: "
+                + (System.currentTimeMillis() - startTime)+ "ms");
 
             /*
              * compare the two files content byte by byte:

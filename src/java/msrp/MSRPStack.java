@@ -30,7 +30,13 @@ import msrp.exceptions.*;
 import msrp.messages.*;
 
 /**
- * @author D
+ * Global MSRP singleton class.
+ * 
+ * This class should contain all methods that must be global or that its outcome
+ * must somewhat depend on knowing about all of the existing MSRP objects like:
+ * sessions, connections, transactions, messages, others(?). 
+ * 
+ * @author João André Pereira Antunes
  * 
  */
 public class MSRPStack
