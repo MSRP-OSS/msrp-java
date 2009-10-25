@@ -110,6 +110,7 @@ public class TestSendingExistingFile
         File fileToSend = new File("resources/tests/fileToSend");
         assertTrue("Error, file: fileToSend doesn't exist, expected in: "
             + fileToSend.getAbsolutePath(), fileToSend.exists());
+        String sizeFileString = "file with: " + fileToSend.length() + " bytes";
 
         Message messageToBeSent = null;
         try
@@ -123,6 +124,7 @@ public class TestSendingExistingFile
             fail(e.getMessage());
         }
         messageToBeSent.setSuccessReport(true);
+        Long startTime = System.currentTimeMillis();
 
         /* add the listener */
         sendingSession.addMSRPSessionListener(sendingSessionListener);
@@ -188,6 +190,10 @@ public class TestSendingExistingFile
                  */
                 receivingSessionListener.wait();
             }
+            System.out.println(sizeFileString
+                + " took: "
+                + (System.currentTimeMillis() - startTime)
+                + " ms");
 
             // confirm that the updateSendStatus got called on the
             // sendingSessionListener at least once

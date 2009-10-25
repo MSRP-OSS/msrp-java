@@ -46,9 +46,20 @@ import msrp.messages.Message;
 import msrp.utils.NetworkUtils;
 
 /**
+ * This class represents an MSRP connection.
+ * 
+ * It has one pair of threads associated for writing and reading.
+ * 
+ * It is also responsible for some parsing, including: 
+ * Identifying MSRP transaction requests and responses; 
+ * Pre-parsing - identifying what is the content of the transaction from what 
+ * isn't;
+ * Whenever a transactions is found, parse its data using the Transaction's 
+ * parse method;
+ * 
  * @author João André Pereira Antunes
  */
-class Connection
+ class Connection
     extends Observable
     implements Runnable
 {
@@ -73,7 +84,7 @@ class Connection
                 socket.getLocalPort(), null, null, null);
         localURI = newLocalURI;
         transactionManager = new TransactionManager(this);
-        //this.addObserver(transactionManager);
+        // this.addObserver(transactionManager);
 
     }
 
@@ -144,7 +155,7 @@ class Connection
             new URI("msrp", null, address.getHostAddress(), socket
                 .getLocalPort(), null, null, null);
         localURI = newLocalURI;
-        //this.addObserver(transactionManager);
+        // this.addObserver(transactionManager);
     }
 
     private TransactionManager transactionManager;
@@ -1248,9 +1259,10 @@ class Connection
                         logger.debug("Found a response to transaction: " + tID);
                         try
                         {
-                            Transaction trResponse = new TransactionResponse(incomingTransaction,
-                                Integer.parseInt(matcherTransactionResponse
-                                    .group(4)), Transaction.IN);
+                            Transaction trResponse =
+                                new TransactionResponse(incomingTransaction,
+                                    Integer.parseInt(matcherTransactionResponse
+                                        .group(4)), Transaction.IN);
                             incomingTransaction = trResponse;
                         }
                         catch (NumberFormatException e)

@@ -39,6 +39,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * This class represents a MSRP Session.
+ * 
+ * This class contains a list of MSRP Messages with whom it's currently
+ * associated with. It is also designed to be a mandatory point of contact with
+ * the MSRPSessionListener class. All of the callbacks done through this
+ * class's trigger methods
+ * 
+ * 
  * @author João Antunes
  */
 public class Session
@@ -141,13 +149,6 @@ public class Session
      * @uml.property name="_URI" the URI that identifies this session
      */
     private URI uri = null;
-
-    /**
-     * @uml.property name="_sessionManager"
-     * @uml.associationEnd multiplicity="(1 1)"
-     *                     inverse="_sessions:msrp.SessionManager"
-     */
-    private msrp.SessionManager manager = null;
 
     /**
      * this field points to the report mechanism associated with this session
@@ -484,33 +485,11 @@ public class Session
     }
 
     /**
-     * Getter of the property <tt>_sessionManager</tt>
-     * 
-     * @return Returns the manager.
-     * @uml.property name="_sessionManager"
-     */
-    public msrp.SessionManager get_sessionManager()
-    {
-        return manager;
-    }
-
-    /**
      * @param reportMechanism the reportMechanism to set
      */
     public void setReportMechanism(ReportMechanism reportMechanism)
     {
         this.reportMechanism = reportMechanism;
-    }
-
-    /**
-     * Setter of the property <tt>_sessionManager</tt>
-     * 
-     * @param _sessionManager The manager to set.
-     * @uml.property name="_sessionManager"
-     */
-    public void set_sessionManager(msrp.SessionManager manager)
-    {
-        this.manager = manager;
     }
 
     public void addMSRPSessionListener(MSRPSessionListener object)

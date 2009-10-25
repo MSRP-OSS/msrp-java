@@ -30,7 +30,7 @@ import msrp.messages.*;
  * Receiving: It implements mechanisms to choose the granularity of successful
  * REPORT requests
  * 
- * TODO: Sending: Implements mechanisms to choose the granularity of the
+ * TODO: Sending: Implement mechanisms to choose the granularity of the
  * updateSendStatus callbacks
  * 
  * @author João André Pereira Antunes 2008

@@ -26,6 +26,13 @@ import msrp.exceptions.NotEnoughDataException;
 import msrp.exceptions.NotEnoughStorageException;
 
 /**
+ * 
+ * An implementation of the data container class.
+ * 
+ * It uses a file read from/write to the data associated with an MSRP message
+ * 
+ * @see DataContainer 
+ * 
  * @author João André Pereira Antunes 2008
  * 
  */

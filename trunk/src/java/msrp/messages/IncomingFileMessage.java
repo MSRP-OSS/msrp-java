@@ -27,6 +27,9 @@ import msrp.ReportMechanism;
 import msrp.Session;
 
 /**
+ * Object used that represents an Incoming MSRP Message whose content goes into
+ * a file
+ * 
  * @author João André Pereira Antunes
  * 
  */
@@ -39,7 +42,7 @@ public class IncomingFileMessage
      */
     private static final Logger logger =
         LoggerFactory.getLogger(IncomingFileMessage.class);
-    
+
     public IncomingFileMessage(Session session, String contentType, File file)
         throws FileNotFoundException,
         SecurityException
@@ -58,7 +61,7 @@ public class IncomingFileMessage
                 + contentType
                 + " File: "
                 + file.getAbsolutePath());
-       
+
     }
 
     public IncomingFileMessage(Session session, String contentType, File file,
@@ -68,14 +71,10 @@ public class IncomingFileMessage
     {
         this(session, contentType, file);
         constructorAssociateReport(reportMechanism);
-        logger
-            .trace("Outgoing File Message with custom report mechanism " +
-                    "created. Associated objects, Session: "
-                + session.getURI()
-                + " contentType: "
-                + contentType
-                + " File: "
-                + file.getAbsolutePath());
+        logger.trace("Outgoing File Message with custom report mechanism "
+            + "created. Associated objects, Session: " + session.getURI()
+            + " contentType: " + contentType + " File: "
+            + file.getAbsolutePath());
     }
 
     /*

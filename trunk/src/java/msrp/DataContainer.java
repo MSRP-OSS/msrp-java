@@ -25,7 +25,8 @@ import msrp.exceptions.NotEnoughStorageException;
 
 /**
  * Class used to provide abstraction to the container of the actual data on the
- * message Also has a mechanism to allow the validation of the received data
+ * message. Also has a mechanism to allow the validation of the received data,
+ * the validator, which isn't yet fully implemented and available
  * 
  * @author João André Pereira Antunes 2008
  * 

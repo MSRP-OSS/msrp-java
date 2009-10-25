@@ -27,6 +27,8 @@ import msrp.messages.*;
  * Abstract class used to allow a fair share of bandwidth between sessions that
  * are using the same connection
  * 
+ * *NOTE* not used atm
+ * 
  * @author João André Pereira Antunes 2008
  * 
  */
