@@ -50,16 +50,14 @@ import msrp.utils.NetworkUtils;
  * 
  * It has one pair of threads associated for writing and reading.
  * 
- * It is also responsible for some parsing, including: 
- * Identifying MSRP transaction requests and responses; 
- * Pre-parsing - identifying what is the content of the transaction from what 
- * isn't;
- * Whenever a transactions is found, parse its data using the Transaction's 
- * parse method;
+ * It is also responsible for some parsing, including: Identifying MSRP
+ * transaction requests and responses; Pre-parsing - identifying what is the
+ * content of the transaction from what isn't; Whenever a transactions is found,
+ * parse its data using the Transaction's parse method;
  * 
  * @author João André Pereira Antunes
  */
- class Connection
+class Connection
     extends Observable
     implements Runnable
 {
@@ -89,7 +87,8 @@ import msrp.utils.NetworkUtils;
     }
 
     /**
-     * Connection constructor for simple MSRP sessions
+     * This will create a new connection object. This connection will create a
+     * socket and bind itself to the first random free port available.
      * 
      * @param address hostname/IP used to bound the new MSRP socket
      * @throws URISyntaxException there was a problem generating the connection
@@ -258,6 +257,9 @@ import msrp.utils.NetworkUtils;
                 + ";tcp", localURI.getQuery(), localURI.getFragment());
 
         int i = 0;
+
+        // The generated URI must be unique, if it isn't, let's generate another
+        // random part for the URI, this is what the following while does:
 
         while (sessions.contains(newURI))
         {
@@ -621,8 +623,8 @@ import msrp.utils.NetworkUtils;
     {
         /**
          * Variable that tells if this instance of the connection is currently
-         * receiving binary data or not, if it's false it's because it should be
-         * receiving US-ASCII data.
+         * receiving header data or body data, if it's false it's because it
+         * should be receiving header data.
          * 
          * This variable is changed by the preParser method and read by the
          * parser method.
@@ -630,7 +632,7 @@ import msrp.utils.NetworkUtils;
          * @see PreParser#preParser(byte[])
          * @see #parser(String)
          */
-        private boolean receivingBinaryData = false;
+        private boolean receivingBodyData = false;
 
         /**
          * Variable used by the method preParser in order to ascertain the state
@@ -650,9 +652,9 @@ import msrp.utils.NetworkUtils;
 
         /**
          * Method that implements a small state machine in order to identify if
-         * the incomingData is in binary or usascii. This method is responsible
-         * for changing the value of the variable receivingBinaryData to the
-         * correct value and then calling the parser.
+         * the incomingData belongs to the headers or to the body. This method
+         * is responsible for changing the value of the variable
+         * receivingBinaryData to the correct value and then calling the parser.
          * 
          * @param incomingData the incoming byte array that contains the data
          *            received
@@ -703,7 +705,7 @@ import msrp.utils.NetworkUtils;
                  * we have two distinct points of start for the algorithm,
                  * either we are in the binary state or in the text state
                  */
-                if (!receivingBinaryData)
+                if (!receivingBodyData)
                 {
                     switch (parserState)
                     {
@@ -749,7 +751,7 @@ import msrp.utils.NetworkUtils;
                                 bufferIncData.array(),
                                 indexLastTimeChanged,
                                 bufferIncData.position() - indexLastTimeChanged,
-                                receivingBinaryData);
+                                receivingBodyData);
                             indexLastTimeChanged = bufferIncData.position();
                             if (incomingTransaction == null)
                             {
@@ -760,7 +762,7 @@ import msrp.utils.NetworkUtils;
                                     .error("The incomingTransaction is null on the preParser in a state where it should not be (receiving binary data)!");
                             }
 
-                            receivingBinaryData = true;
+                            receivingBodyData = true;
                         }
                         else
                         {
@@ -948,10 +950,10 @@ import msrp.utils.NetworkUtils;
                                             indexLastTimeChanged, bufferIncData
                                                 .position()
                                                 - indexLastTimeChanged,
-                                            receivingBinaryData);
+                                            receivingBodyData);
                                         indexLastTimeChanged =
                                             bufferIncData.position();
-                                        receivingBinaryData = false;
+                                        receivingBodyData = false;
                                         parserState = 0;
                                     }
                                     else
@@ -986,7 +988,7 @@ import msrp.utils.NetworkUtils;
              * a state different than zero we should process all the remaining
              * data
              */
-            if (receivingBinaryData && parserState != 0)
+            if (receivingBodyData && parserState != 0)
             {
                 /* here we append the remaining data and process the rest */
                 int offset =
@@ -1011,13 +1013,13 @@ import msrp.utils.NetworkUtils;
 
                 }
                 parser(bufferIncData.array(), indexLastTimeChanged, offset,
-                    receivingBinaryData);
+                    receivingBodyData);
             }
             else
             {
                 parser(bufferIncData.array(), indexLastTimeChanged,
                     bufferIncData.position() - indexLastTimeChanged,
-                    receivingBinaryData);
+                    receivingBodyData);
             }
         }
 
@@ -1052,13 +1054,13 @@ import msrp.utils.NetworkUtils;
      *            consider for processing
      * @param length the number of bytes to process starting from the offset
      *            position
-     * @param receivingBinaryData true if it is receiving binary data false
-     *            otherwise
+     * @param receivingBodyData true if it is receiving data regarding the body
+     *            of a transaction, false otherwise
      * @throws ConnectionParserException Generic error exception TODO specialize
      *             in the future
      */
     private void parser(byte[] incomingBytes, int offset, int length,
-        boolean receivingBinaryData) throws ConnectionParserException
+        boolean receivingBodyData) throws ConnectionParserException
     {
         /*
          * TODO/Cleanup With the introduction of the preparser this method could
@@ -1066,12 +1068,12 @@ import msrp.utils.NetworkUtils;
          * anymore
          */
 
-        if (receivingBinaryData)
+        if (receivingBodyData)
         {
             try
             {
                 incomingTransaction.parse(incomingBytes, offset, length,
-                    receivingBinaryData);
+                    receivingBodyData);
             }
             catch (Exception e)
             {
@@ -1421,7 +1423,7 @@ import msrp.utils.NetworkUtils;
                             incomingTransaction.parse(matchEndTransaction
                                 .group(1).getBytes(usascii), 0,
                                 matchEndTransaction.group(1).length(),
-                                receivingBinaryData);
+                                receivingBodyData);
                         }
                         catch (Exception e)
                         {
@@ -1543,7 +1545,7 @@ import msrp.utils.NetworkUtils;
                         {
                             incomingTransaction.parse(
                                 toParse.getBytes(usascii), 0, toParse.length(),
-                                receivingBinaryData);
+                                receivingBodyData);
                         }
                         catch (Exception e)
                         {
@@ -1579,6 +1581,7 @@ import msrp.utils.NetworkUtils;
          */
         boolean testingOld = false;
         String presetTidOld = new String();
+        // -- start of the code that enables a transaction test.
         if (transactionManager != null)
         {
             testingOld = transactionManager.testing;
@@ -1588,6 +1591,8 @@ import msrp.utils.NetworkUtils;
         transactionManager = new TransactionManager(this);
         transactionManager.testing = testingOld;
         transactionManager.presetTID = presetTidOld;
+        // -- end of the code that enables a transaction test.
+
         socketChannel.connect(remoteAddress);
         Connections connectionsInstance =
             MSRPStack.getConnectionsInstance(address);
