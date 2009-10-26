@@ -598,6 +598,11 @@ public class TransactionManager
 
             if (messageBeingSent == null)
                 messageBeingSent = session.getMessageToSend();
+            // FIXME TODO the generateTransactionsToSend might not initialize
+            // the session if the message being sent is not from this session.
+            // In that case, the connection should pause the messages being sent
+            // and send an empty message or a piece of the message this session
+            // has related with Issue #31
             generateTransactionsToSend();
             // connection.notifyWriteThread();
 
@@ -633,6 +638,11 @@ public class TransactionManager
 
         // change the reference to the lastSendTransaction of the message
         messageBeingSent.setLastSendTransaction(newTransaction);
+
+        // alert the writing thread that it has a job to do probably solves
+        // Issue #32 TODO VERIFY it does solve it with some new performance
+        // tests
+        connection.notifyWriteThread();
 
     }
 

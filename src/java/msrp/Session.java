@@ -43,8 +43,8 @@ import org.slf4j.LoggerFactory;
  * 
  * This class contains a list of MSRP Messages with whom it's currently
  * associated with. It is also designed to be a mandatory point of contact with
- * the MSRPSessionListener class. All of the callbacks done through this
- * class's trigger methods
+ * the MSRPSessionListener class. All of the callbacks done through this class's
+ * trigger methods
  * 
  * 
  * @author João Antunes
@@ -315,8 +315,12 @@ public class Session
         throws URISyntaxException,
         IOException
     {
+        // the following for each block only makes sense because of the
+        // validation task that is yet to be done described below
         for (URI uri : uris)
         {
+            // TODO validate each uri given prior to adding them to the list
+            //related with Issue #16
             this.uris.add(uri);
         }
         connection.addEndPoint(this.uris.get(this.uris.size() - 1), address);
