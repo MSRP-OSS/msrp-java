@@ -184,7 +184,7 @@ public abstract class Message
         this.session = session;
         dataContainer = new MemoryDataContainer(data);
         size = data.length;
-        messageId = session.generateMessageID();
+		messageId = MSRPStack.getInstance().generateMessageID(session);
         this.session.addMessageToSend(this);
         constructorAssociateReport(reportMechanism);
         this.contentType = contentType;
