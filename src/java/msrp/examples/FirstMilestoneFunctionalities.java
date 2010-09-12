@@ -213,7 +213,6 @@ public class FirstMilestoneFunctionalities
          * @see msrp.MSRPSessionListener#acceptHook(msrp.Session,
          * msrp.IncomingMessage)
          */
-        @Override
         /*
          * This is the method that is called by the stack when we receive an
          * incoming message.
@@ -283,7 +282,6 @@ public class FirstMilestoneFunctionalities
          * @see msrp.MSRPSessionListener#receiveMessage(msrp.Session,
          * msrp.Message)
          */
-        @Override
         /*
          * This method is called upon successfully receiving a message
          */
@@ -324,7 +322,6 @@ public class FirstMilestoneFunctionalities
          * @see msrp.MSRPSessionListener#receivedReport(msrp.Session,
          * msrp.Transaction)
          */
-        @Override
         /*
          * This is the method called upon receiving a REPORT request from the
          * other MSRP peer. Note that REPORT requests could be reporting on the
@@ -363,7 +360,6 @@ public class FirstMilestoneFunctionalities
          * @see msrp.MSRPSessionListener#updateSendStatus(msrp.Session,
          * msrp.Message, long)
          */
-        @Override
         /*
          * this method is called regularly, see DefaultReportMechanism
          * shouldTriggerSentHook for more info This granularity can be
@@ -378,14 +374,12 @@ public class FirstMilestoneFunctionalities
 
         }
 
-        @Override
         public void abortedMessage(Session session, IncomingMessage message)
         {
             // Deprecated, use abortedMessageEvent
 
         }
 
-        @Override
         public void abortedMessageEvent(MessageAbortedEvent abortEvent)
         {
             // TODO Auto-generated method stub

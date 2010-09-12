@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 import msrp.FileDataContainer;
+import msrp.MSRPStack;
 import msrp.ReportMechanism;
 import msrp.Session;
 
@@ -62,7 +63,7 @@ public class OutgoingFileMessage
         this.session = session;
         dataContainer = new FileDataContainer(file);
         size = dataContainer.size();
-        messageId = session.generateMessageID();
+		messageId = MSRPStack.getInstance().generateMessageID(session);
         this.session.addMessageToSend(this);
         constructorAssociateReport(reportMechanism);
         this.contentType = contentType;
