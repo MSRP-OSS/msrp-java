@@ -437,7 +437,6 @@ public class TransactionManager
         return newTID;
     }
 
-    @Override
     public void update(Observable connectionObservable, Object transactionObject)
     {
 

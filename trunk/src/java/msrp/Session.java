@@ -349,44 +349,9 @@ public class Session
          */
     }
 
-    /**
-     * Generates a new unique message-ID relative to this session FIXME Issue #7
-     * TODO do this by the method advised on the RFC so that the message-ID is
-     * always unique!
-     * 
-     * @return
-     */
-    public String generateMessageID()
-    {
-        byte[] messageID = new byte[9];
-        TextUtils.generateRandom(messageID);
-        String newMessageID = new String(messageID, TextUtils.usascii);
-
-        while (messagesReceive.containsKey(newMessageID)
-            || messagesSentOrSending.containsKey(newMessageID)
-            || existsInMessagesToSend(newMessageID))
-        {
-            TextUtils.generateRandom(messageID);
-            newMessageID = new String(messageID, TextUtils.usascii);
-        }
-        return newMessageID;
-
-    }
-
     public ArrayList<URI> getToPath()
     {
         return uris;
-    }
-
-    /**
-     * Getter of the property <tt>_connectoin</tt>
-     * 
-     * @return Returns the _connectoin.
-     * @uml.property name="_connectoin"
-     */
-    public msrp.Connection getConnection()
-    {
-        return connection;
     }
 
     /**
@@ -466,16 +431,6 @@ public class Session
         this.relays = relays;
     }
 
-    /**
-     * Getter of the property <tt>_URI</tt>
-     * 
-     * @return Returns the URI that uniquely identifies this session
-     * @uml.property name="_URI"
-     */
-    public URI getURI()
-    {
-        return uri;
-    }
 
     /**
      * Setter of the property <tt>_connectoin</tt>
@@ -749,7 +704,6 @@ public class Session
     }
 
     /**
-     * FIXME Warning: this name is misleading:
      * 
      * retrieves a message from the sentMessages The sentMessages array may have
      * messages that are currently being sent they are only stored for REPORT
@@ -922,14 +876,22 @@ public class Session
         MSRPStack.getInstance().addConnection(connection);
     }
 
-    /**
-     * Convenience method (that probably will disappear when the message id
-     * generation is corrected) that searches for the given messageID on the
-     * queue of messages to send
-     * 
-     * @param messageID String representing the messageID to search for
-     * @return true if it exists on the queue or false otherwise
-     */
+	/**
+	 * @return the address
+	 */
+	public InetAddress getAddress() {
+		return address;
+	}
+
+	/**
+	 * Convenience method (that probably will disappear when the message id
+	 * generation is corrected) that searches for the given messageID on the
+	 * queue of messages to send
+	 * 
+	 * @param messageID
+	 *            String representing the messageID to search for
+	 * @return true if it exists on the queue or false otherwise
+	 */
     private boolean existsInMessagesToSend(String messageID)
     {
         for (Message message : messagesToSend)
@@ -939,6 +901,14 @@ public class Session
         }
         return false;
     }
+
+	public URI getURI() {
+		return uri;
+	}
+
+	protected Connection getConnection() {
+		return connection;
+	}
 
     /*
      * public Message sendMessage(String contentType, byte[] byteContent) throws
