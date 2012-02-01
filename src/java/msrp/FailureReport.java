@@ -72,7 +72,7 @@ public class FailureReport
 
         if (transaction != null
             && !transaction.getFailureReport().equals(
-                message.getSuccessReport()))
+                message.getFailureReport()))
             throw new InternalErrorException(
                 "The value of failure report of the originating transaction"
                     + " and of the message differ");
@@ -83,6 +83,7 @@ public class FailureReport
                     + " that explicitly doesn't want failure reports");
         /* end sanity checks */
 
+        this.direction = OUT;
         offsetRead[HEADERINDEX] = offsetRead[ENDLINEINDEX] = 0;
         transactionType = TransactionType.REPORT;
 
@@ -147,7 +148,7 @@ public class FailureReport
             // TODO validate the comment with a reg. exp. pattern in
             // RegexMSRPFactory that validates that comment is utf8text, if it's
             // not, log it and use comment=null
-            header.concat(" " + comment + "\r\n");
+            header = header.concat(" " + comment + "\r\n");
         }
 
         headerBytes = header.getBytes(usascii);
