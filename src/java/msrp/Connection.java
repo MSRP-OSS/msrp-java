@@ -19,7 +19,6 @@ package msrp;
 import java.io.*;
 import java.net.*;
 import java.nio.*;
-import java.nio.channels.Channels;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.nio.charset.Charset;
@@ -40,8 +39,6 @@ import msrp.exceptions.ConnectionParserException;
 import msrp.exceptions.ConnectionReadException;
 import msrp.exceptions.ConnectionWriteException;
 import msrp.exceptions.IllegalUseException;
-import msrp.exceptions.ImplementationException;
-import msrp.exceptions.InvalidHeaderException;
 import msrp.messages.Message;
 import msrp.utils.NetworkUtils;
 
@@ -1194,8 +1191,7 @@ class Connection
                                 + matcherTransactionRequest.group(3) + " tID:"
                                 + tID);
                             newTransactionType =
-                                TransactionType.valueOf("Unsupported"
-                                    .toUpperCase());
+                                TransactionType.UNSUPPORTED;
                         }
 
                         try
@@ -1605,12 +1601,11 @@ class Connection
     }
 
     /**
-     * 
-     * @return an InetAddress with only the IP of where this connection is bound
+     * @return the InetAddress of the locally bound IP
      */
-    public InetAddress getIpAddress()
+    public InetAddress getLocalAddress()
     {
-        return socketChannel.socket().getInetAddress();
+        return socketChannel.socket().getLocalAddress();
     }
 
     /**

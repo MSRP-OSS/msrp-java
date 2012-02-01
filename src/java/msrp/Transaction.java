@@ -16,9 +16,7 @@
  */
 package msrp;
 
-import java.io.IOException;
 import java.net.URI;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -1749,7 +1747,7 @@ public class Transaction
             // connections
             Connections connectionsInstance =
                 MSRPStack.getConnectionsInstance(transactionManager
-                    .getConnection().getIpAddress());
+                    .getConnection().getLocalAddress());
             Session newSession =
                 connectionsInstance.sessionToIdentify((getToPath())[0]);
             if (newSession == null)
