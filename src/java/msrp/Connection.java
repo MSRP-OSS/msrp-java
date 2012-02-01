@@ -54,11 +54,8 @@ import msrp.utils.NetworkUtils;
  * 
  * @author João André Pereira Antunes
  */
-class Connection
-    extends Observable
-    implements Runnable
+class Connection extends Observable implements Runnable
 {
-
     /**
      * The logger associated with this class
      */
@@ -70,7 +67,6 @@ class Connection
     public Connection(SocketChannel newSocketChannel)
         throws URISyntaxException
     {
-
         socketChannel = newSocketChannel;
         random = new Random();
         Socket socket = socketChannel.socket();
@@ -84,72 +80,37 @@ class Connection
     }
 
     /**
-     * This will create a new connection object. This connection will create a
-     * socket and bind itself to the first random free port available.
+     * Create a new connection object.
+     * This connection will create a socket and bind itself to a free port.
      * 
      * @param address hostname/IP used to bound the new MSRP socket
      * @throws URISyntaxException there was a problem generating the connection
      *             dependent part of the URI
      * @throws IOException if there was a problem with the creation of the
      *             socket
-     * 
      */
-    public Connection(InetAddress address)
-        throws URISyntaxException,
-        IOException
+    public Connection(InetAddress address) throws URISyntaxException, IOException
     {
-
         transactionManager = new TransactionManager(this);
         random = new Random();
         // activate the connection:
-
-        boolean localAddress = false;
-
-        // sanity check, check that the given address is a local one where a
-        // socket
-        // could be bound
-        InetAddress local[] =
-            InetAddress.getAllByName(InetAddress.getLocalHost().getHostName());
-
-        /*
-         * for (InetAddress inetAddress : local) { if
-         * (inetAddress.equals(address)) localAddress = true; } if
-         * (!localAddress) throw new UnknownHostException(
-         * "the given address is a loopback device not a local/inet one");
-         */
 
         if (NetworkUtils.isLinkLocalIPv4Address(address))
         {
             logger.info("Connection: given address is a local one: " + address);
         }
 
-        // bind a socket to a local random port, if it's in use try again
-        // FIXME could prove to be a bug if the bind procedure doesn't work
-
+        // bind a socket to a local TEMP port.
         socketChannel = SelectorProvider.provider().openSocketChannel();
         Socket socket = socketChannel.socket();
-        InetSocketAddress socketAddr;
-        for (socketAddr =
-            new InetSocketAddress(address, random.nextInt(65535 - 1024) + 1024); !socket
-            .isBound(); socketAddr =
-            new InetSocketAddress(address, random.nextInt(65535 - 1024) + 1024))
-        {
-            try
-            {
-                socket.bind(socketAddr);
-            }
-            catch (IOException e)
-            {
-
-                // do nothing
-            }
-        }
+        InetSocketAddress socketAddr = new InetSocketAddress(address, 0);
+        socket.bind(socketAddr);
 
         // fill the localURI variable that contains the uri parts that are
         // associated with this connection (scheme[protocol], host and port)
         URI newLocalURI =
-            new URI("msrp", null, address.getHostAddress(), socket
-                .getLocalPort(), null, null, null);
+            new URI("msrp", null, address.getHostAddress(), socket.getLocalPort(),
+            		null, null, null);
         localURI = newLocalURI;
         // this.addObserver(transactionManager);
     }
@@ -190,7 +151,7 @@ class Connection
      */
     protected void setLocalURI(URI localURI)
     {
-        localURI = localURI;
+        this.localURI = localURI;
     }
 
     protected boolean isEstablished()
@@ -218,11 +179,6 @@ class Connection
     protected HashSet<URI> getSessionURIs()
     {
         return sessions;
-    }
-
-    private void setRemoteURL(URL url)
-    {
-        _remoteURL = url;
     }
 
     /**
@@ -288,7 +244,6 @@ class Connection
      *            the byteArray
      * 
      */
-
     private void generateRandom(byte[] byteArray)
     {
         int i;
@@ -1621,5 +1576,4 @@ class Connection
             }
         }
     }
-
 }
