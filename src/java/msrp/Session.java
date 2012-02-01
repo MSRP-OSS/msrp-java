@@ -105,7 +105,7 @@ public class Session
 
     /**
      * @desc the connection associated with this session
-     * @uml.property name="_connectoin"
+     * @uml.property name="_connection"
      * @uml.associationEnd inverse="_session:msrp.Connection"
      */
     private msrp.Connection connection = null;
@@ -266,6 +266,7 @@ public class Session
         // is the subsequent needed?! TODO
         stackInstance.addConnection(uri, connection);
         set_relays(relays);
+        uris.add(destinationURI);
         logger.trace("MSRP Session created, tls: " + tls + " relays: " + relays
             + " destinationURI: " + destinationURI + " InetAddress:" + address);
 
@@ -484,15 +485,30 @@ public class Session
     }
 
     /**
-     * Adds the given message to the end of the message to send queue
+     * Adds the given message to the end of the message to send queue.
+     * Kick off when queue is empty.
      * 
      * @param message the message to be added to the end of the message queue
      */
     public void addMessageToSend(Message message)
     {
         messagesToSend.add(message);
-
+        triggerSending();
     }
+
+	/**
+	 * Have transactionManager send awaiting messages from session.
+	 */
+	private void triggerSending() {
+		if (transactionManager != null) {
+        	synchronized(getTransactionManager().getTransactionsToSend()) {
+        		if (!transactionManager.hasDataToSend()) {
+        			transactionManager.setMessageBeingSent(getMessageToSend());
+        			transactionManager.generateTransactionsToSend();
+        		}
+        	}
+        }
+	}
 
     /**
      * @return true if this session has messages to send false otherwise
@@ -792,7 +808,8 @@ public class Session
     {
         logger.trace("Called the triggerReceiveMessage hook");
         msrpSessionListener.receiveMessage(this, message);
-
+        if (hasMessagesToSend())
+        	triggerSending();
     }
 
     /**
