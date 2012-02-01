@@ -16,9 +16,6 @@
  */
 package msrp.messages;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import msrp.*;
@@ -27,13 +24,8 @@ import msrp.exceptions.*;
 
 import org.slf4j.*;
 
-import sun.security.action.GetBooleanAction;
-
 /**
  * Class that represents a generic MSRP message.
- * 
- * 
- * 
  * 
  * @author João André Pereira Antunes
  */
@@ -175,7 +167,7 @@ public abstract class Message
         throws IllegalUseException
     {
 
-        if (data.length > MSRPStack.getInstance().getShortMessageBytes())
+        if (data.length > MSRPStack.getShortMessageBytes())
         {
             // TODO create new exception for this
             throw new IllegalUseException(
