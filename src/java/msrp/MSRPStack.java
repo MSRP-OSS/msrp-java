@@ -295,43 +295,33 @@ public class MSRPStack implements Observer {
 	 *            address can't be accessed, a random number is generated
 	 *            instead
 	 * 
-	 * 
 	 * @return quoting the RFC: "For example, an endpoint could concatenate an
 	 *         instance identifier such as a MAC address, its idea of the number
 	 *         of seconds since the epoch, a process ID, and a monotonically
 	 *         increasing 16-bit integer, all base-64 encoded. Alternately, an
 	 *         endpoint without an on-board clock could simply use a 64-bit |
 	 *         random number and base-64 encode it." If the param
-	 * 
-	 * 
 	 */
 	public String generateMessageID(Session sessionBeingUsed) {
 		InetAddress address = sessionBeingUsed.getAddress();
 		boolean gotMacAddress = false;
-		byte[] macAddress = new byte[12];
-		// in case we don't actually get a mac address!
-		TextUtils.generateRandom(macAddress);
+		byte[] macAddress = null;
 		try {
 			macAddress = NetworkInterface.getByInetAddress(address)
 				.getHardwareAddress();
 			gotMacAddress = true;
-		} catch (Exception e) {
-			gotMacAddress = false;
-		}
+		} catch (Exception e) { /* empty */ }
 
-		if (!gotMacAddress || address.isLoopbackAddress() || macAddress == null) {
+		if (!gotMacAddress || macAddress == null) {
 			// if we couldn't get the data to use the advice, we'll use an epoch
 			// representation plus a random number
 			return Long.toString(System.currentTimeMillis())
 					+ Short.toString(getCounterNumber());
-
-		}
-		else {
+		} else {
 			// instead of a PID we'll use an hashcode for the class
 			// ID = 19 digits max. epoch + 12 digits mac addr = 31 max.
 			return Long.toString(System.currentTimeMillis())
-					+ new String(macAddress);
-
+					+ TextUtils.toHexString(macAddress);
 		}
 	}
 

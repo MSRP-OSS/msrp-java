@@ -42,40 +42,6 @@ public abstract class ReportMechanism
         new HashMap<Message, Counter>();
 
     /**
-     * This method is called by the stack to sinalize an incoming body byte on a
-     * send transaction request it's called after the addition of the byte to
-     * the transaction It's up to this method to store the info about the
-     * received message bytes, it should take into consideration that chunks can
-     * overlap and be out of order
-     * 
-     * @deprecated this method represented too much of a performance decrease
-     *             due to the overhead of accounting byte by byte the received
-     *             data
-     * 
-     * @param message the message to which a byte was received
-     * @param transaction the transaction that received the body byte
-     * 
-     * @throws IllegalArgumentException if this method was called with a Message
-     *             other than an IncomingMessage
-     * 
-     *             public final void countReceivedBodyByte(Message message,
-     *             Transaction transaction) { if (!(message instanceof
-     *             IncomingMessage)) throw new
-     *             IllegalArgumentException("Illegal kind of message" +
-     *             " this method should only be called with an IncomingMessage"
-     *             ); Counter counter = getCounter(message); long
-     *             startingPosition = transaction.getByteRange()[0]; int
-     *             numberBytes = transaction.getNrBodyBytes();
-     * 
-     *             if (counter.register(startingPosition, numberBytes)) {
-     *             triggerSuccessReport(message, transaction,
-     *             message.getCounter() .getCount() - 1,
-     *             message.getCounter().getCount()); }
-     * 
-     *             }
-     */
-
-    /**
      * Method that accounts for blocks of received body of the given message
      * starting at the offset given by the byte-range header field of the
      * associated transaction plus the chunkStartOffset
