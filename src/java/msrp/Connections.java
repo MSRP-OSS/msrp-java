@@ -22,14 +22,12 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Random;
@@ -87,32 +85,12 @@ public class Connections
             }
             serverSocketChannel =
                 SelectorProvider.provider().openServerSocketChannel();
-            ServerSocket socket;
 
-            // bind the socket to a local random port, if it's in use try again
-            // FIXME could prove to be a bug if the bind procedure doesn't work
-            socket = serverSocketChannel.socket();
-            InetSocketAddress socketAddr;
-            for (socketAddr =
-                new InetSocketAddress(address,
-                    random.nextInt(65535 - 1024) + 1024); !socket.isBound(); socketAddr =
-                new InetSocketAddress(address,
-                    random.nextInt(65535 - 1024) + 1024))
-            {
-                try
-                {
-                    socket.bind(socketAddr);
-                }
-                catch (IOException e)
-                {
+            // bind the socket to a local temp port.
+            ServerSocket socket = serverSocketChannel.socket();
+            InetSocketAddress socketAddr = new InetSocketAddress(address, 0);
 
-                    logger
-                        .error(
-                            "Error! the connections hanged and didn't got a socket associated",
-                            e);
-                    // do nothing
-                }
-            }
+            socket.bind(socketAddr);
 
             // fill the localURI variable that contains the uri parts that are
             // associated with this connection (scheme[protocol], host and port)
@@ -175,28 +153,12 @@ public class Connections
 
             serverSocketChannel =
                 SelectorProvider.provider().openServerSocketChannel();
-            ServerSocket socket;
 
-            // bind the socket to a local random port, if it's in use try again
-            // FIXME could prove to be a bug if the bind procedure doesn't work
-            socket = serverSocketChannel.socket();
-            InetSocketAddress socketAddr;
-            for (socketAddr =
-                new InetSocketAddress(newAddress,
-                    random.nextInt(65535 - 1024) + 1024); !socket.isBound(); socketAddr =
-                new InetSocketAddress(newAddress,
-                    random.nextInt(65535 - 1024) + 1024))
-            {
-                try
-                {
-                    socket.bind(socketAddr);
-                }
-                catch (IOException e)
-                {
+            // bind the socket to a local temp. port.
+            ServerSocket socket = serverSocketChannel.socket();
+            InetSocketAddress socketAddr = new InetSocketAddress(newAddress, 0);
 
-                    // do nothing
-                }
-            }
+            socket.bind(socketAddr);
 
             // fill the localURI variable that contains the uri parts that are
             // associated with this connection (scheme[protocol], host and port)
@@ -207,8 +169,7 @@ public class Connections
         }
         catch (Exception e)
         {
-            logger
-                .error("Error! the connections hanged and didn't got a socket associated");
+            logger.error("Error! Connection did not get an associated socket");
         }
         return this;
     }
