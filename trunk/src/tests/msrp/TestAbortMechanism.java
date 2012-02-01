@@ -22,7 +22,6 @@ import msrp.events.*;
 
 import java.net.*;
 import java.util.*;
-import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
 import java.io.*;
 
 import static org.junit.Assert.*;
@@ -72,7 +71,7 @@ public class TestAbortMechanism
         try
         {
             testProperties.load(TestAbortMechanism.class
-                .getResourceAsStream("/test.properties"));
+                .getResourceAsStream("test.properties"));
             String addressString = testProperties.getProperty("address");
             address = InetAddress.getByName(addressString);
             /*
@@ -151,8 +150,8 @@ public class TestAbortMechanism
             fileStream.write(bigData);
             fileStream.flush();
             fileStream.close();
-            System.out.println("Stoped generating and writing 5MB "
-                + "of random data took: "
+            System.out.println(
+            		"Stopped generating and writing 5MB of random data. Took: "
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message fiveMegaByteMessage =
@@ -267,9 +266,9 @@ public class TestAbortMechanism
             fileStream.write(bigData);
             fileStream.flush();
             fileStream.close();
-            System.out.println("Stoped generating and writing 5MB "
-                + "of random data took: "
-                + ((System.currentTimeMillis() - startTime) / 1000) + "s");
+            System.out.println(
+            		"Stopped generating and writing 5MB of random data. Took: "
+    				+ ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message fiveMegaByteMessage =
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);

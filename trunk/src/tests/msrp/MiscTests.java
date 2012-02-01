@@ -18,34 +18,25 @@ package msrp;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLStreamHandler;
-import java.net.URLStreamHandlerFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.nio.charset.spi.CharsetProvider;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
-import sun.misc.HexDumpEncoder;
-
-import msrp.*;
 import msrp.Transaction.*;
 import msrp.events.MessageAbortedEvent;
 import msrp.messages.IncomingMessage;
