@@ -131,6 +131,10 @@ public class MSRPStack implements Observer {
 		activeSessions.put(session.getURI(), session);
 	}
 
+	protected void removeActiveSession(Session session) {
+		activeSessions.remove(session.getURI());
+	}
+
 	private HashMap<String, Transaction> transactions;
 
 	/**

@@ -18,22 +18,15 @@ package msrp;
 
 import msrp.exceptions.*;
 import msrp.messages.*;
-import msrp.utils.*;
 import msrp.events.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.UnknownHostException;
-import java.awt.RadialGradientPaint;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Random;
+import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +44,6 @@ import org.slf4j.LoggerFactory;
  */
 public class Session
 {
-
     /**
      * The logger associated with this class
      */
@@ -629,10 +621,32 @@ public class Session
     /**
      * This method releases all of the resources associated with this session.
      * It could eventually, but not necessarily, close connections conforming to
-     * the Connection Model on RFC 4975 TODO work in progress
+     * the Connection Model on RFC 4975.
      */
     public void tearDown()
     {
+		// clear local resources
+		uris = null;
+
+		if (messagesToSend != null) {
+			Iterator<Message> it = messagesToSend.iterator();
+			while (it.hasNext()) {
+				DataContainer buffer = it.next().getDataContainer();
+				if (buffer != null)
+					buffer.dispose();
+			}
+		messagesToSend = null;
+		}
+
+		if (transactionManager != null) {
+			transactionManager.removeSession(this);
+			transactionManager = null;
+		}
+		// TODO: (msrp-30) remove a session from a connection, possibly closing it.
+		if (stackInstance != null) {
+			stackInstance.removeActiveSession(this);
+			stackInstance = null;
+		}
     }
 
     /**
@@ -878,10 +892,9 @@ public class Session
 
     }
 
-    /**
+    /*
      * @param connection the connection to add adds the connection to the
      *            session and to the MSRPStack
-     */
     private void setConnection(Connection conn)
     {
         if (conn == null)
@@ -892,6 +905,7 @@ public class Session
         connection = conn;
         MSRPStack.getInstance().addConnection(connection);
     }
+     */
 
 	/**
 	 * @return the address
@@ -900,7 +914,7 @@ public class Session
 		return address;
 	}
 
-	/**
+	/*
 	 * Convenience method (that probably will disappear when the message id
 	 * generation is corrected) that searches for the given messageID on the
 	 * queue of messages to send
@@ -908,7 +922,6 @@ public class Session
 	 * @param messageID
 	 *            String representing the messageID to search for
 	 * @return true if it exists on the queue or false otherwise
-	 */
     private boolean existsInMessagesToSend(String messageID)
     {
         for (Message message : messagesToSend)
@@ -918,6 +931,7 @@ public class Session
         }
         return false;
     }
+	 */
 
 	public URI getURI() {
 		return uri;
