@@ -21,13 +21,11 @@ import msrp.events.MessageAbortedEvent;
 import msrp.exceptions.*;
 import msrp.messages.*;
 import msrp.utils.*;
-import msrp.*;
 
 import java.net.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -46,7 +44,6 @@ import org.slf4j.LoggerFactory;
 public class TransactionManager
     implements Observer
 {
-
     /**
      * The logger associated with this class
      */
@@ -80,8 +77,6 @@ public class TransactionManager
 
     private HashMap<String, Transaction> existingTransactions =
         new HashMap<String, Transaction>();
-
-    private MSRPStack instanceStack = MSRPStack.getInstance();
 
     private HashMap<URI, Session> associatedSessions =
         new HashMap<URI, Session>();
@@ -312,8 +307,6 @@ public class TransactionManager
                     + transaction);
             }
 
-            long[] byteRange = transaction.getByteRange();
-            long totalBytes = transaction.getTotalMessageBytes();
             Message associatedMessage = transaction.getMessage();
             if (associatedMessage != null && associatedMessage.isComplete())
             {
@@ -572,7 +565,10 @@ public class TransactionManager
     {
         session.setTransactionManager(this);
         associatedSessions.put(session.getURI(), session);
+    }
 
+    protected void removeSession(Session session) {
+    	associatedSessions.remove(session.getURI());
     }
 
     /**
@@ -1262,5 +1258,4 @@ public class TransactionManager
             addTransactionToSend(transaction, UNIMPORTANT);
         }
     }
-
 }
