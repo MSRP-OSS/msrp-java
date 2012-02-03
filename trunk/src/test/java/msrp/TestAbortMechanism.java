@@ -71,7 +71,7 @@ public class TestAbortMechanism
         try
         {
             testProperties.load(TestAbortMechanism.class
-                .getResourceAsStream("test.properties"));
+                .getResourceAsStream("/test.properties"));
             String addressString = testProperties.getProperty("address");
             address = InetAddress.getByName(addressString);
             /*
