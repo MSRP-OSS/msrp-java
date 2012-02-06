@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import msrp.*;
 import msrp.Transaction.TransactionType;
 import msrp.exceptions.*;
+import msrp.utils.TextUtils;
 
 import org.slf4j.*;
 
@@ -134,6 +135,8 @@ public abstract class Message
      * @uml.property name="successReport"
      */
     private boolean successReport = false;
+
+    protected WrappedMessage wrappedMessage = null;
 
     /**
      * This field keeps a reference to the last SEND transaction associated with
@@ -464,7 +467,29 @@ public abstract class Message
         return contentType;
     }
 
-    /**
+    public String getContent() {
+    	if (this.getDirection() == OUT || (this.getDirection() == IN && this.isComplete())) {
+    		if (wrappedMessage == null) {
+    			return getRawContent();
+    		} else {
+    			return wrappedMessage.getMessageContent();
+    		}
+    	}
+    	return null;
+    }
+
+    public String getRawContent() {
+    	if (this.getDirection() == OUT || (this.getDirection() == IN && this.isComplete())) {
+    		try {
+				return new String(this.getDataContainer().get(0, this.getSize()).array(), TextUtils.utf8);
+			} catch (Exception e) {
+				logger.info("No raw content to retrieve", e);
+			}
+    	}
+		return null;
+	}
+
+	/**
      * Getter of the property <tt>_failureReport</tt>
      * 
      * @return Returns the report.
@@ -589,6 +614,12 @@ public abstract class Message
      *         otherwise
      */
     public abstract boolean isComplete();
+
+    /** Message is complete, see if correct.
+     * Also the cue for any (un-)wrapping.
+     * @throws Exception
+     */
+    public abstract void validate() throws Exception;
 
     /**
      * Aborts the Outgoing or incoming message note, both arguments are

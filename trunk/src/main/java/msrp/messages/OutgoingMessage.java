@@ -162,4 +162,7 @@ public class OutgoingMessage
         return OUT;
     }
 
+    public void validate() throws Exception {
+    	;
+    }
 }
