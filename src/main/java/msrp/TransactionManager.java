@@ -295,7 +295,7 @@ public class TransactionManager
             + " message-id:" + transaction.getMessageID()
             + " Connection (localURI) associated: " + connection.getLocalURI());
 
-        if (transaction.getTransactionType().equals(TransactionType.SEND))
+        if (transaction.getTransactionType() == TransactionType.SEND)
         {
             try
             {
@@ -306,11 +306,9 @@ public class TransactionManager
                 logger.error("Generating a success report for transaction: "
                     + transaction);
             }
-
-            Message associatedMessage = transaction.getMessage();
-            if (associatedMessage != null && associatedMessage.isComplete())
+            Message message = transaction.getMessage();
+            if (message != null && message.isComplete())
             {
-
                 logger.trace("transaction: tId" + transaction.getTID()
                     + " has an associated message message-id:"
                     + transaction.getMessageID() + " that is complete");
@@ -326,29 +324,26 @@ public class TransactionManager
                 // (?!
                 // no use atm also think twice about
                 // maintaining the receivedMessages on Session)
-
                 try
                 {
-                    long callCount = associatedMessage.getCounter().getCount();
+                	message.validate();
 
-                    associatedMessage.getReportMechanism()
-                        .triggerSuccessReport(associatedMessage, transaction,
-                            associatedMessage.lastCallReportCount, callCount);
-                    associatedMessage.lastCallReportCount = callCount;
-                    Message message = transaction.getMessage();
-                    /**
-                     *TODO Validate the content of the message?! with the
-                     * validator?!
-                     */
+                	long callCount = message.getCounter().getCount();
+                    message.getReportMechanism()
+                        .triggerSuccessReport(message, transaction,
+                            message.lastCallReportCount, callCount);
+                    message.lastCallReportCount = callCount;
+
                     session.triggerReceiveMessage(message);
                 }
                 catch (Exception e)
                 {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+					try {
+						FailureReport fr = new FailureReport(message, session, transaction,
+								"000", MessageAbortedEvent.RESPONSE400, e.getMessage());
+	                	addPriorityTransaction(fr);
+					} catch (Exception e1) { /*empty */ }
                 }
-
-                // TODO parse the content-type of the message
             }
         }
         if (transaction.getTransactionType().equals(TransactionType.REPORT))
@@ -565,6 +560,7 @@ public class TransactionManager
     {
         session.setTransactionManager(this);
         associatedSessions.put(session.getURI(), session);
+
     }
 
     protected void removeSession(Session session) {
@@ -1258,4 +1254,5 @@ public class TransactionManager
             addTransactionToSend(transaction, UNIMPORTANT);
         }
     }
+
 }
