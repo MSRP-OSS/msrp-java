@@ -26,11 +26,12 @@ import java.nio.charset.*;
  */
 public class TextUtils
 {
-    
+
     public static Charset usascii = Charset.forName("US-ASCII");
-    
+    public static Charset utf8 = Charset.forName("UTF-8");
+
     static Random randomGenerator = new Random();
-    
+
     /**
      * Generates a number of random alpha-numeric characters in US-ASCII
      * 
@@ -41,7 +42,6 @@ public class TextUtils
      **/
     public static void generateRandom(byte[] byteArray)
     {
-        
         int i;
         randomGenerator.nextBytes(byteArray);
         for (i = 0; i < byteArray.length; i++)

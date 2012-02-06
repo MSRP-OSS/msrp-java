@@ -27,6 +27,8 @@ import msrp.events.MessageAbortedEvent;
 import msrp.exceptions.IllegalUseException;
 import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InternalErrorException;
+import msrp.exceptions.InvalidHeaderException;
+import msrp.wrap.Wrap;
 
 /**
  * This class is used to generate incoming messages
@@ -137,6 +139,17 @@ public class IncomingMessage
     public int getDirection()
     {
         return IN;
+    }
+
+    public void validate() throws Exception {
+    	if (this.getSize() > 0) {
+    		if (this.getContentType() == null)
+    			throw new InvalidHeaderException("no content type.");
+	    	if (Wrap.getInstance().isWrapperType(this.getContentType())) {
+	    		wrappedMessage = Wrap.getInstance().getWrapper(this.getContentType());
+	    		wrappedMessage.parse(this.getDataContainer().get(0, 0));
+	    	}
+    	}
     }
 
     /**
