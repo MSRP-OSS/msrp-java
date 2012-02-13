@@ -78,7 +78,7 @@ public class OutgoingMessage
     public void abort(int reason, String extraReasonInfo)
         throws InternalErrorException
     {
-        logger.trace("Going to abort an OutgoingMessage, reason: " + reason
+        logger.debug("Going to abort an OutgoingMessage, reason: " + reason
             + " comment: " + extraReasonInfo);
         /*
          * Sanity checks:
@@ -118,7 +118,8 @@ public class OutgoingMessage
             if (transaction.transactionType.equals(TransactionType.SEND)
                 && transaction.getMessage().equals(this))
             {
-                logger.debug("Found transaction: " + transaction + " associated with message: " + this);
+                logger.debug("Found transaction: " + transaction
+                			+ " associated with message[" + this + "]");
                 if (!firstTransactionFound)
                 {
                     transaction.abort();

@@ -537,12 +537,11 @@ public class Transaction
     @Override
     public String toString()
     {
-        String toReturn = "tr. ID: " + tID;
-        toReturn = toReturn.concat(" of type:" + transactionType.toString());
+    	StringBuilder toReturn = new StringBuilder(40);
+    	toReturn.append("Tx-").append(transactionType).append("[").append(tID).append("]");
         if (hasResponse())
-            toReturn =
-                toReturn.concat(" has response, code:" + response.responseCode);
-        return toReturn;
+            toReturn.append(", response code[").append(response.responseCode).append("]");
+        return toReturn.toString();
 
     }
 

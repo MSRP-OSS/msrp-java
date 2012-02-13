@@ -45,8 +45,6 @@ public class Counter
      */
     ArrayList<long[]> counter;
 
-    private static final short STARTINGPOSITION = 0;
-
     private static final int VMIN = 0;
 
     private static final int NRBYTESPOS = 1;
@@ -91,8 +89,8 @@ public class Counter
     protected synchronized boolean register(long startingPosition,
         long numberBytes)
     {
-        logger.trace("going to register: " + numberBytes
-            + " received bytes starting at position:" + startingPosition);
+        logger.debug("Register: " + numberBytes
+            + " bytes received @ position " + startingPosition);
         long previousValueConsecutiveBytes = nrConsecutiveBytes;
         long[] valueToRegister =
         { startingPosition, numberBytes };
@@ -110,7 +108,7 @@ public class Counter
             if (vMinToInsert < toEvaluate[VMIN]
                 && vMaxToInsert < toEvaluate[VMIN])
             {
-                logger.debug("Case one - separate cluster before - detected");
+                logger.trace("1. separate cluster before detected");
                 // insert the new element before
                 int indexToInsert = counterIterator.previousIndex();
                 if (indexToInsert == -1)
@@ -132,8 +130,7 @@ public class Counter
                 && vMaxExisting >= vMaxToInsert
                 && vMaxToInsert >= toEvaluate[VMIN])
             {
-                logger.debug("Case two - Intersects and extends it in the "
-                    + " beginning - detected");
+                logger.trace("2. Intersects and extends in the beginning detected");
                 valueToRegister[NRBYTESPOS] =
                     vMaxExisting - valueToRegister[VMIN];
 
@@ -153,8 +150,7 @@ public class Counter
             else if (vMinToInsert >= toEvaluate[VMIN]
                 && vMaxToInsert <= vMaxExisting)
             {
-                logger.debug("Case three - Within an existing cluster - "
-                    + "detected");
+                logger.trace("3. Within existing cluster detected");
                 // don't quite do anything, just break the cycle
                 inserted = true;
                 break;
@@ -163,8 +159,7 @@ public class Counter
             else if (vMinToInsert >= toEvaluate[VMIN]
                 && vMinToInsert <= vMaxExisting && vMaxToInsert >= vMaxExisting)
             {
-                logger.debug("Case four - Intersects and extends it further "
-                    + "to the end - detected");
+                logger.trace("4. Intersects and extends further to end detected");
                 // remove the existing one and create the new one
                 counterIterator.remove();
                 valueToRegister[VMIN] = toEvaluate[VMIN];
@@ -184,7 +179,7 @@ public class Counter
                 && vMinToInsert > vMaxExisting)
             // don't do anything
             {
-                logger.debug("Case five - Separate cluster after - detected");
+                logger.trace("5. Separate cluster after detected");
                 // go to the next iteration
                 continue;
 
@@ -194,7 +189,7 @@ public class Counter
                 && vMaxToInsert > vMaxExisting)
             // case six - bigger new cluster
             {
-                logger.debug("Case six - bigger new cluster - detected");
+                logger.trace("6. bigger new cluster detected");
                 // remove this one
                 counterIterator.remove();
                 count -= toEvaluate[NRBYTESPOS];
@@ -204,13 +199,13 @@ public class Counter
             }
             else
             {
-                logger.error("Counter algorithm serious error, please "
+                logger.error("Serious error in counter algorithm, please "
                     + "report this error to the developers");
             }
         }
         if (!inserted)
         {
-            logger.debug("Not inserted - and cycle ended - detected");
+            logger.trace("Not inserted and cycle ended");
             counter.add(valueToRegister);
             // update the number of counted and consecutive bytes
             count += valueToRegister[NRBYTESPOS];

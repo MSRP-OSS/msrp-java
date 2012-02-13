@@ -159,8 +159,8 @@ public class TransactionResponse
     @Override
     public String toString()
     {
-        return "Transaction response of tr.ID: " + tID + " response code: "
-            + responseCode;
+        return "Transaction response of Tx[" + tID + "] response code["
+            + responseCode + "]";
     }
 
     /**
