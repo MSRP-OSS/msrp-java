@@ -1657,7 +1657,6 @@ public class Transaction
         {
             return null;
         }
-
     }
 
     /**
@@ -2006,8 +2005,7 @@ public class Transaction
 
         // TODO support multiple From-Path URIs
         Pattern generalTransactionFields =
-            Pattern
-                .compile(
+            Pattern.compile(
                     "(^To-Path:) (.{7,120})(\r\n)(From-Path:) (.{7,})(\r\n)(\\p{ASCII}*)",
                     Pattern.CASE_INSENSITIVE);
         Matcher toAndFromMatcher =
@@ -2071,8 +2069,7 @@ public class Transaction
         case SEND:
             /* Message-ID processing: */
             Pattern messageIDPattern =
-                Pattern
-                    .compile(
+                Pattern.compile(
                         "(.*)(Message-ID:) ((\\p{Alnum}|\\.|\\-|\\+|\\%|\\=){3,31})(\r\n)(.*)",
                         Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
             Matcher messageIDMatcher = messageIDPattern.matcher(yetToBeParsed);
@@ -2092,8 +2089,7 @@ public class Transaction
 
             /* Byte-Range processing: */
             Pattern byteRangePattern =
-                Pattern
-                    .compile(
+                Pattern.compile(
                         "(.*)(Byte-Range:) (\\p{Digit}+)-(\\p{Digit}+|\\*)/(\\p{Digit}+|\\*)(\r\n)(.*)",
                         Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
             Matcher byteRangeMatcher = byteRangePattern.matcher(yetToBeParsed);
@@ -2127,7 +2123,6 @@ public class Transaction
                         "Error, erroneously parsed part of the Byte-Range field as an INT",
                         e);
                 }
-
             }
 
             /* Content-Type processing: */
@@ -2140,8 +2135,7 @@ public class Transaction
             // "(.*)(Content-Type:) (([!#$%&'*+\\-.][0-9][A-Z][^-~]){1,30}/([!#$%&'*+-.][0-9][A-Z][^-~]){1,30})(\r\n)(.*)"
             // , Pattern.DOTALL);
             Pattern contentTypePattern =
-                Pattern
-                    .compile(
+                Pattern.compile(
                         "(.*)(Content-Type:) (\\p{Alnum}{1,30}/\\p{Alnum}{1,30})(\r\n)(.*)",
                         Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
             Matcher contentTypeMatcher =
@@ -2226,18 +2220,13 @@ public class Transaction
             }
 
             /* Report request specific headers: */
-            if (transactionType.equals(TransactionType.REPORT))
+            if (transactionType == TransactionType.REPORT)
             {
-
-                /* Status: processing: */
-
-                // TODO FIXME alter the pattern so that it recognizes also the
-                // comments as specified in the formal syntax of rfc4975
+                /* 'Status:' processing */
                 Pattern statusHeaderPattern =
-                    Pattern
-                        .compile(
-                            "(.*)(Status:) (\\p{Digit}{3}) (\\p{Digit}{3})(\r\n)(.*)",
-                            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+                    Pattern.compile(
+                        "(.*)(Status:) (\\p{Digit}{3}) (\\p{Digit}{3})([^\r\n]*)\r\n(.*)",
+                        Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
                 Pattern statusHeaderErrorPattern =
                     Pattern.compile("(.*)(Status:)(.*)", Pattern.DOTALL
                         | Pattern.CASE_INSENSITIVE);
@@ -2263,18 +2252,13 @@ public class Transaction
                     /* we might have found an invalid syntax status header field */
                     throw new InvalidHeaderException("Processing "
                         + "Status failed");
-
                 }
-
             }
-
             break;
         case UNSUPPORTED:
             // TODO
             break;
-
         }
-
     }
 
     private boolean parserSuccessReport(String successReportValue)
