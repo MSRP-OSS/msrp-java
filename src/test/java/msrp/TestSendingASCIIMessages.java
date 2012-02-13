@@ -65,7 +65,6 @@ public class TestSendingASCIIMessages
         Properties testProperties = new Properties();
         try
         {
-
             /* Set the limit to be of 30 MB of messages allowed in memory */
             MSRPStack.setShortMessageBytes(30024 * 1024);
 
@@ -128,7 +127,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[300 * 1024];
@@ -201,7 +199,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[1024 * 1024];
@@ -274,7 +271,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             Long startTime = System.currentTimeMillis();
@@ -353,7 +349,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[300 * 1024];
@@ -384,7 +379,6 @@ public class TestSendingASCIIMessages
             /* make the mocklistener accept the message */
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait(6000);
@@ -413,7 +407,6 @@ public class TestSendingASCIIMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -430,7 +423,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             Long startTime = System.currentTimeMillis();
@@ -468,7 +460,6 @@ public class TestSendingASCIIMessages
 
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait(6000);
@@ -515,7 +506,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             Long startTime = System.currentTimeMillis();
@@ -575,7 +565,6 @@ public class TestSendingASCIIMessages
              */
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
@@ -612,14 +601,10 @@ public class TestSendingASCIIMessages
 
             int originalByte;
             int copiedByte;
-            int i, j;
-            i = j = 0;
             do
             {
                 originalByte = originalFileStream.read();
                 copiedByte = receivedFileStream.read();
-                i++;
-                j++;
                 assertEquals("File's content differed:", originalByte,
                     copiedByte);
             }
@@ -633,11 +618,9 @@ public class TestSendingASCIIMessages
 
             receivedFileStream.close();
             originalFileStream.close();
-
         }
         catch (Exception e)
         {
-
             e.printStackTrace();
             fail(e.getMessage());
         }
@@ -653,7 +636,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             /*
@@ -728,7 +710,6 @@ public class TestSendingASCIIMessages
              */
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
@@ -765,14 +746,10 @@ public class TestSendingASCIIMessages
 
             int originalByte;
             int copiedByte;
-            int i, j;
-            i = j = 0;
             do
             {
                 originalByte = originalFileStream.read();
                 copiedByte = receivedFileStream.read();
-                i++;
-                j++;
                 assertEquals("File's content differed:", originalByte,
                     copiedByte);
             }
@@ -790,7 +767,6 @@ public class TestSendingASCIIMessages
         }
         catch (Exception e)
         {
-
             e.printStackTrace();
             fail(e.getMessage());
         }
@@ -804,7 +780,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[300 * 1024];
@@ -878,7 +853,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[1024 * 1024];
@@ -1012,7 +986,6 @@ public class TestSendingASCIIMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -1029,7 +1002,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[300 * 1024];
@@ -1060,7 +1032,6 @@ public class TestSendingASCIIMessages
             /* make the mocklistener accept the message */
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait(6000);
@@ -1089,7 +1060,6 @@ public class TestSendingASCIIMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -1106,7 +1076,6 @@ public class TestSendingASCIIMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             Long startTime = System.currentTimeMillis();
@@ -1144,7 +1113,6 @@ public class TestSendingASCIIMessages
 
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait(6000);
@@ -1251,7 +1219,6 @@ public class TestSendingASCIIMessages
              */
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
@@ -1288,14 +1255,10 @@ public class TestSendingASCIIMessages
 
             int originalByte;
             int copiedByte;
-            int i, j;
-            i = j = 0;
             do
             {
                 originalByte = originalFileStream.read();
                 copiedByte = receivedFileStream.read();
-                i++;
-                j++;
                 assertEquals("File's content differed:", originalByte,
                     copiedByte);
             }
@@ -1313,7 +1276,6 @@ public class TestSendingASCIIMessages
         }
         catch (Exception e)
         {
-
             e.printStackTrace();
             fail(e.getMessage());
         }

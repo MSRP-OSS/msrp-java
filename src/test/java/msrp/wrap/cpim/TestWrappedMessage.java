@@ -16,7 +16,7 @@ import org.junit.Test;
  * @author tuijldert
  *
  */
-public class MessageTest {
+public class TestWrappedMessage {
 	private static String cpimMessage =
 			"From: MR SANDERS <im:piglet@100akerwood.com>\r\n" +
 		    "To: Depressed Donkey <im:eeyore@100akerwood.com>\r\n" +

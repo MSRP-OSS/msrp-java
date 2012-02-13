@@ -28,6 +28,7 @@ import static org.junit.Assert.*;
 
 import msrp.*;
 import msrp.testutils.*;
+import msrp.utils.TextUtils;
 import msrp.Transaction.TransactionType;
 import msrp.exceptions.ConnectionParserException;
 import msrp.exceptions.IllegalUseException;
@@ -93,13 +94,13 @@ public class TestTransaction
 
         }
         byte[] tid = new byte[8];
-        MiscTests.generateRandom(tid);
+        TextUtils.generateRandom(tid);
         tID = new String(tid, usascii);
 
         // TODO add support for the content-type in MSRP (?) [at least the
         // parsing should be done to be present on the message type]
         randomData = new byte[30];
-        MiscTests.generateRandom(randomData);
+        TextUtils.generateRandom(randomData);
         completeSendTransaction =
             ("To-Path: msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
                 + "From-Path: msrp://192.168.2.3:1324/123asd;tcp\r\n"
