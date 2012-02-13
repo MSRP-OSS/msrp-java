@@ -134,7 +134,7 @@ public class TestAbortMechanism
     }
 
     /**
-     * This test is used to test that the abortion of a currently being sent
+     * This test is used to test that the abortion of a currently sending
      * message is working well
      */
     @Test
@@ -182,8 +182,7 @@ public class TestAbortMechanism
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work and the message didn't get accepted");
             synchronized (sendingSessionListener.updateSendStatusCounter)
             {
                 /*
@@ -207,7 +206,7 @@ public class TestAbortMechanism
             }
 
             /* confirm that we have an aborted message */
-            assertEquals("We didn't got a call from the library to the "
+            assertEquals("We didn't get a call from the library to the "
                 + "abortMessage", 1,
                 receivingSessionListener.abortMessageCounter.size());
 
@@ -243,9 +242,8 @@ public class TestAbortMechanism
         catch (Exception e)
         {
             e.printStackTrace();
-            fail("Catched an exception that shouldn't occur:" + e.getMessage());
+            fail("Caught an exception that shouldn't occur:" + e.getMessage());
         }
-
     }
 
     /**
@@ -321,7 +319,7 @@ public class TestAbortMechanism
             }
 
             /* confirm that we have an aborted message */
-            assertEquals("We didn't got a call from the library to the "
+            assertEquals("We didn't get a call from the library to the "
                 + "abortMessage", 1, sendingSessionListener.abortMessageCounter
                 .size());
             /*
@@ -333,7 +331,7 @@ public class TestAbortMechanism
                 receivingSessionListener.abortMessageCounter.wait(6000);
             }
             /* confirm that we have an aborted message */
-            assertEquals("We didn't got a call from the library to the "
+            assertEquals("We didn't get a call from the library to the "
                 + "abortMessage", 1, receivingSessionListener.abortMessageCounter
                 .size());
             MessageAbortedEvent receivingAbortEvent = receivingSessionListener.messageAbortEvents.get(0);
@@ -383,7 +381,7 @@ public class TestAbortMechanism
         catch (Exception e)
         {
             e.printStackTrace();
-            fail("Catched an exception that shouldn't occur:" + e.getMessage());
+            fail("Caught an exception that shouldn't occur:" + e.getMessage());
         }
 
     }

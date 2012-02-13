@@ -28,7 +28,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
@@ -42,13 +41,11 @@ import msrp.events.MessageAbortedEvent;
 import msrp.messages.IncomingMessage;
 import msrp.messages.Message;
 import msrp.messages.OutgoingMessage;
+import msrp.utils.TextUtils;
 
 public class MiscTests
     implements MSRPSessionListener, Runnable
 {
-
-    static Charset usascii = Charset.forName("US-ASCII");
-
     static Random test = new Random();
 
     static InetAddress address = null;
@@ -59,7 +56,6 @@ public class MiscTests
 
     private static void testURLandSockets()
     {
-
         // Typical URI:
         String sURI =
             new String("msrps://bob.example.com:8493/si438dsaodes;tcp");
@@ -104,18 +100,15 @@ public class MiscTests
             // Detect if it's a local URL:
             for (i = 0; i < local.length; i++)
             {
-
                 if (local[i].equals(remoteAddress))
                     System.out.println("Found out that: "
                         + local[i].getHostAddress() + " is equal to:"
                         + lUrl.getHost());
 
             }
-
         }
         catch (Exception e)
         {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
 
@@ -123,7 +116,6 @@ public class MiscTests
 
     private static void testSocketChannelsAndTransactionID()
     {
-
         test = new Random();
         // Creating the new SocketChannel and checking if it has a port and an
         // address associated
@@ -179,7 +171,7 @@ public class MiscTests
             // message"
             byte[] outGoingTransaction = new byte[11240];
             byte[] tid = new byte[8];
-            generateRandom(tid);
+            TextUtils.generateRandom(tid);
 
             /*
              * String emptySend = ("MSRP " + new String(tid, usascii) +
@@ -194,53 +186,43 @@ public class MiscTests
              */
 
             String responseWithComment =
-                ("MSRP " + new String(tid, usascii) + " 200 OK\r\n"
+                ("MSRP " + new String(tid, TextUtils.usascii) + " 200 OK\r\n"
                     + "To-Path: msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
                     + "From-Path: msrp://192.168.2.3:1324/123asd;tcp\r\n"
-                    + "-------" + new String(tid, usascii) + "$\r\n");
-            byte[] teste = responseWithComment.getBytes(usascii);
+                    + "-------" + new String(tid, TextUtils.usascii) + "$\r\n");
+            byte[] teste = responseWithComment.getBytes(TextUtils.usascii);
             ByteBuffer outByteBuffer = ByteBuffer.wrap(teste);
             outgoing.write(outByteBuffer);
 
         }
         catch (IOException e)
         {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         catch (InterruptedException e)
         {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
     }
 
     private static void testRandomStringGenerator()
     {
-
         byte[] randomBytes = new byte[8];
         System.out.println("random bytes uninitialized:"
-            + (new String(randomBytes, Charset.forName("ascii"))));
-
-        // System.out.println("random bytes:" + (new String(randomBytes,
-        // Charset.forName("us-ascii"))) + ":END of bytes ");
-
-        // System.out.println("random bytes:" + (new String(randomBytes,
-        // Charset.forName("us-ascii"))) + ":END of bytes ");
+            + (new String(randomBytes, TextUtils.usascii)));
 
         Long startTime = System.currentTimeMillis();
         Long finishTime = System.currentTimeMillis();
         HashSet<URI> uRIs = new HashSet<URI>();
         try
         {
-            generateRandom(randomBytes);
+        	TextUtils.generateRandom(randomBytes);
             System.out.println("random bytes:"
-                + (new String(randomBytes, Charset.forName("us-ascii")))
+                + (new String(randomBytes, TextUtils.usascii))
                 + ":END of bytes ");
             URI testURI =
                 new URI("msrp", null, "localhost", 1234, "/"
-                    + (new String(randomBytes, Charset.forName("us-ascii")))
+                    + (new String(randomBytes, TextUtils.usascii))
                     + ";tcp", null, null);
             int i = 0;
             while (!uRIs.contains(testURI))
@@ -248,57 +230,19 @@ public class MiscTests
                 i++;
                 uRIs.add(testURI);
                 System.out.println(testURI);
-                generateRandom(randomBytes);
+                TextUtils.generateRandom(randomBytes);
                 testURI =
                     new URI("msrp", null, "localhost", 1234,
                         "/"
-                            + (new String(randomBytes, Charset
-                                .forName("us-ascii"))) + ";tcp", null, null);
+                            + (new String(randomBytes, TextUtils.usascii)) + ";tcp", null, null);
             }
 
             System.out.println("got to the end, value of i:" + i);
-
         }
         catch (URISyntaxException e)
         {
             // TODO Auto-generated catch block
             e.printStackTrace();
-        }
-
-    }
-
-    // IMPROVE it could be improved by adding the rest of the unreserved
-    // characters according to rfc3986 (-._~)
-    // IMPROVE can be improved the speed by not doing so much calls to the
-    // Random class
-    /**
-     * Generates a number of random alpha-numeric characters in US-ASCII
-     * 
-     * @param byteArray the byte array that will contain the newly generated
-     *            bytes. the number of generated bytes is given by the length of
-     *            the byteArray
-     * 
-     **/
-    public static void generateRandom(byte[] byteArray)
-    {
-        int i;
-        test.nextBytes(byteArray);
-        for (i = 0; i < byteArray.length; i++)
-        {
-            if (byteArray[i] < 0)
-                byteArray[i] *= -1;
-
-            while (!((byteArray[i] >= 65 && byteArray[i] <= 90)
-                || (byteArray[i] >= 97 && byteArray[i] <= 122) || (byteArray[i] <= 57 && byteArray[i] >= 48)))
-            {
-
-                if (byteArray[i] > 122)
-                    byteArray[i] -= test.nextInt(byteArray[i]);
-                if (byteArray[i] < 48)
-                    byteArray[i] += test.nextInt(5);
-                else
-                    byteArray[i] += test.nextInt(10);
-            }
         }
     }
 
@@ -366,7 +310,6 @@ public class MiscTests
 
     public static void testMessageExchange() throws Exception
     {
-
         Session sessionSend = new Session(false, false, address);
         URI uri = sessionSend.getURI();
         if (uri == null)
@@ -390,7 +333,7 @@ public class MiscTests
                 new OutgoingMessage(sessionSend, "plain/text",
                     ("this is just a simple"
                         + "test to see if this message can get through")
-                        .getBytes(usascii));
+                        .getBytes(TextUtils.usascii));
             ArrayList<URI> uris = new ArrayList<URI>();
             uris.add(sessionReceive.getURI());
             // Enable the sessionSend on sessionReceive
@@ -400,16 +343,13 @@ public class MiscTests
         }
         catch (Exception e)
         {
-            // TODO Auto-generated catch block
             e.printStackTrace();
             throw e;
         }
-
     }
 
     private static void testUsingLocalAddress()
     {
-
         try
         {
             InetAddress local = InetAddress.getLocalHost();
@@ -417,18 +357,15 @@ public class MiscTests
         }
         catch (UnknownHostException e)
         {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
     }
 
     private static void testRegexEndChars()
     {
-
         byte[] tid = new byte[8];
-        generateRandom(tid);
-        String tID = new String(tid, usascii);
+        TextUtils.generateRandom(tid);
+        String tID = new String(tid, TextUtils.usascii);
 
         String emptySend = ("garbage" + "\r\n-------" + tID);
 
@@ -492,7 +429,6 @@ public class MiscTests
         }
         catch (Exception e)
         {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         testRandomStringGenerator();
@@ -512,7 +448,7 @@ public class MiscTests
                 ByteBuffer byteBuf = dc.get(0, 0);
                 byte[] byteArray = new byte[byteBuf.capacity()];
                 byteBuf.get(byteArray);
-                System.out.println(new String(byteArray, usascii));
+                System.out.println(new String(byteArray, TextUtils.usascii));
             }
             catch (Exception e)
             {
@@ -624,7 +560,7 @@ public class MiscTests
                         while (inByteBuffer.hasRemaining())
                             readBytes[i++] = inByteBuffer.get();
 
-                        String incomingString = new String(readBytes, usascii);
+                        String incomingString = new String(readBytes, TextUtils.usascii);
 
                         // parsing received data if received anything
                         if (incomingString.length() > 0)
@@ -642,10 +578,8 @@ public class MiscTests
         }
         catch (IOException e1)
         {
-            // TODO Auto-generated catch block
             e1.printStackTrace();
         }
-
     }
 
     static boolean receivingTransaction = false;
@@ -826,7 +760,7 @@ public class MiscTests
                 if (matchEndTransaction.matches())
                 {
                     incomingTransaction.parse(matchEndTransaction.group(1)
-                        .getBytes(usascii), 0, matchEndTransaction.group(1)
+                        .getBytes(TextUtils.usascii), 0, matchEndTransaction.group(1)
                         .length(), false);
                     incomingTransaction.signalizeEnd(matchEndTransaction.group(
                         3).charAt(0));
@@ -900,14 +834,12 @@ public class MiscTests
                         toParse =
                             toParse.substring(0, toParse.lastIndexOf('\r'));
                     }
-                    incomingTransaction.parse(toParse.getBytes(usascii), 0,
+                    incomingTransaction.parse(toParse.getBytes(TextUtils.usascii), 0,
                         toParse.length(), false);
                     complete = true;
                 }
             }
-
         }// if (receivingTransaction)
-
     }
 
     /**
@@ -926,16 +858,11 @@ public class MiscTests
     @Override
     public void abortedMessage(Session session, IncomingMessage message)
     {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void abortedMessageEvent(MessageAbortedEvent abortEvent)
     {
-        // TODO Auto-generated method stub
-
     }
-
 }// end of class
 
