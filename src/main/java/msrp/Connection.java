@@ -41,6 +41,7 @@ import msrp.exceptions.ConnectionWriteException;
 import msrp.exceptions.IllegalUseException;
 import msrp.messages.Message;
 import msrp.utils.NetworkUtils;
+import msrp.utils.TextUtils;
 
 /**
  * This class represents an MSRP connection.
@@ -139,8 +140,6 @@ class Connection extends Observable implements Runnable
      * @uml.property name="_connections"
      * @uml.associationEnd inverse="connection1:msrp.Connections"
      */
-    /* private Connections connectionsInstance = Connections.getInstance(); */
-
     protected TransactionManager getTransactionManager()
     {
         return transactionManager;
@@ -246,17 +245,16 @@ class Connection extends Observable implements Runnable
      */
     private void generateRandom(byte[] byteArray)
     {
-        int i;
         random.nextBytes(byteArray);
-        for (i = 0; i < byteArray.length; i++)
+        for (int i = 0; i < byteArray.length; i++)
         {
             if (byteArray[i] < 0)
                 byteArray[i] *= -1;
 
             while (!((byteArray[i] >= 65 && byteArray[i] <= 90)
-                || (byteArray[i] >= 97 && byteArray[i] <= 122) || (byteArray[i] <= 57 && byteArray[i] >= 48)))
+                || (byteArray[i] >= 97 && byteArray[i] <= 122)
+                || (byteArray[i] <= 57 && byteArray[i] >= 48)))
             {
-
                 if (byteArray[i] > 122)
                     byteArray[i] -= random.nextInt(byteArray[i]);
                 if (byteArray[i] < 48)
@@ -303,10 +301,20 @@ class Connection extends Observable implements Runnable
      * @uml.property name="_transactions"
      */
 
-    /**
+    /** close this connection/these threads
+     * 
      */
     public void close()
     {
+    	if (closing)
+    		return;						// already closed
+    	closing = true;
+    	writeThread.notifyAll();
+    	try {
+			socketChannel.close();
+		} catch (IOException e) {
+			/* empty */;
+		}
     }
 
     /**
@@ -357,20 +365,13 @@ class Connection extends Observable implements Runnable
      * @return
      * @throws Exception
      */
-    /*
-     * private ByteBuffer getPrioritizedData() {
-     * 
-     * }
-     */
     public Connection()
     {
-
     }
 
-    private final Charset usascii = Charset.forName("US-ASCII");
+    protected boolean closing = false;	// connection closing?
 
     private Thread writeThread = null;
-
     private Thread readThread = null;
 
     private void writeCycle() throws ConnectionWriteException
@@ -379,17 +380,16 @@ class Connection extends Observable implements Runnable
          * TODO FIXME should remove this line here when we get a better model
          * for the threads
          */
-        Thread.currentThread().setName(
-            "Connection: " + localURI + " writeCycle thread");
+        Thread.currentThread().setName("Connection: " + localURI + " writeCycle thread");
+
         byte[] outData = new byte[OUTPUTBUFFERLENGTH];
         ByteBuffer outByteBuffer = ByteBuffer.wrap(outData);
 
         int wroteNrBytes = 0;
-        while (true)
+        while (!closing)
         {
             try
             {
-
                 if (transactionManager.hasDataToSend())
                 {
                     int toWriteNrBytes;
@@ -404,35 +404,26 @@ class Connection extends Observable implements Runnable
                     wroteNrBytes = 0;
                     while (wroteNrBytes != toWriteNrBytes)
                         wroteNrBytes += socketChannel.write(outByteBuffer);
-                    // commented, too much output was being generated:
-                    /*
-                     * logger.trace("Wrote: " + wroteNrBytes +
-                     * " bytes of data to: " +
-                     * socketChannel.socket().getRemoteSocketAddress()
-                     * .toString());
-                     */
-
                 }
                 else
+                {
                     // TODO FIXME do this in another way, maybe with notify!
                     synchronized (writeThread)
                     {
                         writeThread.wait(2000);
                     }
-                // Thread.currentThread().wait(2000);
-                // Thread.currentThread().sleep(2000);
-                // this.wait();
+                }
             }
             catch (Exception e)
             {
-                throw new ConnectionWriteException(e);
+            	if (!closing)
+            		throw new ConnectionWriteException(e);
             }
         }
     }
 
     /**
-     * This is the instance of PreParser, it is used to pre parse the received
-     * data by the read cycle
+     * Used to pre-parse the received data by the read cycle
      * 
      * @see #readCycle()
      * @see PreParser#preParse(byte[])
@@ -441,11 +432,10 @@ class Connection extends Observable implements Runnable
 
     private void readCycle() throws ConnectionReadException
     {
-
         byte[] inData = new byte[OUTPUTBUFFERLENGTH];
         ByteBuffer inByteBuffer = ByteBuffer.wrap(inData);
         int readNrBytes = 0;
-        while (readNrBytes != -1)
+        while (readNrBytes != -1 && !closing)
         {
             inByteBuffer.clear();
             try
@@ -455,20 +445,13 @@ class Connection extends Observable implements Runnable
                 if (readNrBytes != -1 && readNrBytes != 0)
                 {
                     inByteBuffer.flip();
-
-                    // commented, too much output was being generated:
-                    /*
-                     * logger.trace("Read: " + readNrBytes +
-                     * " bytes of data from: " +
-                     * socketChannel.socket().getRemoteSocketAddress()
-                     * .toString());
-                     */
                     preParser.preParse(inData, inByteBuffer.limit());
                 }
             }
             catch (Exception e)
             {
-                throw new ConnectionReadException(e);
+            	if (!closing)
+            		throw new ConnectionReadException(e);
             }
         }
     }
@@ -516,59 +499,15 @@ class Connection extends Observable implements Runnable
         }
         catch (Exception e)
         {
-            // TODO logging or other stuff
-            e.printStackTrace();
+        	logger.error(e.getLocalizedMessage());
         }
-
         return;
-        /*
-         * to REMOVE
-         * 
-         * 
-         * 
-         * byte[] outData = new byte[2048];
-         * 
-         * ByteBuffer outByteBuffer = ByteBuffer.wrap(outData); // not sure if
-         * correct to use due to the Charset, although i believe // that
-         * US-ascii is always considered as a base // CharBuffer inCharBuffer =
-         * inByteBuffer.asCharBuffer(); try { while (true) {
-         * 
-         * // READ part of the cycle inByteBuffer.clear(); int readNrBytes;
-         * readNrBytes = incomingInstance.read(inByteBuffer); byte[] readBytes =
-         * new byte[readNrBytes]; if (readNrBytes != -1 && readNrBytes != 0) {
-         * inByteBuffer.flip(); int i = 0; while (inByteBuffer.hasRemaining())
-         * readBytes[i++] = inByteBuffer.get();
-         * 
-         * String incomingString = new String(readBytes, usascii);
-         * 
-         * // parsing received data if received anything if
-         * (incomingString.length() > 0) parser(incomingString); }
-         * 
-         * // TODO WRITE part of the cycle outByteBuffer.clear(); if
-         * (transactionManager.hasDataToSend()) { int toWriteNrBytes =
-         * transactionManager.dataToSend(outData);
-         * outByteBuffer.limit(toWriteNrBytes); int wroteNrBytes = 0; while
-         * (wroteNrBytes != toWriteNrBytes) wroteNrBytes +=
-         * incomingInstance.write(outByteBuffer);
-         * 
-         * }
-         * 
-         * } } catch (Exception e) { // TODO Catch everything that .read throws
-         * and capture it for // processing e.printStackTrace(); }
-         * 
-         * // TODO Check to see if this session given by the To-Path // is in
-         * use in any other connection, if so return a 506 // TODO if the
-         * session associated with this transaction doesn't exist // return a
-         * 481
-         */
     }
 
     /**
-     * Class used to pre-parse the incoming data. The main purpose of this class
-     * is to correctly set the receivingBinaryData variable so that accurately
-     * it states if this connection is receiving data in binary format or not
-     * 
-     * @author João André Pereira Antunes
+     * Pre-parse incoming data. Main purpose
+     * is to correctly set the receivingBinaryData variable so that it accurately
+     * states whether this connection is receiving binary data or not
      * 
      */
     class PreParser
@@ -649,10 +588,8 @@ class Connection extends Observable implements Runnable
                 bufferIncData.position(positionSmallBuffer);
 
             }
-
             while (bufferIncData.hasRemaining())
             {
-
                 /*
                  * we have two distinct points of start for the algorithm,
                  * either we are in the binary state or in the text state
@@ -959,7 +896,7 @@ class Connection extends Observable implements Runnable
                         + " bytes, offset: " + offset + " bufferIncData "
                         + "position:" + bufferIncData.position()
                         + " smallbuffer content:"
-                        + new String(smallBuffer.array(), usascii)
+                        + new String(smallBuffer.array(), TextUtils.usascii)
                         + "|end of content excluding the | char");
                     throw e;
 
@@ -1041,7 +978,7 @@ class Connection extends Observable implements Runnable
              * text data
              */
             String incomingString =
-                new String(incomingBytes, offset, length, usascii);
+                new String(incomingBytes, offset, length, TextUtils.usascii);
             String toParse;
             String tID;
             boolean complete = false;
@@ -1099,14 +1036,12 @@ class Connection extends Observable implements Runnable
                     // be a Upper
                     // case word like SEND
                     Pattern startTransactionRequest =
-                        Pattern
-                            .compile(
+                        Pattern.compile(
                                 "(^MSRP) ([\\p{Alnum}]{8,20}) ([\\p{Upper}]{1,20})\r\n(.*)",
                                 Pattern.DOTALL);
                     Pattern startTransactionResponse =
-                        Pattern
-                            .compile(
-                                "(^MSRP) ([\\p{Alnum}]{8,20}) ((\\d{3}) ?(\\w{1,20})?\r\n)(.*)",
+                        Pattern.compile(
+                                "(^MSRP) ([\\p{Alnum}]{8,20}) ((\\d{3})([^\r\n]*)\r\n)(.*)",
                                 Pattern.DOTALL);
                     Matcher matcherTransactionResponse =
                         startTransactionResponse.matcher(toParse);
@@ -1372,7 +1307,7 @@ class Connection extends Observable implements Runnable
                         try
                         {
                             incomingTransaction.parse(matchEndTransaction
-                                .group(1).getBytes(usascii), 0,
+                                .group(1).getBytes(TextUtils.usascii), 0,
                                 matchEndTransaction.group(1).length(),
                                 receivingBodyData);
                         }
@@ -1495,7 +1430,7 @@ class Connection extends Observable implements Runnable
                         try
                         {
                             incomingTransaction.parse(
-                                toParse.getBytes(usascii), 0, toParse.length(),
+                                toParse.getBytes(TextUtils.usascii), 0, toParse.length(),
                                 receivingBodyData);
                         }
                         catch (Exception e)
