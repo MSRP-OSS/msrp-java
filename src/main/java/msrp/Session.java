@@ -642,7 +642,11 @@ public class Session
 			transactionManager.removeSession(this);
 			transactionManager = null;
 		}
-		// TODO: (msrp-30) remove a session from a connection, possibly closing it.
+		// FIXME: (msrp-31) allow connection reuse by sessions.
+		if (connection != null) {
+			connection.close();
+			connection = null;
+		}
 		if (stackInstance != null) {
 			stackInstance.removeActiveSession(this);
 			stackInstance = null;
