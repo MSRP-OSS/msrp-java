@@ -62,7 +62,6 @@ public class TestReportMechanism
     @Before
     public void setUpConnection()
     {
-
         sendingSessionListener =
             new MockMSRPSessionListener("sendingSessionListener");
         receivingSessionListener =
@@ -101,13 +100,11 @@ public class TestReportMechanism
 
             receivingSession.addMSRPSessionListener(receivingSessionListener);
             sendingSession.addMSRPSessionListener(sendingSessionListener);
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-
     }
 
     @After
@@ -132,7 +129,6 @@ public class TestReportMechanism
     @Test
     public void testDefaultReportMechanismSmall()
     {
-
         int messageSize = 499 * 1024;
         try
         {
@@ -145,7 +141,6 @@ public class TestReportMechanism
             lessFiveHundredMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
@@ -163,19 +158,18 @@ public class TestReportMechanism
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(5000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(5000);
             }
             synchronized (sendingSessionListener.successReportCounter)
             {
@@ -248,14 +242,12 @@ public class TestReportMechanism
                     .longValue() * 100)
                     / sendingSessionListener.getUpdateSendStatusMessage()
                         .getSize());
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail(e.getMessage());
         }
-
     }
 
     /**
@@ -265,7 +257,6 @@ public class TestReportMechanism
     @Test
     public void testDefaultReportMechanismBig()
     {
-
         try
         {
             Long startTime = System.currentTimeMillis();
@@ -303,19 +294,18 @@ public class TestReportMechanism
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(5000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(5000);
             }
             synchronized (sendingSessionListener)
             {
@@ -379,7 +369,6 @@ public class TestReportMechanism
             e.printStackTrace();
             fail(e.getMessage());
         }
-
     }
 
     /**
@@ -389,7 +378,6 @@ public class TestReportMechanism
     @Test
     public void testCustomReportMechanismSmall()
     {
-
         try
         {
             /* change the report mechanism of the sessions: */
@@ -406,7 +394,6 @@ public class TestReportMechanism
             lessFiveHundredMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
@@ -424,19 +411,18 @@ public class TestReportMechanism
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(5000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(5000);
             }
             synchronized (sendingSessionListener)
             {
@@ -509,14 +495,12 @@ public class TestReportMechanism
                     .longValue() * 100)
                     / sendingSessionListener.getUpdateSendStatusMessage()
                         .getSize());
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail(e.getMessage());
         }
-
     }
 
     /**
@@ -526,7 +510,6 @@ public class TestReportMechanism
     @Test
     public void testCustomReportMechanismBig()
     {
-
         try
         {
             /* change the report mechanism of the sessions: */
@@ -569,19 +552,18 @@ public class TestReportMechanism
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(5000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(5000);
             }
             synchronized (sendingSessionListener)
             {
@@ -623,14 +605,12 @@ public class TestReportMechanism
                     .longValue() * 100)
                     / sendingSessionListener.getUpdateSendStatusMessage()
                         .getSize());
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail(e.getMessage());
         }
-
     }
 
     // @Test
@@ -667,8 +647,7 @@ public class TestReportMechanism
     //
     // if (receivingSessionListener.getAcceptHookMessage() == null
     // || receivingSessionListener.getAcceptHookSession() == null)
-    // fail("The Mock didn't worked and the message didn't got "
-    // + "accepted");
+    // fail("The Mock didn't work, message not accepted");
     // synchronized (sendingSessionListener) {
     // sendingSessionListener.wait(4000);
     // }
