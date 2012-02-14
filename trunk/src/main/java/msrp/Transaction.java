@@ -320,8 +320,8 @@ public class Transaction
         TransactionManager manager, int direction)
         throws IllegalUseException
     {
-        logger.info("transaction created (incoming?) tID: " + tid + " method: "
-            + method + " transactionManager: " + manager);
+        logger.info("Transaction created (incoming?) Tx-" + method + "[" + tid
+        			+ "], handled by " + manager);
         // sanity check:
         if (direction != IN && direction != OUT)
             throw new IllegalUseException("direction has an invalid argument"
@@ -428,9 +428,8 @@ public class Transaction
             continuationFlagByte = ENDMESSAGE;
             initializeDataStructures();
         }
-        logger.info("transaction created tID: " + tID + " method: " + send
-            + " messageAssociated: " + messageBeingSent);
-
+        logger.info("Transaction created Tx-" + send + "[" + tID
+        			+ "], associated message: " + messageBeingSent);
     }
 
     /**
@@ -2135,7 +2134,7 @@ public class Transaction
             // , Pattern.DOTALL);
             Pattern contentTypePattern =
                 Pattern.compile(
-                        "(.*)(Content-Type:) (\\p{Alnum}{1,30}/\\p{Alnum}{1,30})(\r\n)(.*)",
+                        "(.*)(Content-Type:) ([^/]{1,30}/[^;]{1,30})(;.*)?\r\n(.*)",
                         Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
             Matcher contentTypeMatcher =
                 contentTypePattern.matcher(yetToBeParsed);
