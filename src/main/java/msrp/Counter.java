@@ -89,7 +89,7 @@ public class Counter
     protected synchronized boolean register(long startingPosition,
         long numberBytes)
     {
-        logger.debug("Register: " + numberBytes
+        logger.trace("Register: " + numberBytes
             + " bytes received @ position " + startingPosition);
         long previousValueConsecutiveBytes = nrConsecutiveBytes;
         long[] valueToRegister =
