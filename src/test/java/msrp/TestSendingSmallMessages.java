@@ -66,7 +66,6 @@ public class TestSendingSmallMessages
         Properties testProperties = new Properties();
         try
         {
-
             /* Set the limit to be of 30 MB of messages allowed in memory */
             MSRPStack.setShortMessageBytes(30024 * 1024);
 
@@ -97,13 +96,11 @@ public class TestSendingSmallMessages
                 tempFile =
                     File.createTempFile(Long.toString(System
                         .currentTimeMillis()), null, null);
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-
     }
 
     @After
@@ -125,7 +122,6 @@ public class TestSendingSmallMessages
     {
         try
         {
-
             byte[] smallData = new byte[3 * 1024];
             randomGenerator.nextBytes(smallData);
 
@@ -134,7 +130,6 @@ public class TestSendingSmallMessages
             threeHKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
@@ -152,22 +147,19 @@ public class TestSendingSmallMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait();
             }
-
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
-                 * allow the message to be received
+                 * allow message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(500);
             }
-
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
                     .get(0, 0);
@@ -176,7 +168,6 @@ public class TestSendingSmallMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -194,7 +185,6 @@ public class TestSendingSmallMessages
     {
         try
         {
-
             byte[] smallData = new byte[2 * 1024];
             TextUtils.generateRandom(smallData);
 
@@ -221,20 +211,19 @@ public class TestSendingSmallMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(500);
             }
 
             ByteBuffer receivedByteBuffer =
@@ -245,7 +234,6 @@ public class TestSendingSmallMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {

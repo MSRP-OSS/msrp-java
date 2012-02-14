@@ -65,7 +65,5 @@ public class TestRegexMSRPFactory
             .assertTrue(
                 "oh nooo 'prs.genericfile/prs.rawbyte' should definitely be considered a token",
                 testMatcher.matches());
-
     }
-
 }

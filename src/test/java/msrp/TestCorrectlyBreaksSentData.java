@@ -20,7 +20,6 @@ import static org.junit.Assert.*;
 
 import java.io.*;
 import java.net.*;
-import java.nio.charset.Charset;
 import java.util.*;
 
 import org.junit.*;
@@ -194,19 +193,18 @@ public class TestCorrectlyBreaksSentData
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(3000);
             }
 
             /*
@@ -251,13 +249,11 @@ public class TestCorrectlyBreaksSentData
                 foundFirstSendTransaction);
             assertEquals("second transaction not found!", true,
                 foundSecondSendTransaction);
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("It occurred an unexpected exception: " + e.getMessage());
         }
-
     }
 }
