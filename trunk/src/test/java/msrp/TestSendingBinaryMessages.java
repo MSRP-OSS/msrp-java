@@ -65,7 +65,6 @@ public class TestSendingBinaryMessages
         Properties testProperties = new Properties();
         try
         {
-
             /* Set the limit to be of 30 MB of messages allowed in memory */
             MSRPStack.setShortMessageBytes(30024 * 1024);
 
@@ -99,13 +98,11 @@ public class TestSendingBinaryMessages
                 tempFile =
                     File.createTempFile(Long.toString(System
                         .currentTimeMillis()), null, null);
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-
     }
 
     @After
@@ -162,20 +159,19 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+ "ms");
@@ -188,7 +184,6 @@ public class TestSendingBinaryMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -205,7 +200,6 @@ public class TestSendingBinaryMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[1024 * 1024];
@@ -217,7 +211,6 @@ public class TestSendingBinaryMessages
             Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
@@ -235,20 +228,19 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             System.out.println(methodName + " took: "
@@ -262,7 +254,6 @@ public class TestSendingBinaryMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -309,20 +300,19 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+ "ms");
@@ -335,7 +325,6 @@ public class TestSendingBinaryMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -383,23 +372,21 @@ public class TestSendingBinaryMessages
             /* make the mocklistener accept the message */
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             System.out.println(methodName + " took: "
@@ -413,7 +400,6 @@ public class TestSendingBinaryMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -430,20 +416,17 @@ public class TestSendingBinaryMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             Long startTime = System.currentTimeMillis();
-            System.out.println("Starting generating and writing 5MB "
-                + "of random data");
+            System.out.println("Start generating and writing 5MB random data");
             byte[] smallData = new byte[5024 * 1024];
             FileOutputStream fileStream = new FileOutputStream(tempFile);
             randomGenerator.nextBytes(smallData);
             fileStream.write(smallData);
             fileStream.flush();
             fileStream.close();
-            System.out.println("Stoped generating and writing 5MB "
-                + "of random data took: "
+            System.out.println("Done generating and writing 5MB random data, took: "
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message threeHKbMessage =
@@ -466,26 +449,23 @@ public class TestSendingBinaryMessages
              */
 
             /* make the mocklistener accept the message */
-
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+ "ms");
@@ -498,7 +478,6 @@ public class TestSendingBinaryMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -516,7 +495,6 @@ public class TestSendingBinaryMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             /*
@@ -582,24 +560,22 @@ public class TestSendingBinaryMessages
              */
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+ "ms");
@@ -637,14 +613,11 @@ public class TestSendingBinaryMessages
                 && copiedByte == -1);
 
             /* free the resources: */
-
             receivedFileStream.close();
             originalFileStream.close();
-
         }
         catch (Exception e)
         {
-
             e.printStackTrace();
             fail(e.getMessage());
         }
@@ -668,8 +641,7 @@ public class TestSendingBinaryMessages
              * test starts:
              */
             Long startTime = System.currentTimeMillis();
-            System.out.println("Starting generating and writing 20MB "
-                + "of random data");
+            System.out.println("Start generating and writing 20MB random data");
             byte[] smallData;
             FileOutputStream fileStream = new FileOutputStream(tempFile);
 
@@ -682,8 +654,8 @@ public class TestSendingBinaryMessages
             }
             fileStream.close();
 
-            System.out.println("Stoped generating and writing "
-                + tempFile.length() + "Bytes " + "of random data took: "
+            System.out.println("Done generating and writing "
+                + tempFile.length() + "Bytes " + "random data, took: "
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             /* set the random data generated to be collected by the GC */
@@ -691,10 +663,10 @@ public class TestSendingBinaryMessages
 
             System.gc();
 
-            Message threeHKbMessage =
+            Message twentyMbMessage =
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
 
-            threeHKbMessage.setSuccessReport(false);
+            twentyMbMessage.setSuccessReport(false);
 
             startTime = System.currentTimeMillis();
 
@@ -736,24 +708,22 @@ public class TestSendingBinaryMessages
              */
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+ "ms");
@@ -791,14 +761,11 @@ public class TestSendingBinaryMessages
                 && copiedByte == -1);
 
             /* free the resources: */
-
             receivedFileStream.close();
             originalFileStream.close();
-
         }
         catch (Exception e)
         {
-
             e.printStackTrace();
             fail(e.getMessage());
         }
@@ -825,7 +792,6 @@ public class TestSendingBinaryMessages
             Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
@@ -843,20 +809,19 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+ "ms");
@@ -917,20 +882,19 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             System.out.println(methodName + " took: "
@@ -944,7 +908,6 @@ public class TestSendingBinaryMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -973,7 +936,6 @@ public class TestSendingBinaryMessages
             Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
@@ -991,20 +953,19 @@ public class TestSendingBinaryMessages
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+"ms");
@@ -1017,7 +978,6 @@ public class TestSendingBinaryMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -1034,7 +994,6 @@ public class TestSendingBinaryMessages
     {
         try
         {
-
             String methodName =
                 new Exception().getStackTrace()[0].getMethodName();
             byte[] smallData = new byte[300 * 1024];
@@ -1052,7 +1011,6 @@ public class TestSendingBinaryMessages
             Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
@@ -1069,20 +1027,19 @@ public class TestSendingBinaryMessages
 
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             System.out.println(methodName + " took: "
@@ -1096,7 +1053,6 @@ public class TestSendingBinaryMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -1117,16 +1073,14 @@ public class TestSendingBinaryMessages
                 new Exception().getStackTrace()[0].getMethodName();
 
             Long startTime = System.currentTimeMillis();
-            System.out.println("Starting generating and writing 5MB "
-                + "of random data");
+            System.out.println("Start generating and writing 5MB random data");
             byte[] smallData = new byte[5024 * 1024];
             FileOutputStream fileStream = new FileOutputStream(tempFile);
             randomGenerator.nextBytes(smallData);
             fileStream.write(smallData);
             fileStream.flush();
             fileStream.close();
-            System.out.println("Stoped generating and writing 5MB "
-                + "of random data took: "
+            System.out.println("Done generating and writing 5MB random data, took: "
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             Message threeHKbMessage =
@@ -1148,26 +1102,23 @@ public class TestSendingBinaryMessages
              */
 
             /* make the mocklistener accept the message */
-
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+ "ms");
@@ -1180,7 +1131,6 @@ public class TestSendingBinaryMessages
              * assert that the received data matches the sent data
              */
             assertArrayEquals(smallData, receivedData);
-
         }
         catch (Exception e)
         {
@@ -1222,7 +1172,6 @@ public class TestSendingBinaryMessages
             Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
@@ -1259,24 +1208,22 @@ public class TestSendingBinaryMessages
              */
             synchronized (receivingSessionListener)
             {
-
                 receivingSessionListener.setDataContainer(newFileDC);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+ "ms");
@@ -1304,24 +1251,22 @@ public class TestSendingBinaryMessages
                 copiedByte = receivedFileStream.read();
                 i++;
                 j++;
-                assertEquals("File's content differed:", originalByte,
+                assertEquals("Files content differ:", originalByte,
                     copiedByte);
             }
             while (originalByte != -1 && copiedByte != -1);
 
-            assertTrue("didn't reached end of file content at the same time, "
+            assertTrue("didn't reach end of file content at the same time, "
                 + "file size/content differ", originalByte == -1
                 && copiedByte == -1);
 
             /* free the resources: */
-
             receivedFileStream.close();
             originalFileStream.close();
 
         }
         catch (Exception e)
         {
-
             e.printStackTrace();
             fail(e.getMessage());
         }

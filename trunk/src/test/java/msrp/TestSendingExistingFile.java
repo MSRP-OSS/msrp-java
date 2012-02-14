@@ -65,7 +65,6 @@ public class TestSendingExistingFile
         Properties testProperties = new Properties();
         try
         {
-
             /* Set the limit to be of 30 MB of messages allowed in memory */
             MSRPStack.setShortMessageBytes(30024 * 1024);
 
@@ -100,7 +99,6 @@ public class TestSendingExistingFile
         {
             e.printStackTrace();
         }
-
     }
 
     @Test
@@ -165,7 +163,6 @@ public class TestSendingExistingFile
          * message should be transfered or in the process of being completely
          * transfered
          */
-
         try
         {
             /* make the mocklistener accept the message */
@@ -173,27 +170,24 @@ public class TestSendingExistingFile
             {
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(10000);
+                receivingSessionListener.wait();
             }
 
             // confirm that the message got accepted on the
             // receivingSessionListener
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock (?!) didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
 
             synchronized (receivingSessionListener)
             {
                 /*
-                 * allow the message to be received
+                 * allow message to be received
                  */
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(10000);
             }
-            System.out.println(sizeFileString
-                + " took: "
-                + (System.currentTimeMillis() - startTime)
-                + " ms");
+            System.out.println(sizeFileString + " took: "
+                + (System.currentTimeMillis() - startTime) + " ms");
 
             // confirm that the updateSendStatus got called on the
             // sendingSessionListener at least once
@@ -234,12 +228,10 @@ public class TestSendingExistingFile
                 assertArrayEquals("Error, file contents differ!",
                     bufferSent, bufferSent);
             }
-
             // clean up:
             // TODO needs: tear down of the sessions
             sentFileStream.close();
             receivedFileStream.close();
-
         }
         catch (InterruptedException e)
         {
@@ -253,7 +245,5 @@ public class TestSendingExistingFile
         {
             fail(e.getMessage());
         }
-
     }
-
 }

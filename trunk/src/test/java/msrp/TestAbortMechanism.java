@@ -61,7 +61,6 @@ public class TestAbortMechanism
     @Before
     public void setUpConnection()
     {
-
         sendingSessionListener =
             new MockMSRPSessionListener("sendingSessionListener");
         receivingSessionListener =
@@ -100,13 +99,11 @@ public class TestAbortMechanism
 
             receivingSession.addMSRPSessionListener(receivingSessionListener);
             sendingSession.addMSRPSessionListener(sendingSessionListener);
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-
     }
 
     @After
@@ -182,7 +179,7 @@ public class TestAbortMechanism
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't work and the message didn't get accepted");
+                fail("The Mock didn't work, message not accepted");
             synchronized (sendingSessionListener.updateSendStatusCounter)
             {
                 /*
@@ -341,7 +338,6 @@ public class TestAbortMechanism
                 + receivingAbortEvent.getReason(),
                 receivingAbortEvent.getReason() == MessageAbortedEvent.CONTINUATIONFLAG);
 
-
             /*
              * confirm that the aborted message size received before it was
              * aborted is on the 10% + buffer size%
@@ -375,14 +371,11 @@ public class TestAbortMechanism
             assertTrue("Error, reason code different from 413, got: "
                 + abortEvent.getReason(),
                 abortEvent.getReason() == MessageAbortedEvent.RESPONSE413);
-
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
             fail("Caught an exception that shouldn't occur:" + e.getMessage());
         }
-
     }
 }
