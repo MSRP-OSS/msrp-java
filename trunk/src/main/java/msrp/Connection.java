@@ -896,10 +896,10 @@ class Connection extends Observable implements Runnable
                         + " bytes, offset: " + offset + " bufferIncData "
                         + "position:" + bufferIncData.position()
                         + " smallbuffer content:"
-                        + new String(smallBuffer.array(), TextUtils.usascii)
+                        + new String(bufferIncData.array(), TextUtils.usascii)
+                        		.substring(offset, bufferIncData.position())
                         + "|end of content excluding the | char");
                     throw e;
-
                 }
                 parser(bufferIncData.array(), indexLastTimeChanged, offset,
                     receivingBodyData);
@@ -1060,8 +1060,8 @@ class Connection extends Observable implements Runnable
                         // .group(2),matcherTransaction.group(2));
                         tID = matcherTransactionRequest.group(2);
                         logger
-                            .debug("recognised the transaction request with ID: "
-                                + tID);
+                            .debug("Recognised transaction request ["
+                                + tID + "]");
                         TransactionType newTransactionType;
                         try
                         {
@@ -1069,19 +1069,18 @@ class Connection extends Observable implements Runnable
                                 TransactionType
                                     .valueOf(matcherTransactionRequest.group(3)
                                         .toUpperCase());
-                            logger.debug("tID: " + tID + " of type:"
-                                + matcherTransactionRequest.group(3));
+                            logger.debug("Tx-" + matcherTransactionRequest.group(3)
+                            			+ "[" + tID + "]");
                         }
                         catch (IllegalArgumentException argExcptn)
                         {
                             // Then we have ourselves an unsupported method
                             // create an unsupported transaction and signalize
                             // it
-                            logger.warn("Unsupported type of transaction: "
-                                + matcherTransactionRequest.group(3) + " tID:"
-                                + tID);
-                            newTransactionType =
-                                TransactionType.UNSUPPORTED;
+                            logger.warn("Unsupported type of transaction: Tx-"
+                        			+ matcherTransactionRequest.group(3)
+                        			+ "[" + tID + "]");
+                            newTransactionType = TransactionType.UNSUPPORTED;
                         }
 
                         try

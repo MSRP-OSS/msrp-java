@@ -21,11 +21,9 @@ import java.util.ArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import msrp.Counter;
 import msrp.DataContainer;
 import msrp.MSRPSessionListener;
 import msrp.MemoryDataContainer;
-import msrp.ReportMechanism;
 import msrp.Session;
 import msrp.Transaction;
 import msrp.events.MessageAbortedEvent;
@@ -138,7 +136,7 @@ public class MockMSRPSessionListener
         }
         boolean toReturn = acceptHookResult.booleanValue();
 
-        logger.debug("AcceptHook is goint to return " + toReturn);
+        logger.debug("AcceptHook will return: " + toReturn);
 
         acceptHookMessage = message;
         acceptHookSession = session;
@@ -155,18 +153,16 @@ public class MockMSRPSessionListener
         acceptHookResult = null;
         synchronized (this)
         {
-
             notifyAll();
+            logger.debug("AcceptHook returns: " + toReturn);
             return toReturn;
-
         }
     }
 
     @Override
     public void receiveMessage(Session session, Message message)
     {
-        logger.debug("receive message called on message: "
-            + message.getMessageID());
+        logger.debug("receiveMessage(id=[" + message.getMessageID() + "])");
         receiveMessage = message;
         receiveMessageSession = session;
         synchronized (this)
@@ -178,19 +174,18 @@ public class MockMSRPSessionListener
     @Override
     public void receivedReport(Session session, Transaction tReport)
     {
-
         if (tReport.getStatusHeader().getStatusCode() != 200)
         {
-            logger.debug("Received a report with code different from 200"
+            logger.debug("Received report with code different from 200"
                 + ", with code: " + tReport.getStatusHeader().getStatusCode()
                 + " returning");
             return;
         }
-        logger.debug("Received report, confirming that: "
-            + tReport.getByteRange()[1] + " bytes were sent; "
+        logger.debug("Received report, confirming "
+            + tReport.getByteRange()[1] + " bytes were sent(== "
             + (tReport.getByteRange()[1] * 100)
-            / tReport.getTotalMessageBytes() + "% sent " + "TType: "
-            + tReport.transactionType + " Status code:"
+            / tReport.getTotalMessageBytes() + "%) Tx-"
+            + tReport.transactionType + ", status:"
             + tReport.getStatusHeader().getStatusCode());
         receivedReportSession = session;
         receivedReportTransaction = tReport;
@@ -199,23 +194,20 @@ public class MockMSRPSessionListener
             successReportCounter.add(tReport.getByteRange()[1]);
             successReportCounter.notifyAll();
         }
-
     }
 
     @Override
     public void updateSendStatus(Session session, Message message,
         long numberBytesSent)
     {
-        logger.debug("updateSendStatus called, sent: " + numberBytesSent
-            + " bytes; " + (numberBytesSent * 100) / message.getSize()
-            + "% sent");
+        logger.debug("updateSendStatus() bytes sent: " + numberBytesSent
+            + " == " + (numberBytesSent * 100) / message.getSize() + "%");
         updateSendStatusSession = session;
         updateSendStatusMessage = message;
         synchronized (updateSendStatusCounter)
         {
             updateSendStatusCounter.add(numberBytesSent);
             updateSendStatusCounter.notifyAll();
-
         }
     }
 
@@ -229,18 +221,16 @@ public class MockMSRPSessionListener
             incoming = true;
 
             IncomingMessage message = (IncomingMessage) abortEvent.getMessage();
-            logger
-                .debug("abortedMessageEvent called, received: "
-                    + message.getReceivedBytes() + " bytes; "
-                    + (message.getReceivedBytes() * 100) / message.getSize()
-                    + "% ");
+            logger.debug("abortedMessageEvent() bytes received: "
+                + message.getReceivedBytes() + " == "
+                + (message.getReceivedBytes() * 100) / message.getSize() + "%");
         }
         else if (abortEvent.getMessage().getDirection() == Message.OUT)
         {
             OutgoingMessage message = (OutgoingMessage) abortEvent.getMessage();
-            logger.debug("abortedMessageEvent called " + "sent:"
-                + message.getSentBytes() + " bytes; "
-                + (message.getSentBytes() * 100) / message.getSize() + "% ");
+            logger.debug("abortedMessageEvent() bytes sent: "
+                + message.getSentBytes() + " == "
+                + (message.getSentBytes() * 100) / message.getSize() + "%");
         }
         abortedMessage = abortEvent.getMessage();
         abortedMessageSession = abortEvent.getSession();
@@ -253,9 +243,7 @@ public class MockMSRPSessionListener
                 abortMessageCounter.add(((OutgoingMessage) abortedMessage)
                     .getSentBytes());
             abortMessageCounter.notifyAll();
-
         }
-
     }
 
     @Override
