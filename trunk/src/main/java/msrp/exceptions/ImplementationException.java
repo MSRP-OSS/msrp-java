@@ -22,6 +22,7 @@ package msrp.exceptions;
  * @author João André Pereira Antunes 2008
  * 
  */
+@SuppressWarnings("serial")
 public class ImplementationException
     extends Exception
 {

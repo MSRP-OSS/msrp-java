@@ -22,12 +22,9 @@ import java.util.ArrayList;
 import java.util.Random;
 
 import org.junit.*;
-import org.junit.internal.ArrayComparisonFailure;
 
 import static org.junit.Assert.*;
 
-import msrp.*;
-import msrp.testutils.*;
 import msrp.utils.TextUtils;
 import msrp.Transaction.TransactionType;
 import msrp.exceptions.ConnectionParserException;

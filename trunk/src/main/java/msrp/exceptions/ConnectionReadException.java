@@ -17,12 +17,11 @@
  */
 package msrp.exceptions;
 
-import java.io.IOException;
-
 /**
  * @author João André Pereira Antunes 2008
  *
  */
+@SuppressWarnings("serial")
 public class ConnectionReadException
     extends Exception
 {

@@ -165,11 +165,6 @@ public class MiscTests
 
             // generating the transaction
 
-            // it should be able to: "receive chunks of any size from zero
-            // octets
-            // to the maximum number of octets they can receive for a complete
-            // message"
-            byte[] outGoingTransaction = new byte[11240];
             byte[] tid = new byte[8];
             TextUtils.generateRandom(tid);
 
@@ -211,8 +206,6 @@ public class MiscTests
         System.out.println("random bytes uninitialized:"
             + (new String(randomBytes, TextUtils.usascii)));
 
-        Long startTime = System.currentTimeMillis();
-        Long finishTime = System.currentTimeMillis();
         HashSet<URI> uRIs = new HashSet<URI>();
         try
         {

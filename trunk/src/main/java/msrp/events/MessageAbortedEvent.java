@@ -93,12 +93,6 @@ public class MessageAbortedEvent
     private Session session;
 
     /**
-     * The Transaction object (with or without response) associated with the
-     * abort event
-     */
-    private Transaction transaction;
-
-    /**
      * Constructor used to create the abort event
      * 
      * @param message the message that got aborted

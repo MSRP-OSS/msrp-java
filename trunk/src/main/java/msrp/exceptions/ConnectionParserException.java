@@ -23,6 +23,7 @@ package msrp.exceptions;
  * @author João André Pereira Antunes
  * 
  */
+@SuppressWarnings("serial")
 public class ConnectionParserException
     extends Exception
 {
