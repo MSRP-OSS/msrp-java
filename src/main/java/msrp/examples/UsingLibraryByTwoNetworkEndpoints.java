@@ -22,15 +22,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 import msrp.exceptions.IllegalUseException;
-import msrp.exceptions.InternalErrorException;
 import msrp.messages.Message;
 import msrp.messages.OutgoingMessage;
 import msrp.testutils.*;
-import msrp.utils.TextUtils;
 
 /**
  * 

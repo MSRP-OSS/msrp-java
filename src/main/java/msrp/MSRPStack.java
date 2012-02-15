@@ -70,8 +70,6 @@ public class MSRPStack implements Observer {
 	 */
 	private static HashMap<InetAddress, Connections> addressConnections = new HashMap<InetAddress, Connections>();
 
-	private static Random test = new Random();
-
 	/**
 	 * @param address
 	 *            the ip address to bind to

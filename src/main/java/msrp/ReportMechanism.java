@@ -17,9 +17,6 @@
 package msrp;
 
 import java.util.HashMap;
-import java.util.HashSet;
-
-import javax.xml.ws.handler.MessageContext;
 
 import msrp.messages.*;
 

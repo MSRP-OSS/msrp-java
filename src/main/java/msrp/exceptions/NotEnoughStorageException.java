@@ -21,6 +21,7 @@ package msrp.exceptions;
  * @author João André Pereira Antunes 2008
  *
  */
+@SuppressWarnings("serial")
 public class NotEnoughStorageException
     extends Exception
 {

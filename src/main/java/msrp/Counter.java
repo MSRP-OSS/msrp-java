@@ -50,11 +50,6 @@ public class Counter
     private static final int NRBYTESPOS = 1;
 
     /**
-     * Stores the value of the index of the previous clear bit
-     */
-    private long indexPreviousClearBit;
-
-    /**
      * Stores the number of bytes that the counter has
      */
     private long count = 0;

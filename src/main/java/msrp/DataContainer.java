@@ -16,7 +16,6 @@
  */
 package msrp;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import msrp.exceptions.IllegalUseException;
@@ -118,7 +117,7 @@ public abstract class DataContainer
      *      MSRPStack.setShortMessageBytes(int)
      */
     public final int MAXIMUMNUMBERBYTES =
-        MSRPStack.getInstance().getShortMessageBytes();
+        MSRPStack.getShortMessageBytes();
 
     /**
      * Convenience number 0 that used as size argument on the get operations
