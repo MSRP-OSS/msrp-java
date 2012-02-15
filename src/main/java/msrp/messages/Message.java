@@ -49,7 +49,7 @@ public abstract class Message
 
     public static final int UNINTIALIZED = -2;
 
-    public static final int UNKNWON = -1;
+    public static final int UNKNOWN = -1;
 
     public static final String YES = "yes";
 
@@ -540,7 +540,7 @@ public abstract class Message
      */
     public String getStringTotalSize()
     {
-        if (size == UNKNWON)
+        if (size == UNKNOWN)
             return "*";
         return Long.toString(size);
 

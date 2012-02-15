@@ -956,7 +956,6 @@ class Connection extends Observable implements Runnable
          * probably be cleaned up because there are actions that make no sense
          * anymore
          */
-
         if (receivingBodyData)
         {
             try
@@ -1015,7 +1014,6 @@ class Connection extends Observable implements Runnable
                 {
                     toParse = toParse.concat(restTransactions.get(0));
                     restTransactions.remove(0);
-
                 }
                 if (restTransactions.size() > 1)
                     throw new RuntimeException(
@@ -1179,8 +1177,8 @@ class Connection extends Observable implements Runnable
                         // treat it
                         // accordingly
                         logger
-                            .error("start of the transaction not found on thread: "
-                                + Thread.currentThread().getName());
+                            .error("Start of transaction not found, parsing: "
+                                + toParse.substring(0, toParse.length() > 80 ? 80 : toParse.length()));
                         throw new ConnectionParserException(
                             "Error, start of the transaction not found on thread: "
                                 + Thread.currentThread().getName());
