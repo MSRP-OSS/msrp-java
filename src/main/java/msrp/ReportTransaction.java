@@ -16,8 +16,12 @@
  */
 package msrp;
 
+import java.net.URI;
+
 import msrp.exceptions.ImplementationException;
 import msrp.exceptions.InternalErrorException;
+import msrp.messages.Message;
+import msrp.utils.TextUtils;
 
 /**
  * A class that inherits from the Transaction to represent the transactions for
@@ -29,7 +33,83 @@ import msrp.exceptions.InternalErrorException;
 public class ReportTransaction
     extends Transaction
 {
-    @Override
+	/** Construct a report to send.
+	 * @param message the associated message to report on.
+	 * @param session the originating session.
+	 * @param transaction	the originating transaction.
+	 * @throws InternalErrorException invalid arguments or object states.
+	 */
+	public ReportTransaction(Message message, Session session, Transaction transaction)
+							throws InternalErrorException
+	{
+        /*
+         * "Must check to see if session is valid" as specified in RFC4975 valid
+         * being for now if it exists or not FIXME(?!)
+         */
+        if (session == null || !session.isActive())
+            throw new InternalErrorException("not a valid session: " + session);
+
+        if (!session.equals(message.getSession()))
+            throw new InternalErrorException("Generating report: this session"
+            				+ "and associated message session differ!");
+
+        if (transaction == null ||
+    		transaction.getTotalMessageBytes() == Message.UNINTIALIZED)
+            throw new InternalErrorException(
+    			"Invalid argument or in generating a report, the total number "
+        		+ "of bytes of this message was unintialized");
+
+        direction = OUT;
+        offsetRead[HEADERINDEX] = offsetRead[ENDLINEINDEX] = 0;
+        transactionType = TransactionType.REPORT;
+
+        this.message = message;
+        transactionManager = session.getTransactionManager();
+        tID = transactionManager.generateNewTID();
+        continuationFlagByte = ENDMESSAGE;
+	}
+
+	/** Utility routine to make an outgoing report.
+	 * @param transaction	the originating transaction to report on
+	 * @param namespace		status namespace
+	 * @param statusCode	status code to return
+	 * @param comment		optional comment for the status field.
+	 */
+	protected void makeReportHeader(Transaction transaction, String namespace,
+								int statusCode, String comment)
+	{
+		StringBuilder header = new StringBuilder(256);
+
+        header.append("MSRP ").append(tID).append(" REPORT\r\nTo-Path:");
+
+        URI[] toPathURIs = transaction.getFromPath();
+        for (int i = 0; i < toPathURIs.length; i++)
+        {
+            header.append(" ").append(toPathURIs[i].toString());
+        }
+        header	.append("\r\nFrom-Path: ").append(message.getSession().getURI().toString())
+        		.append("\r\nMessage-ID: ").append(message.getMessageID());
+
+        long totalBytes = transaction.getTotalMessageBytes();
+        header.append("\r\nByte-Range: 1-").append(message.getCounter()
+        		.getNrConsecutiveBytes()).append("/");
+        if (totalBytes == Message.UNKNOWN)
+            header.append("*");
+        else
+            header.append(totalBytes);
+        /*
+         * TODO validate the comment with a regex in RegexMSRPFactory that
+         * validates the comment is utf8text, if not, log it and skip comment
+         */
+        header.append("\r\nStatus: ").append(namespace).append(" ").append(statusCode);
+        if (comment != null)
+        	header.append(" ").append(comment);
+        header.append("\r\n");
+
+        headerBytes = header.toString().getBytes(TextUtils.utf8);
+	}
+
+	@Override
     protected byte get() throws ImplementationException
     {
         if (offsetRead[HEADERINDEX] < headerBytes.length)
@@ -65,9 +145,8 @@ public class ReportTransaction
      */
     @Override
     public int getData(byte[] outData, int offset)
-        throws ImplementationException,
-        IndexOutOfBoundsException,
-        InternalErrorException
+        throws	ImplementationException, IndexOutOfBoundsException,
+        		InternalErrorException
     {
         // sanity checks:
         if (interrupted && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
@@ -92,7 +171,6 @@ public class ReportTransaction
         int spaceRemainingOnBuffer = outData.length - offset;
         while ((bytesCopied < spaceRemainingOnBuffer) && !stopCopying)
         {
-
             if (offset > (outData.length - 1))
                 throw new IndexOutOfBoundsException();
 
@@ -116,7 +194,6 @@ public class ReportTransaction
             if (!interrupted && (offsetRead[HEADERINDEX] >= headerBytes.length))
                 stopCopying = true;
         }
-
         return bytesCopied;
     }
 
@@ -132,5 +209,4 @@ public class ReportTransaction
             return false;
         return true;
     }
-
 }

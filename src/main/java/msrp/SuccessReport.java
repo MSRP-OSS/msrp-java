@@ -16,9 +16,6 @@
  */
 package msrp;
 
-import java.net.*;
-
-import msrp.*;
 import msrp.exceptions.*;
 import msrp.messages.*;
 
@@ -33,113 +30,32 @@ public class SuccessReport
     extends ReportTransaction
 {
     /**
-     * This constructor creates an outgoing success report based on the success
-     * report rules defined in the RFC
+     * Create an outgoing success report based on the RFC rules.
      * 
      * @param message the message associated to the report
      * @param session the session associated with the report
-     * @param transaction the transaction that originally triggered this success
-     *            report or null if the message is complete
-     * @param comment the optional comment as defined in RFC 4975 syntax. If
-     *            null it's not included
-     * @throws NonValidSessionSuccessReportException if the constructor was
-     *             called without having a "valid" session
+     * @param transaction the originating transaction that triggered this report.
+     * @param comment optional comment as defined in RFC 4975.
      * @throws InternalErrorException if the objects used have invalid states or
-     *             any other kind of internal error
+     *             any other kind of internal error.
      * @throws IllegalUseException if something like trying to send success
-     *             reports on messages that don't want them is done or also if
-     *             the arguments are invalid
-     * 
+     *             reports on messages that don't want them.
      */
     public SuccessReport(Message message, Session session,
         Transaction transaction, String comment)
-        throws IllegalUseException,
-        InternalErrorException
+        throws IllegalUseException, InternalErrorException
     {
-        /*
-         * "Must check to see if session is valid" as specified in RFC4975 valid
-         * being for now if it exists or not FIXME(?!)
-         */
-        if (session == null || !session.isActive())
-        {
-            throw new InternalErrorException("not a valid session: " + session);
-        }
-        /* sanity checks: */
-        if (!session.equals(message.getSession()))
-            throw new IllegalUseException("Generating a success report: "
-                + "the session and the one associated with the message differ!");
+    	super(message, session, transaction);
 
-        if (transaction != null
-            && transaction.getSuccessReport() != message.getSuccessReport())
+    	if (transaction.getSuccessReport() != message.getSuccessReport())
             throw new InternalErrorException(
-                "The value of success report of the originating transaction and of the message differ");
+		                "Report request of the originating transaction "
+		        		+ "differs from that of the message");
 
         if (!message.getSuccessReport())
             throw new IllegalUseException(
-                "It was called the successreport constructor for a message that doesn't request success reports");
-        /* end sanity checks */
+                "Constructing a success report for a message that didn't want one?");
 
-        this.direction = OUT;
-        offsetRead[HEADERINDEX] = offsetRead[ENDLINEINDEX] = 0;
-        transactionType = TransactionType.REPORT;
-
-        /*
-         * Determine the byte-range to report of the message
-         */
-        Counter messageCounter = message.getCounter();
-        /*
-         * TODO fill the ID X field if we have the complete message there will
-         * be no byte-range field on the message, only if we have parts of it ID
-         * X
-         */
-        this.message = message;
-        transactionManager = session.getTransactionManager();
-        tID = transactionManager.generateNewTID();
-        String header = "MSRP " + tID + " REPORT\r\n" + "To-Path:";
-        URI[] toPathURIs = transaction.getFromPath();
-        URI fromPath = session.getURI();
-
-        for (int i = 0; i < toPathURIs.length; i++)
-        {
-            header = header.concat(" " + toPathURIs[i]);
-        }
-        header =
-            header.concat("\r\n" + "From-Path: " + fromPath + "\r\n"
-                + "Message-ID: " + message + "\r\n");
-
-        /* Byte-Range: */
-        /*
-         * Only if the message isn't complete we will insert the Byte Range
-         * header
-         */
-        long[] byteRange = transaction.getByteRange();
-        header =
-            header.concat("Byte-Range: 1" + "-"
-                + message.getCounter().getNrConsecutiveBytes() + "/");
-        long totalBytes = transaction.getTotalMessageBytes();
-        if (totalBytes == Message.UNINTIALIZED)
-            throw new InternalErrorException(
-                "Generating the success report, the total number of bytes of this message was unintialized");
-        if (totalBytes == Message.UNKNWON)
-        {
-            header = header.concat("*\r\n");
-        }
-        else
-            header = header.concat(totalBytes + "\r\n");
-
-        /* Status header (rest of headers) */
-        if (comment == null)
-            header = header.concat("Status: 000 200\r\n");
-        else
-        {
-            // TODO validate the comment with a reg. exp. pattern in
-            // RegexMSRPFactory that validates that comment is utf8text, if it's
-            // not, log it and use comment=null
-            header.concat("Status: 000 200 " + comment + "\r\n");
-        }
-
-        headerBytes = header.getBytes(usascii);
-        continuationFlagByte = ENDMESSAGE;
+        makeReportHeader(transaction, "000", 200, comment);
     }
-
 }
