@@ -103,7 +103,7 @@ public class DefaultReportMechanism
     {
         if (outgoingMessage.isComplete())
             return true;
-        if (outgoingMessage.getSize() == Message.UNKNWON)
+        if (outgoingMessage.getSize() == Message.UNKNOWN)
             return false;
         else if (outgoingMessage.getSize() > Message.UNINTIALIZED)
         {

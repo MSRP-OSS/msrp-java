@@ -101,7 +101,7 @@ public class CustomExampleReportMechanism
     {
     	if (message.isComplete())
     		return true;
-        if (message.getSize() == Message.UNKNWON)
+        if (message.getSize() == Message.UNKNOWN)
             return true;
         else if (message.getSize() > Message.UNINTIALIZED)
         {

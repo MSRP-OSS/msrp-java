@@ -534,7 +534,6 @@ public class TestReportMechanism
             fiveMegaByteMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
@@ -563,11 +562,11 @@ public class TestReportMechanism
                 /*
                  * allow the message to be received
                  */
-                receivingSessionListener.wait(5000);
+                receivingSessionListener.wait(500);
             }
             synchronized (sendingSessionListener)
             {
-                sendingSessionListener.wait(5000);
+                sendingSessionListener.wait(500);
             }
             /*
              * 11 Times might be one time too many times, because the sender
