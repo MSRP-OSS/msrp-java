@@ -18,7 +18,6 @@ package msrp.examples;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -262,7 +261,6 @@ public class FirstMilestoneFunctionalities
                 // however we need to generate a new data container, either a
                 // memory or a file one with appropriate size (in case of being
                 // a memory one)
-                int reportedSizeMessage = (int) message.getSize();
                 DataContainer dataContainer = new MemoryDataContainer(300);
                 // for alternatives to the MemoryDataContainer see javadoc of
                 // FileDataContainer

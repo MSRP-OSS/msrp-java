@@ -260,8 +260,6 @@ public class Transaction
      */
     private boolean successReport = false;
 
-    private int offsetBody = 0;
-
     private String messageID = null;
 
     private StringBuffer headerBuffer = new StringBuffer();
@@ -628,7 +626,7 @@ public class Transaction
                             .warn("an exception made this transaction: "
                                 + tID
                                 + " method:"
-                                + transactionType.TransactionType
+                                + TransactionType.TransactionType
                                 + " an invalid transaction, returning without parsing");
                         return;
                     }
@@ -1491,7 +1489,6 @@ public class Transaction
                 if (bodyByteBuffer.hasRemaining())
                     dst[i] = bodyByteBuffer.get();
             }
-            offsetBody += i;
             return dst;
 
         }
@@ -1639,12 +1636,10 @@ public class Transaction
      * 
      * @return a string with the line including the \r\n chars or null if none
      *         found
-     */
     private String getLineHeaderBuffer()
     {
         try
         {
-
             String stringToReturn =
                 headerBuffer.substring(0, headerBuffer.indexOf("\r\n"));
             headerBuffer.delete(0, headerBuffer.indexOf("\r\n")
@@ -1656,6 +1651,7 @@ public class Transaction
             return null;
         }
     }
+     */
 
     /**
      * Method that takes into account the validTransaction field of the
@@ -2289,11 +2285,11 @@ public class Transaction
 
     /**
      * @param message the message to set
-     */
     private void setMessage(Message message)
     {
         this.message = message;
     }
+     */
 
     /**
      * Gets a byte for the end of transaction line

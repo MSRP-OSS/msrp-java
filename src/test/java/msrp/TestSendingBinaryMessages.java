@@ -595,14 +595,10 @@ public class TestSendingBinaryMessages
 
             int originalByte;
             int copiedByte;
-            int i, j;
-            i = j = 0;
             do
             {
                 originalByte = originalFileStream.read();
                 copiedByte = receivedFileStream.read();
-                i++;
-                j++;
                 assertEquals("File's content differed:", originalByte,
                     copiedByte);
             }
@@ -743,14 +739,10 @@ public class TestSendingBinaryMessages
 
             int originalByte;
             int copiedByte;
-            int i, j;
-            i = j = 0;
             do
             {
                 originalByte = originalFileStream.read();
                 copiedByte = receivedFileStream.read();
-                i++;
-                j++;
                 assertEquals("File's content differed:", originalByte,
                     copiedByte);
             }
@@ -1243,14 +1235,10 @@ public class TestSendingBinaryMessages
 
             int originalByte;
             int copiedByte;
-            int i, j;
-            i = j = 0;
             do
             {
                 originalByte = originalFileStream.read();
                 copiedByte = receivedFileStream.read();
-                i++;
-                j++;
                 assertEquals("Files content differ:", originalByte,
                     copiedByte);
             }

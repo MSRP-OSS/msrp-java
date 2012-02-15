@@ -71,11 +71,6 @@ public class MockMSRPSessionListener
     private Boolean acceptHookResult;
 
     /**
-     * The name of the object
-     */
-    private String name;
-
-    /**
      * The external to be set, or not data container object that is going to be
      * used on the acceptHook if it exists upon the calling of the trigger
      */
@@ -113,7 +108,6 @@ public class MockMSRPSessionListener
      */
     public MockMSRPSessionListener(String name)
     {
-        this.name = name;
     }
 
     @Override

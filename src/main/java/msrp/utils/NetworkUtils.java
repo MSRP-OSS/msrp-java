@@ -25,7 +25,6 @@ package msrp.utils;
 
 import java.net.*;
 import java.util.*;
-import java.text.*;
 
 /**
  * Utility methods and fields to use when working with network addresses.
