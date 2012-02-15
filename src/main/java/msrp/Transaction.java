@@ -18,7 +18,6 @@ package msrp;
 
 import java.net.URI;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import msrp.exceptions.*;
 import msrp.messages.*;
+import msrp.utils.TextUtils;
 
 /**
  * Class that represents a MSRP Transaction (either request or response,
@@ -103,8 +103,6 @@ public class Transaction
      * aborted)
      */
     protected boolean interrupted = false;
-
-    static Charset usascii = Charset.forName("US-ASCII");
 
     /**
      * variable that has the byte associated with the end of transaction char
@@ -420,7 +418,7 @@ public class Transaction
             // + "\r\n\r\n");
 
             // }
-            headerBytes = headerString.getBytes(usascii);
+            headerBytes = headerString.getBytes(TextUtils.utf8);
 
             /* by default have the continuation flag to be the end of message */
             continuationFlagByte = ENDMESSAGE;
@@ -574,7 +572,7 @@ public class Transaction
          */
         if (!receivingBinaryData)
         {
-            String toParse = new String(incData, offset, length, usascii);
+            String toParse = new String(incData, offset, length, TextUtils.utf8);
             // Trims and assembles the received data via the toParse string
             // so that we get a buffer with the whole headers before we try to
             // analyze it
@@ -684,7 +682,7 @@ public class Transaction
                                      * automatically calls the trigger TODO)
                                      */
                                     byteData =
-                                        toParse.substring(i).getBytes(usascii);
+                                        toParse.substring(i).getBytes(TextUtils.utf8);
                                     message.getDataContainer().put(
                                         startingIndex, byteData);
                                     realChunkSize += byteData.length;
@@ -701,7 +699,7 @@ public class Transaction
                                             i
                                                 + (message.getReportMechanism()
                                                     .getTriggerGranularity()))
-                                            .getBytes(usascii);
+                                            .getBytes(TextUtils.utf8);
                                     message.getDataContainer().put(
                                         startingIndex, byteData);
                                     realChunkSize += byteData.length;
@@ -716,7 +714,7 @@ public class Transaction
                         }
                         else
                         {
-                            byteData = toParse.substring(i).getBytes(usascii);
+                            byteData = toParse.substring(i).getBytes(TextUtils.utf8);
                             logger.trace("parsing the body of  non-send or non"
                                 + " message associated transaction"
                                 + " with tID: " + tID + " the nr of bytes:"
@@ -1005,7 +1003,7 @@ public class Transaction
             }
         }
         String aux = headerBuffer.toString();
-        headerBytes = aux.getBytes(usascii);
+        headerBytes = aux.getBytes(TextUtils.utf8);
         completeTransaction = true;
 
     }
@@ -2319,7 +2317,7 @@ public class Transaction
         if (offsetRead[ENDLINEINDEX] > 6
             && (offsetRead[ENDLINEINDEX] < tID.length() + 7))
         {
-            byte[] byteTID = tID.getBytes(usascii);
+            byte[] byteTID = tID.getBytes(TextUtils.utf8);
             return byteTID[(int) (offsetRead[ENDLINEINDEX]++ - 7)];
         }
 
