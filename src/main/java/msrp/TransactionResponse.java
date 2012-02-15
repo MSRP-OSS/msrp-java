@@ -3,6 +3,7 @@ package msrp;
 import java.nio.ByteBuffer;
 
 import msrp.exceptions.IllegalUseException;
+import msrp.utils.TextUtils;
 
 /**
  * This class represents a response to a Transaction, which is considered a
@@ -69,7 +70,7 @@ public class TransactionResponse
         this.tID = transaction.tID;
         this.fromPath = transaction.toPath;
         this.toPath = transaction.fromPath;
-        byte[] contentBytes = contentString.getBytes(usascii);
+        byte[] contentBytes = contentString.getBytes(TextUtils.utf8);
         content = ByteBuffer.wrap(contentBytes);
         content.rewind();
         transaction.setResponse(this);
