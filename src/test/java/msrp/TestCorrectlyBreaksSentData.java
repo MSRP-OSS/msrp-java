@@ -97,8 +97,8 @@ public class TestCorrectlyBreaksSentData
             receivingSession =
                 new Session(false, false, sendingSession.getURI(), address);
 
-            receivingSession.addMSRPSessionListener(receivingSessionListener);
-            sendingSession.addMSRPSessionListener(sendingSessionListener);
+            receivingSession.addListener(receivingSessionListener);
+            sendingSession.addListener(sendingSessionListener);
 
         }
         catch (Exception e)
