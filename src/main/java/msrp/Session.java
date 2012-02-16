@@ -20,10 +20,11 @@ import msrp.exceptions.*;
 import msrp.messages.*;
 import msrp.events.*;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -118,10 +119,12 @@ public class Session
      */
     private ReportMechanism reportMechanism = DefaultReportMechanism.getInstance();
 
-    // TODO alter the constructors to use the this(argument) call
-
-    /**
-     * Create a session with the local address.
+    /* 
+     * TODO: Use the static methods to create a public interface
+     * {@code MSRPSession} to expose the API, and make this the implementation
+     * class (msrp-27).
+     */
+    /** Create a session with the local address.
      * The associated connection will be an active one.
      * 
      * @param isSecure	Is it a secure connection or not (use TLS)?
@@ -130,13 +133,18 @@ public class Session
      * @throws InternalErrorException if any error ocurred. More info about the
      *             error in the accompanying Throwable.
      */
-    public Session(boolean isSecure, boolean isRelay, InetAddress address)
+    public static Session create(boolean isSecure, boolean isRelay, InetAddress address)
+            throws InternalErrorException {
+    	return new Session(isSecure, isRelay, address);
+    }
+
+    Session(boolean isSecure, boolean isRelay, InetAddress address)
         throws InternalErrorException
     {
+        this.localAddress = address;
+        setRelay(isRelay);
         try
         {
-            this.localAddress = address;
-            setRelay(isRelay);
             connection = new Connection(address);
 
             // Generate new URI and add to list of connection-URIs.
@@ -152,8 +160,32 @@ public class Session
         }
     }
 
-    /**
-     * Creates a session with the local address
+    /** Create a session with an active connection using the given report mechanism.
+     * 
+     * @param isSecure	Is it a secure connection or not (use TLS)?
+     * @param isRelay	is this a relaying session?
+     * @param address	the address to use as local endpoint.
+     * @param reportMechanism	the reporting mechanism to use.
+     * @throws InternalErrorException if any error ocurred. More info about the
+     *             error in the accompanying Throwable.
+     */
+    public static Session create(boolean isSecure, boolean isRelay, InetAddress address,
+            ReportMechanism reportMechanism)
+            throws InternalErrorException {
+    	Session s = new Session(isSecure, isRelay, address);
+    	s.reportMechanism = reportMechanism;
+    	return s;
+    }
+
+    Session(boolean isSecure, boolean isRelay, InetAddress address,
+        ReportMechanism reportMechanism)
+        throws InternalErrorException
+    {
+        this(isSecure, isRelay, address);
+        this.reportMechanism = reportMechanism;
+    }
+
+    /** Creates a session with the local address
      * The associated connection will be a passive one.
      * 
      * @param isSecure	Is it a secure connection or not (use TLS)?
@@ -162,114 +194,139 @@ public class Session
      * @param address	the address to use as local endpoint.
      * @throws InternalErrorException if any error ocurred. More info about the
      *             error in the accompanying Throwable.
-     * 
      */
-    public Session(boolean isSecure, boolean isRelay, URI toURI, InetAddress address)
+    public static Session create(boolean isSecure, boolean isRelay, URI toURI, InetAddress address)
+            throws InternalErrorException
+    {
+    	return new Session(isSecure, isRelay, toURI, address);
+    }
+
+    Session(boolean isSecure, boolean isRelay, URI toURI, InetAddress address)
         throws InternalErrorException
     {
         this.localAddress = address;
-        connection = MSRPStack.getConnectionsInstance(address);
+        setRelay(isRelay);
         try
         {
+            connection = MSRPStack.getConnectionsInstance(address);
             uri = ((Connections) connection).generateNewUri();
+            stack.addConnection(uri, connection);
         }
         catch (Exception e)
         {
-            // let's wrap every exception in an InternalError one
-            logger.error("Got an internal error exception", e);
+            // let's wrap the exceptions in an InternalError
+            logger.error("Error creating Connections: ", e);
             throw new InternalErrorException(e);
         }
-        ((Connections) connection).addUriToIdentify(uri, this);
-        // is the subsequent needed?! TODO
-        stack.addConnection(uri, connection);
-        setRelay(isRelay);
-        toUris.add(toURI);
-        logger.trace("MSRP Session created, tls: " + isSecure + " isRelay: " + isRelay
-            + " destinationURI: " + toURI + " InetAddress:" + address);
 
+        ((Connections) connection).addUriToIdentify(uri, this);
+        toUris.add(toURI);
+
+        logger.debug("MSRP Session created: secure?[" + isSecure + "], relay?[" + isRelay
+            + "], toURI=[" + toURI + "], InetAddress:" + address);
     }
 
-    /**
-     * Constructor used to define the failureReport mechanism for all messages (wrapper
-     * for the tls isRelay InetAddress constructor)
+    /** Create a session with a passive connection using the given report mechanism.
      * 
-     * @throws IOException
-     * @throws URISyntaxException
+     * @param isSecure	Is it a secure connection or not (use TLS)?
+     * @param isRelay	is this a relaying session?
+     * @param toUri		the destination URI that will contact this session.
+     * @param address	the address to use as local endpoint.
+     * @param reportMechanism	the reporting mechanism to use.
+     * @throws InternalErrorException if any error ocurred. More info about the
+     *             error in the accompanying Throwable.
      */
-    public Session(boolean isSecure, boolean isRelay, InetAddress address,
-        ReportMechanism reportMechanism)
+    public static Session create(boolean isSecure, boolean isRelay, URI toURI,
+            InetAddress address, ReportMechanism reportMechanism)
+            throws InternalErrorException
+    {
+    	Session s = new Session(isSecure, isRelay, toURI, address);
+        s.reportMechanism = reportMechanism;
+        return s;
+    }
+
+    Session(boolean isSecure, boolean isRelay, URI toURI,
+        InetAddress address, ReportMechanism reportMechanism)
         throws InternalErrorException
     {
-        this(isSecure, isRelay, address);
+        this(isSecure, isRelay, toURI, address);
         this.reportMechanism = reportMechanism;
-        logger.trace("MSRP Session created with custom failureReport mechanism, tls: "
-            + isSecure + " isRelay: " + isRelay + " InetAddress:" + address);
+    }
+
+    public String toString()
+    {
+        return this.getURI().toString();
+    }
+
+    /** Add a listener to this session to catch any incoming traffic.
+     * 
+     * @param listener	the session listener
+     */
+    public void addListener(MSRPSessionListener listener)
+    {
+        if (listener != null && listener instanceof MSRPSessionListener)
+        {
+            msrpSessionListener = listener;
+            logger.trace("MSRP Session Listener added to Session: " + this);
+        } else {
+	        logger.error("Listener could not be added to Session: "
+	            + this + " because it didn't match the criteria");
+        }
     }
 
     /**
-     * Constructor used to define the failureReport mechanism for all messages (wrapper
-     * for the tls, isRelay, destinationURI, InetAddress constructor)
+     * Adds the given uri's and establish the connection according RFC.
      * 
-     * @throws Exception
-     */
-    public Session(boolean isSecure, boolean isRelay, URI destinationURI,
-        InetAddress address, ReportMechanism reportMechanism)
-        throws Exception
-    {
-        this(isSecure, isRelay, destinationURI, address);
-        this.reportMechanism = reportMechanism;
-        logger.trace("MSRP Session created with custom failureReport mechanism, tls: "
-            + isSecure + " isRelay: " + isRelay + " destinationURI: " + destinationURI
-            + " InetAddress:" + address);
-    }
-
-    /**
-     * Adds the given uri and establishes the connection according to the
-     * connection model specified in the RFC
+     * @param uris the to-path to use.
      * 
-     * @param uri Receives the uri of the new connection Is used to set the new
-     *            connection to remote url given by the URI
-     * @return the newly or already existing connection
-     * @throws URISyntaxException in case there was a problem with the given URI
-     * @throws IOException if there was a problem with the socket
+     * @throws IOException if there was a connection problem.
      */
-    public void addToPath(ArrayList<URI> uris)
-        throws URISyntaxException,
-        IOException
+    public void addToPath(ArrayList<URI> uris) throws IOException
     {
-        // the following for each block only makes sense because of the
-        // validation task that is yet to be done described below
         for (URI uri : uris)
         {
             // TODO validate each uri given prior to adding them to the list
-            //related with Issue #16
-            this.toUris.add(uri);
+            // related with Issue #16
+            toUris.add(uri);
         }
-        connection.addEndPoint(this.toUris.get(this.toUris.size() - 1), localAddress);
-        // stack.addActiveSession(this);
+        connection.addEndPoint(toUris.get(toUris.size() - 1), localAddress);
+
         txManager = connection.getTransactionManager();
         txManager.addSession(this);
         txManager.initialize(this);
 
-        logger.trace("Added toPath with URI[0]: " + uris.get(0).toString()
-            + " URI array size:" + this.toUris.size());
-
-        /*
-         * //TODO: refactor the method it does somethings that don't make sense
-         * anymore
-         * 
-         * URI newUri = new URI(uri); URL newUrl = newUri.toURL();
-         * 
-         * 
-         * Connection newCon =
-         * MSRPStack.getInstance().getConnectionByURL(newUrl); if (newCon !=
-         * null) { setConnection(newCon); return _connection; } newCon = new
-         * Connection(); setConnection(newCon);
-         * 
-         * 
-         * return _connection;
-         */
+        logger.trace("Added "+ toUris.size() +" toPaths with URI[0]="
+        				+ uris.get(0).toString());
     }
+
+	/** send the given content over this session.
+	 * 
+	 * @param contentType	the type of content.
+	 * @param content		the content itself
+	 * @return				the message-object that will be send, can be used
+	 * 						to abort large content.
+	 * @throws IllegalUseException
+	 */
+	public Message sendMessage(String contentType, byte[] content)
+			throws IllegalUseException
+	{
+		return new OutgoingMessage(this, contentType, content);
+	}
+
+	/** send the given file over this session.
+	 * 
+	 * @param contentType	the type of file.
+	 * @param content		the file itself
+	 * @return				the message-object that will be send, can be used
+	 * 						to abort large content.
+	 * @throws SecurityException 
+	 * @throws FileNotFoundException 
+	 */
+	public Message sendMessage(String contentType, File content)
+			throws FileNotFoundException, SecurityException
+	{
+		return new OutgoingFileMessage(this, contentType, content);
+	}
 
     public ArrayList<URI> getToPath()
     {
@@ -282,7 +339,7 @@ public class Session
      * @return Returns the failureReport.
      * @uml.property name="_failureReport"
      */
-    public boolean is_failureReport()
+    public boolean isFailureReport()
     {
         return failureReport;
     }
@@ -293,7 +350,7 @@ public class Session
      * @param _failureReport The failureReport to set.
      * @uml.property name="_failureReport"
      */
-    public void set_failureReport(boolean report)
+    public void setFailureReport(boolean report)
     {
         this.failureReport = report;
     }
@@ -304,7 +361,7 @@ public class Session
      * @return Returns the successReport.
      * @uml.property name="_successReport"
      */
-    public boolean is_successReport()
+    public boolean isSuccessReport()
     {
         return successReport;
     }
@@ -315,16 +372,15 @@ public class Session
      * @param _successReport The successReport to set.
      * @uml.property name="_successReport"
      */
-    public void set_successReport(boolean report)
+    public void setSuccessReport(boolean report)
     {
         successReport = report;
     }
 
     /**
-     * Getter of the property <tt>_message</tt>
+     * Get messages being received.
      * 
-     * @return Returns the _message.
-     * @uml.property name="_message"
+     * @return just those.
      */
     public HashMap<String, Message> getMessagesReceive()
     {
@@ -353,14 +409,13 @@ public class Session
         this.isRelay = isRelay;
     }
 
-
     /**
-     * Setter of the property <tt>_connectoin</tt>
+     * Setter of the property <tt>_connection</tt>
      * 
-     * @param _connectoin The _connection to set.
-     * @uml.property name="_connectoin"
+     * @param _connection The _connection to set.
+     * @uml.property name="_connection"
      */
-    public void setconnection(msrp.Connection connection)
+    public void setConnection(Connection connection)
     {
         this.connection = connection;
     }
@@ -371,25 +426,6 @@ public class Session
     public void setReportMechanism(ReportMechanism reportMechanism)
     {
         this.reportMechanism = reportMechanism;
-    }
-
-    public void addMSRPSessionListener(MSRPSessionListener object)
-    {
-        // TODO add the needed listeners from the object
-        if (object != null && object instanceof MSRPSessionListener)
-        {
-            msrpSessionListener = object;
-            logger.trace("MSRP Session Listener added to Session: "
-                + getURI().toString());
-            return;
-        }
-        logger.error("MSRP Session Listener called but not added to Session: "
-            + getURI().toString() + " because it didn't matched the criteria");
-    }
-
-    public String toString()
-    {
-        return getURI().toString();
     }
 
     /**
@@ -440,104 +476,16 @@ public class Session
     }
 
     /**
-     * Returns and removes the first message of the top of the sendQueue
-     * array.
+     * Returns and removes first message of the top of sendQueue
      * 
-     * @return the first message to be sent out of the sendQueue array
+     * @return first message to be sent from sendQueue
      */
     public Message getMessageToSend()
     {
-        // returns the first message to be sent out of the sendQueue array
-        // list
-        if (sendQueue.isEmpty())
-            return null; // TODO ?! FIXME?! also delete from the active sessions
-        Message messageToReturn = sendQueue.get(0);
-        sendQueue.remove(messageToReturn);
-        return messageToReturn;
+    	if (sendQueue == null || sendQueue.isEmpty())
+    		return null;
+    	return sendQueue.remove(0);
     }
-
-    /*
-     * TODO: remove these lines
-     * 
-     * @param tls says if this is a secure connection or not.
-     * 
-     * @param failureReport sets the failure-failureReport value
-     * 
-     * @param isRelay says if this sessions uses isRelay or not
-     * 
-     * @return Session the newly created session with the failureport altered
-     * 
-     * public Session(boolean tls, boolean failureReport, boolean isRelay) {
-     * super(); }
-     * 
-     * /**
-     * 
-     * @param tls tells if this session goes through a seucure connection or not
-     * 
-     * @param successReport sets the value of the success-Report field
-     * 
-     * @param failureReport sets the failure-failureReport value
-     * 
-     * @param isRelay does this session uses isRelay
-     * 
-     * @return a newly created session
-     * 
-     * public Session(boolean tls, boolean successReport, boolean failureReport,
-     * boolean isRelay) { super(); }
-     */
-
-    /**
-     * Creates an MessageAbortedEvent and fires it
-     * 
-     * @param message the msrp message that was aborted
-     * @param reason the reason
-     * @param extraReasonInfo the extra information about the reason if any is
-     *            present (it can be transported on the body of a REPORT
-     *            request)
-     * @param transaction the transaction associated with the abort event
-     * @see MessageAbortedEvent
-     */
-    public void fireMessageAbortedEvent(Message message, int reason,
-        String extraReasonInfo, Transaction transaction)
-    {
-        logger.trace("Called the fireMessageAbortedEvent");
-        MessageAbortedEvent abortedEvent =
-            new MessageAbortedEvent(message, this, reason, extraReasonInfo,
-                transaction);
-        MSRPSessionListener sessionListener;
-        synchronized (msrpSessionListener)
-        {
-            sessionListener = msrpSessionListener;
-        }
-        sessionListener.abortedMessageEvent(abortedEvent);
-
-    }
-
-    /**
-     * This function is only used so that we have a central point to eventually
-     * do any cleanup before the real callback. (for instance with the Stack
-     * itself, at this moment nothing is being done though).
-     * 
-     * trigger for the registered MSRPSessionListener callback abortedMessage
-     * 
-     * @deprecated use MessageAbortedEvents instead, this one only works for
-     *             incoming messages that get a ABORT in the CONTINUATION FLAG
-     * 
-     * 
-     */
-    public void triggerAbortedMessage(Session session, IncomingMessage message,
-        Transaction transaction)
-    {
-        logger.trace("Called the triggerAbortedMessage hook");
-        msrpSessionListener.abortedMessage(session, message);
-        fireMessageAbortedEvent(message, MessageAbortedEvent.CONTINUATIONFLAG,
-            null, transaction);
-
-    }
-
-    /*
-     * End of triggers to the Listener
-     */
 
     /**
      * @return the reportMechanism associated with this session
@@ -614,36 +562,6 @@ public class Session
 
     }
 
-    /*
-     * TODO: remove these lines
-     * 
-     * @param tls says if this is a secure connection or not.
-     * 
-     * @param failureReport sets the failure-failureReport value
-     * 
-     * @param isRelay says if this sessions uses isRelay or not
-     * 
-     * @return Session the newly created session with the failureport altered
-     * 
-     * public Session(boolean tls, boolean failureReport, boolean isRelay) {
-     * super(); }
-     * 
-     * /**
-     * 
-     * @param tls tells if this session goes through a seucure connection or not
-     * 
-     * @param successReport sets the value of the success-Report field
-     * 
-     * @param failureReport sets the failure-failureReport value
-     * 
-     * @param isRelay does this session uses isRelay
-     * 
-     * @return a newly created session
-     * 
-     * public Session(boolean tls, boolean successReport, boolean failureReport,
-     * boolean isRelay) { super(); }
-     */
-
     /**
      * FIXME This method shouldn't usually be used by the user, but it is
      * required due to the package structure.. related with Issue #27
@@ -681,15 +599,6 @@ public class Session
 
     }
 
-    // public void addUriToIdentify(URI uri)
-    // {
-    // TODO add the uri to a list in order to verify the authenticity of the
-    // sender
-    /*
-     * if (this.connection instanceof Connections) ((Connections)
-     * Connections.getInstance()).addUriToIdentify(uri,this);
-     */
-    // }
     /**
      * method used by an incoming transaction to retrieve the message object
      * associated with it, if it's already being received
@@ -723,17 +632,13 @@ public class Session
     /*
      * Triggers to the Listener, not really sure if they are needed now, but
      * later can be used to trigger some extra validations before actually
-     * calling the callback
+     * calling the callback or cleanup after.
      */
     /**
-     * This function is only used so that we have a central point to eventually
-     * do any cleanup before the real callback. (for instance with the Stack
-     * itself, at this moment nothing is being done though).
-     * 
-     * trigger for the registered MSRPSessionListener callback.
+     * trigger for the registered {@code MSRPSessionListener} callback.
      * 
      * @see MSRPSessionListener
-     * @param failureReport the transaction associated with the failureReport request
+     * @param report the transaction associated with the Report
      */
     protected void triggerReceivedReport(Transaction report)
     {
@@ -742,11 +647,7 @@ public class Session
     }
 
     /**
-     * This function is only used so that we have a central point to eventually
-     * do any cleanup before the real callback. (for instance with the Stack
-     * itself, at this moment nothing is being done though).
-     * 
-     * trigger for the registered MSRPSessionListener callback.
+     * trigger for the registered {@code MSRPSessionListener} callback.
      * 
      * @see MSRPSessionListener
      * @param message the received message
@@ -760,11 +661,7 @@ public class Session
     }
 
     /**
-     * This function is only used so that we have a central point to eventually
-     * do any cleanup before the real callback. (for instance with the Stack
-     * itself, at this moment nothing is being done though).
-     * 
-     * trigger for the registered MSRPSessionListener callback
+     * trigger for the registered {@code MSRPSessionListener} callback.
      * 
      * @see MSRPSessionListener
      * @param message the message to accept or not
@@ -774,15 +671,10 @@ public class Session
     {
         logger.trace("Called the triggerAcceptHook hook");
         return msrpSessionListener.acceptHook(this, message);
-
     }
 
     /**
-     * This function is only used so that we have a central point to eventually
-     * do any cleanup before the real callback. (for instance with the Stack
-     * itself, at this moment nothing is being done though).
-     * 
-     * trigger for the registered MSRPSessionListener callback updateSendStatus
+     * trigger for the registered {@code MSRPSessionListener} callback.
      * 
      * @see MSRPSessionListener
      */
@@ -795,7 +687,55 @@ public class Session
     }
 
     /**
-     * Adds a message to the sent message list the message is stored because of
+     * trigger for the registered {@code abortedMessageEvent} callback.
+     * 
+     * @param message the msrp message that was aborted
+     * @param reason the reason
+     * @param extraReasonInfo the extra information about the reason if any is
+     *            present (it can be transported on the body of a REPORT
+     *            request)
+     * @param transaction the transaction associated with the abort event
+     * 
+     * @see MessageAbortedEvent
+     */
+    public void fireMessageAbortedEvent(Message message, int reason,
+        String extraReasonInfo, Transaction transaction)
+    {
+        logger.trace("Called the fireMessageAbortedEvent");
+        MessageAbortedEvent abortedEvent =
+            new MessageAbortedEvent(message, this, reason, extraReasonInfo,
+                transaction);
+        MSRPSessionListener sessionListener;
+        synchronized (msrpSessionListener)
+        {
+            sessionListener = msrpSessionListener;
+        }
+        sessionListener.abortedMessageEvent(abortedEvent);
+    }
+
+    /**
+     * trigger for the registered {@code MSRPSessionListener} callback.
+     * 
+     * @deprecated use MessageAbortedEvents instead, this one only works for
+     *             incoming messages that get a ABORT in the CONTINUATION FLAG
+     * 
+     * 
+     */
+    public void triggerAbortedMessage(Session session, IncomingMessage message,
+        Transaction transaction)
+    {
+        logger.trace("Called the triggerAbortedMessage hook");
+        msrpSessionListener.abortedMessage(session, message);
+        fireMessageAbortedEvent(message, MessageAbortedEvent.CONTINUATIONFLAG,
+            null, transaction);
+
+    }
+    /*
+     * End of triggers to the Listener
+     */
+
+    /**
+     * Adds a message to the sent message list. Stored because of
      * expected subsequent REPORT requests on this message
      * 
      * @param message the message to add
@@ -803,68 +743,31 @@ public class Session
     protected void addSentOrSendingMessage(Message message)
     {
         messagesSentOrSending.put(message.getMessageID(), message);
-
     }
 
     /**
-     * Method used to delete a message that stopped being received from the
-     * being received queue of the Session NOTE: currently this method is only
-     * called for IncomingMessage objects
+     * Delete a message that stopped being received from the
+     * being-received-queue of the Session.
      * 
-     * @param incomingMessage the message to be removed
+     * NOTE: currently only called for {@code IncomingMessage} objects
+     * 
+     * @param message the message to be removed
      */
-    protected void delMessageToReceive(IncomingMessage incomingMessage)
+    protected void delMessageToReceive(IncomingMessage message)
     {
-        if (messagesReceive.remove(incomingMessage.getMessageID()) == null)
+        if (messagesReceive.remove(message.getMessageID()) == null)
         {
-            /*
-             * log the fact that the message wasn't found when it should have
-             * been!! TODO: log it!
-             */
+        	logger.warn("Message to receive not found nor deleted, id="
+        				+ message.getMessageID());
         }
-
     }
-
-    /*
-     * @param connection the connection to add adds the connection to the
-     *            session and to the MSRPStack
-    private void setConnection(Connection conn)
-    {
-        if (conn == null)
-            logger
-                .error("Error, tried to add a null connection to the session!");
-
-        MSRPStack.getInstance().delConnection(connection);
-        connection = conn;
-        MSRPStack.getInstance().addConnection(connection);
-    }
-     */
 
 	/**
-	 * @return the localAddress
+	 * @return the local address
 	 */
 	public InetAddress getAddress() {
 		return localAddress;
 	}
-
-	/*
-	 * Convenience method (that probably will disappear when the message id
-	 * generation is corrected) that searches for the given messageID on the
-	 * queue of messages to send
-	 * 
-	 * @param messageID
-	 *            String representing the messageID to search for
-	 * @return true if it exists on the queue or false otherwise
-    private boolean existsInMessagesToSend(String messageID)
-    {
-        for (Message message : sendQueue)
-        {
-            if (message.getMessageID().equals(messageID))
-                return true;
-        }
-        return false;
-    }
-	 */
 
 	public URI getURI() {
 		return uri;
@@ -873,22 +776,4 @@ public class Session
 	protected Connection getConnection() {
 		return connection;
 	}
-
-    /*
-     * public Message sendMessage(String contentType, byte[] byteContent) throws
-     * Exception { try { Message messageToSend = new
-     * Message(this,contentType,byteContent);
-     * 
-     * sendQueue.add(messageToSend); return messageToSend; } catch
-     * (Exception e) { IOInterface.debugln(e.getMessage()); throw e; } }
-     * 
-     * 
-     * public Message sendMessage(String contentType, Stream stream) throws
-     * Exception { try { Message messageToSend = new
-     * Message(this,contentType,stream);
-     * 
-     * sendQueue.add(messageToSend); return messageToSend; } catch
-     * (Exception e) { IOInterface.debugln(e.getMessage()); throw e; } }
-     */
-
 }

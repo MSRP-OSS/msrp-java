@@ -125,7 +125,7 @@ public class TestSendingExistingFile
         Long startTime = System.currentTimeMillis();
 
         /* add the listener */
-        sendingSession.addMSRPSessionListener(sendingSessionListener);
+        sendingSession.addListener(sendingSessionListener);
 
         /*
          * set up the receiving session handler to receive the data to the
@@ -145,7 +145,7 @@ public class TestSendingExistingFile
         }
         receivingSessionListener.setDataContainer(receivedFileDC);
 
-        receivingSession.addMSRPSessionListener(receivingSessionListener);
+        receivingSession.addListener(receivingSessionListener);
 
         /* start the transfer by adding the toPath to the sendingSession */
         ArrayList<URI> toPathSendSession = new ArrayList<URI>();

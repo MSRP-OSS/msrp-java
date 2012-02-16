@@ -36,21 +36,22 @@ public interface MSRPSessionListener
 {
 
     /**
-     * Method used to accept or reject the message by the stack SHOULD ALWAYS
-     * ASSIGN A DataContainer to the given message or else the message is
+     * Accept or reject the message by the stack SHOULD ALWAYS
+     * assign a {@code DataContainer} to the given message otherwise it is
      * discarded
      * 
      * @param session the session on which we have an incoming message
-     * @param message the message on which we should decide upon accepting or
-     *            rejecting it
-     * @return true if the message is to be accepted, false otherwise Note: if
-     *         the message is rejected one should call message.reject(code) to
-     *         specify the reason why, default reason is 413
+     * @param message the message to decide upon accepting or rejecting
+     * @return true if the message is to be accepted, false otherwise
+     * 
+     * Note: if the message is rejected one should call
+     * 		 {@code message.reject(code)} to
+     *       specify the reason why, default is 413
      */
     boolean acceptHook(Session session, IncomingMessage message);
 
     /**
-     * Method used by the API to signal the application of a received message
+     * Signal a received message
      * 
      * @param session the session on which the message was received
      * @param message the message received
@@ -58,8 +59,7 @@ public interface MSRPSessionListener
     void receiveMessage(Session session, Message message);
 
     /**
-     * Method used by the API to signal the application of a received REPORT
-     * request
+     * Signal a received REPORT
      * 
      * @param session the Session on which the REPORT was received
      * @param report the Transaction associated with the REPORT
@@ -67,7 +67,7 @@ public interface MSRPSessionListener
     void receivedReport(Session session, Transaction report);
 
     /**
-     * Method used by the API to signal the application of an aborted message
+     * Signal an aborted message
      * 
      * @deprecated use abortedMessageEvent instead
      * @param session the session associated with the message
@@ -76,23 +76,20 @@ public interface MSRPSessionListener
     void abortedMessage(Session session, IncomingMessage message);
 
     /**
-     * Method used by the API to signal the application of an aborted message
+     * Aignal an aborted message
      * 
      * @param abortEvent the Message aborted event used
      */
     void abortedMessageEvent(MessageAbortedEvent abortEvent);
 
     /**
-     * Used by the stack to notify the using app of updates on the sending
-     * status of a message. The granularity of such updates can be set by
-     * implementing the shouldTriggerSentHook of the ReportMechanism
+     * Notify the application of updates on the sending status of a message.
+     * The granularity of such updates can be set by
+     * implementing {@code shouldTriggerSentHook} of {@code ReportMechanism}
      * 
-     * @param session
-     * @param message
-     * @param numberBytesSent the total number of sent bytes belonging to the
-     *            message
-     * 
+     * @param session	the session used
+     * @param message	the message it pertains to
+     * @param numberBytesSent the total number of sent bytes from the message
      */
     void updateSendStatus(Session session, Message message, long numberBytesSent);
-
 }
