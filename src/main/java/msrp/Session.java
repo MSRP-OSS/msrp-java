@@ -32,13 +32,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * This class represents a MSRP Session.
+ * An MSRP Session.
  * 
- * This class contains a list of MSRP Messages with whom it's currently
- * associated with. It is also designed to be a mandatory point of contact with
- * the MSRPSessionListener class. All of the callbacks done through this class's
- * trigger methods
- * 
+ * This interface, combined with the {@code MSRPSessionListener} is the primary
+ * interface for sending and receiving MSRP traffic. 
+ * The class contains a list of MSRP Messages with which it's currently
+ * associated.
  * 
  * @author João Antunes
  */
@@ -55,73 +54,41 @@ public class Session
      */
     private MSRPSessionListener msrpSessionListener;
 
-    // TODO alter the constructors to use the this(argument) call
+    private MSRPStack stack = MSRPStack.getInstance();
 
-    /*
-     * TODO: remove these lines
-     * 
-     * @param tls says if this is a secure connection or not.
-     * 
-     * @param failureReport sets the failure-report value
-     * 
-     * @param relays says if this sessions uses relays or not
-     * 
-     * @return Session the newly created session with the failureport altered
-     * 
-     * public Session(boolean tls, boolean failureReport, boolean relays) {
-     * super(); }
-     * 
-     * /**
-     * 
-     * @param tls tells if this session goes through a seucure connection or not
-     * 
-     * @param successReport sets the value of the success-Report field
-     * 
-     * @param failureReport sets the failure-report value
-     * 
-     * @param relays does this session uses relays
-     * 
-     * @return a newly created session
-     * 
-     * public Session(boolean tls, boolean successReport, boolean failureReport,
-     * boolean relays) { super(); }
-     */
+    private ArrayList<URI> toUris = new ArrayList<URI>();
 
-    private MSRPStack stackInstance = MSRPStack.getInstance();
+    private TransactionManager txManager;
 
-    private ArrayList<URI> uris = new ArrayList<URI>();
-
-    private TransactionManager transactionManager;
-
-    private InetAddress address;
+    private InetAddress localAddress;
 
     /**
      * @desc the connection associated with this session
      * @uml.property name="_connection"
      * @uml.associationEnd inverse="_session:msrp.Connection"
      */
-    private msrp.Connection connection = null;
+    private Connection connection = null;
 
     /**
      * @uml.property name="_failureReport"
      */
-    private boolean report = true;
+    private boolean failureReport = true;
 
     /**
      * @uml.property name="_successReport"
      */
-    private boolean report1;
+    private boolean successReport;
 
     /**
-     * This field contains the queue of messages to be sent
+     * The queue of messages to send.
      * 
-     * @uml.property name="messagesToSend"
+     * @uml.property name="sendQueue"
      */
-    private ArrayList<Message> messagesToSend = new ArrayList<Message>();
+    private ArrayList<Message> sendQueue = new ArrayList<Message>();
 
     /**
-     * @uml.property name="_messagesSent" stores the sent/being sended messages
-     *               according to the Success-Report field
+     * stores sent/being sent messages on request of the Success-Report field.
+     * @uml.property name="_messagesSent"
      */
     private HashMap<String, Message> messagesSentOrSending =
         new HashMap<String, Message>();
@@ -135,114 +102,72 @@ public class Session
     /**
      * @uml.property name="_relays"
      */
-    private boolean relays;
+    private boolean isRelay;
 
-    /**
-     * @uml.property name="_URI" the URI that identifies this session
+    /** URI identifying this session
+     * @uml.property name="_URI"
      */
     private URI uri = null;
 
     /**
-     * this field points to the report mechanism associated with this session
-     * the report mechanism basically is used to decide upon the granularity of
-     * the success reports
-     * 
-     * it will use the DefaultReportMechanism
+     * The Report mechanism associated with this session.
+     * The mechanism is basically used to decide on the granularity of reports.
+     * Defaults to {@code DefaultReportMechanism}.
      * 
      * @see DefaultReportMechanism
      */
-    private ReportMechanism reportMechanism =
-        DefaultReportMechanism.getInstance();
+    private ReportMechanism reportMechanism = DefaultReportMechanism.getInstance();
+
+    // TODO alter the constructors to use the this(argument) call
 
     /**
-     * Constructor used to define the report mechanism for all messages (wrapper
-     * for the tls relays InetAddress constructor)
+     * Create a session with the local address.
+     * The associated connection will be an active one.
      * 
-     * @throws IOException
-     * @throws URISyntaxException
-     */
-    public Session(boolean tls, boolean relays, InetAddress address,
-        ReportMechanism reportMechanism)
-        throws InternalErrorException
-    {
-        this(tls, relays, address);
-        this.reportMechanism = reportMechanism;
-        logger.trace("MSRP Session created with custom report mechanism, tls: "
-            + tls + " relays: " + relays + " InetAddress:" + address);
-    }
-
-    /**
-     * Constructor used to define the report mechanism for all messages (wrapper
-     * for the tls, relays, destinationURI, InetAddress constructor)
-     * 
-     * @throws Exception
-     */
-    public Session(boolean tls, boolean relays, URI destinationURI,
-        InetAddress address, ReportMechanism reportMechanism)
-        throws Exception
-    {
-        this(tls, relays, destinationURI, address);
-        this.reportMechanism = reportMechanism;
-        logger.trace("MSRP Session created with custom report mechanism, tls: "
-            + tls + " relays: " + relays + " destinationURI: " + destinationURI
-            + " InetAddress:" + address);
-    }
-
-    /**
-     * Creates a new session with the address given as the _local_ endpoint the
-     * associated connection will be an active one
-     * 
-     * @param tls an boolean telling if this is a secure connection or not
-     * @param relays is it a session that uses relays?
-     * @param address the configured address to use as the local endpoint
+     * @param isSecure	Is it a secure connection or not (use TLS)?
+     * @param isRelay	is this a relaying session?
+     * @param address	the address to use as local endpoint.
      * @throws InternalErrorException if any error ocurred. More info about the
-     *             error can be getted by printing the stacktrace
+     *             error in the accompanying Throwable.
      */
-    public Session(boolean tls, boolean relays, InetAddress address)
+    public Session(boolean isSecure, boolean isRelay, InetAddress address)
         throws InternalErrorException
     {
         try
         {
-            this.address = address;
+            this.localAddress = address;
+            setRelay(isRelay);
             connection = new Connection(address);
-            set_relays(relays);
-            // Generates the new URI and adds it to the list of URIs of the
-            // connection
-            if (connection != null)
-            {
-                uri = connection.generateNewURI();
 
-                stackInstance.addConnection(uri, connection);
-            }
+            // Generate new URI and add to list of connection-URIs.
+            uri = connection.generateNewURI();
+            stack.addConnection(uri, connection);
+            logger.debug("MSRP Session created: secure?[" + isSecure + "], relay?["
+            			+ isRelay + "] InetAddress: " + address);
         }
         catch (Exception e)
         {
-            // let's wrap every exception in an InternalError one
+            // let's wrap the exceptions in an InternalError
             throw new InternalErrorException(e);
         }
-        logger.trace("MSRP Session created, tls: " + tls + " relays: " + relays
-            + " InetAddress:" + address);
-
     }
 
     /**
-     * Creates a new session with the address given as the _local_ endpoint the
-     * associated connection will be a passive one at the moment.
+     * Creates a session with the local address
+     * The associated connection will be a passive one.
      * 
-     * @param tls an boolean telling if this is a secure connection or not
-     * @param relays is it a session that uses relays?
-     * @param address the configured address to use as the local endpoint
-     * @throws InternalErrorException if any kind of internal error ocurred,
-     *             usually there was an error with the socket or the generation
-     *             of the URI, more information can be obtained by printing the
-     *             stacktrace
+     * @param isSecure	Is it a secure connection or not (use TLS)?
+     * @param isRelay	is this a relaying session?
+     * @param toUri		the destination URI that will contact this session.
+     * @param address	the address to use as local endpoint.
+     * @throws InternalErrorException if any error ocurred. More info about the
+     *             error in the accompanying Throwable.
      * 
      */
-    public Session(boolean tls, boolean relays, URI destinationURI,
-        InetAddress address)
+    public Session(boolean isSecure, boolean isRelay, URI toURI, InetAddress address)
         throws InternalErrorException
     {
-        this.address = address;
+        this.localAddress = address;
         connection = MSRPStack.getConnectionsInstance(address);
         try
         {
@@ -256,43 +181,47 @@ public class Session
         }
         ((Connections) connection).addUriToIdentify(uri, this);
         // is the subsequent needed?! TODO
-        stackInstance.addConnection(uri, connection);
-        set_relays(relays);
-        uris.add(destinationURI);
-        logger.trace("MSRP Session created, tls: " + tls + " relays: " + relays
-            + " destinationURI: " + destinationURI + " InetAddress:" + address);
+        stack.addConnection(uri, connection);
+        setRelay(isRelay);
+        toUris.add(toURI);
+        logger.trace("MSRP Session created, tls: " + isSecure + " isRelay: " + isRelay
+            + " destinationURI: " + toURI + " InetAddress:" + address);
 
     }
 
-    /*
-     * TODO: remove these lines
+    /**
+     * Constructor used to define the failureReport mechanism for all messages (wrapper
+     * for the tls isRelay InetAddress constructor)
      * 
-     * @param tls says if this is a secure connection or not.
-     * 
-     * @param failureReport sets the failure-report value
-     * 
-     * @param relays says if this sessions uses relays or not
-     * 
-     * @return Session the newly created session with the failureport altered
-     * 
-     * public Session(boolean tls, boolean failureReport, boolean relays) {
-     * super(); }
-     * 
-     * /**
-     * 
-     * @param tls tells if this session goes through a seucure connection or not
-     * 
-     * @param successReport sets the value of the success-Report field
-     * 
-     * @param failureReport sets the failure-report value
-     * 
-     * @param relays does this session uses relays
-     * 
-     * @return a newly created session
-     * 
-     * public Session(boolean tls, boolean successReport, boolean failureReport,
-     * boolean relays) { super(); }
+     * @throws IOException
+     * @throws URISyntaxException
      */
+    public Session(boolean isSecure, boolean isRelay, InetAddress address,
+        ReportMechanism reportMechanism)
+        throws InternalErrorException
+    {
+        this(isSecure, isRelay, address);
+        this.reportMechanism = reportMechanism;
+        logger.trace("MSRP Session created with custom failureReport mechanism, tls: "
+            + isSecure + " isRelay: " + isRelay + " InetAddress:" + address);
+    }
+
+    /**
+     * Constructor used to define the failureReport mechanism for all messages (wrapper
+     * for the tls, isRelay, destinationURI, InetAddress constructor)
+     * 
+     * @throws Exception
+     */
+    public Session(boolean isSecure, boolean isRelay, URI destinationURI,
+        InetAddress address, ReportMechanism reportMechanism)
+        throws Exception
+    {
+        this(isSecure, isRelay, destinationURI, address);
+        this.reportMechanism = reportMechanism;
+        logger.trace("MSRP Session created with custom failureReport mechanism, tls: "
+            + isSecure + " isRelay: " + isRelay + " destinationURI: " + destinationURI
+            + " InetAddress:" + address);
+    }
 
     /**
      * Adds the given uri and establishes the connection according to the
@@ -314,16 +243,16 @@ public class Session
         {
             // TODO validate each uri given prior to adding them to the list
             //related with Issue #16
-            this.uris.add(uri);
+            this.toUris.add(uri);
         }
-        connection.addEndPoint(this.uris.get(this.uris.size() - 1), address);
-        // stackInstance.addActiveSession(this);
-        transactionManager = connection.getTransactionManager();
-        transactionManager.addSession(this);
-        transactionManager.initialize(this);
+        connection.addEndPoint(this.toUris.get(this.toUris.size() - 1), localAddress);
+        // stack.addActiveSession(this);
+        txManager = connection.getTransactionManager();
+        txManager.addSession(this);
+        txManager.initialize(this);
 
         logger.trace("Added toPath with URI[0]: " + uris.get(0).toString()
-            + " URI array size:" + this.uris.size());
+            + " URI array size:" + this.toUris.size());
 
         /*
          * //TODO: refactor the method it does somethings that don't make sense
@@ -344,51 +273,51 @@ public class Session
 
     public ArrayList<URI> getToPath()
     {
-        return uris;
+        return toUris;
     }
 
     /**
      * Getter of the property <tt>_failureReport</tt>
      * 
-     * @return Returns the report.
+     * @return Returns the failureReport.
      * @uml.property name="_failureReport"
      */
     public boolean is_failureReport()
     {
-        return report;
+        return failureReport;
     }
 
     /**
      * Setter of the property <tt>_failureReport</tt>
      * 
-     * @param _failureReport The report to set.
+     * @param _failureReport The failureReport to set.
      * @uml.property name="_failureReport"
      */
     public void set_failureReport(boolean report)
     {
-        this.report = report;
+        this.failureReport = report;
     }
 
     /**
      * Getter of the property <tt>_successReport</tt>
      * 
-     * @return Returns the report1.
+     * @return Returns the successReport.
      * @uml.property name="_successReport"
      */
     public boolean is_successReport()
     {
-        return report1;
+        return successReport;
     }
 
     /**
      * Setter of the property <tt>_successReport</tt>
      * 
-     * @param _successReport The report1 to set.
+     * @param _successReport The successReport to set.
      * @uml.property name="_successReport"
      */
     public void set_successReport(boolean report)
     {
-        report1 = report;
+        successReport = report;
     }
 
     /**
@@ -408,9 +337,9 @@ public class Session
      * @return Returns the _relays.
      * @uml.property name="_relays"
      */
-    public boolean is_relays()
+    public boolean isRelay()
     {
-        return relays;
+        return isRelay;
     }
 
     /**
@@ -419,9 +348,9 @@ public class Session
      * @param _relays The _relays to set.
      * @uml.property name="_relays"
      */
-    public void set_relays(boolean relays)
+    public void setRelay(boolean isRelay)
     {
-        this.relays = relays;
+        this.isRelay = isRelay;
     }
 
 
@@ -473,7 +402,7 @@ public class Session
      */
     public void addMessageOnTop(Message message)
     {
-        messagesToSend.add(0, message);
+        sendQueue.add(0, message);
     }
 
     /**
@@ -484,19 +413,19 @@ public class Session
      */
     public void addMessageToSend(Message message)
     {
-        messagesToSend.add(message);
+        sendQueue.add(message);
         triggerSending();
     }
 
 	/**
-	 * Have transactionManager send awaiting messages from session.
+	 * Have txManager send awaiting messages from session.
 	 */
 	private void triggerSending() {
-		if (transactionManager != null) {
+		if (txManager != null) {
         	synchronized(getTransactionManager().getTransactionsToSend()) {
-        		if (!transactionManager.hasDataToSend()) {
-        			transactionManager.setMessageBeingSent(getMessageToSend());
-        			transactionManager.generateTransactionsToSend();
+        		if (!txManager.hasDataToSend()) {
+        			txManager.setMessageBeingSent(getMessageToSend());
+        			txManager.generateTransactionsToSend();
         		}
         	}
         }
@@ -507,23 +436,23 @@ public class Session
      */
     public boolean hasMessagesToSend()
     {
-        return !messagesToSend.isEmpty();
+        return !sendQueue.isEmpty();
     }
 
     /**
-     * Returns and removes the first message of the top of the messagesToSend
+     * Returns and removes the first message of the top of the sendQueue
      * array.
      * 
-     * @return the first message to be sent out of the messagesToSend array
+     * @return the first message to be sent out of the sendQueue array
      */
     public Message getMessageToSend()
     {
-        // returns the first message to be sent out of the messagesToSend array
+        // returns the first message to be sent out of the sendQueue array
         // list
-        if (messagesToSend.isEmpty())
+        if (sendQueue.isEmpty())
             return null; // TODO ?! FIXME?! also delete from the active sessions
-        Message messageToReturn = messagesToSend.get(0);
-        messagesToSend.remove(messageToReturn);
+        Message messageToReturn = sendQueue.get(0);
+        sendQueue.remove(messageToReturn);
         return messageToReturn;
     }
 
@@ -532,13 +461,13 @@ public class Session
      * 
      * @param tls says if this is a secure connection or not.
      * 
-     * @param failureReport sets the failure-report value
+     * @param failureReport sets the failure-failureReport value
      * 
-     * @param relays says if this sessions uses relays or not
+     * @param isRelay says if this sessions uses isRelay or not
      * 
      * @return Session the newly created session with the failureport altered
      * 
-     * public Session(boolean tls, boolean failureReport, boolean relays) {
+     * public Session(boolean tls, boolean failureReport, boolean isRelay) {
      * super(); }
      * 
      * /**
@@ -547,14 +476,14 @@ public class Session
      * 
      * @param successReport sets the value of the success-Report field
      * 
-     * @param failureReport sets the failure-report value
+     * @param failureReport sets the failure-failureReport value
      * 
-     * @param relays does this session uses relays
+     * @param isRelay does this session uses isRelay
      * 
      * @return a newly created session
      * 
      * public Session(boolean tls, boolean successReport, boolean failureReport,
-     * boolean relays) { super(); }
+     * boolean isRelay) { super(); }
      */
 
     /**
@@ -626,35 +555,35 @@ public class Session
     public void tearDown()
     {
 		// clear local resources
-		uris = null;
+		toUris = null;
 
-		if (messagesToSend != null) {
-			Iterator<Message> it = messagesToSend.iterator();
+		if (sendQueue != null) {
+			Iterator<Message> it = sendQueue.iterator();
 			while (it.hasNext()) {
 				DataContainer buffer = it.next().getDataContainer();
 				if (buffer != null)
 					buffer.dispose();
 			}
-		messagesToSend = null;
+		sendQueue = null;
 		}
 
-		if (transactionManager != null) {
-			transactionManager.removeSession(this);
-			transactionManager = null;
+		if (txManager != null) {
+			txManager.removeSession(this);
+			txManager = null;
 		}
 		// FIXME: (msrp-31) allow connection reuse by sessions.
 		if (connection != null) {
 			connection.close();
 			connection = null;
 		}
-		if (stackInstance != null) {
-			stackInstance.removeActiveSession(this);
-			stackInstance = null;
+		if (stack != null) {
+			stack.removeActiveSession(this);
+			stack = null;
 		}
     }
 
     /**
-     * at this point this is used by the generation of the success report to
+     * at this point this is used by the generation of the success failureReport to
      * assert if it should be sent or not quoting the RFC:
      * 
      * "Endpoints SHOULD NOT send REPORT requests if they have reason to believe
@@ -681,7 +610,7 @@ public class Session
      */
     public void delMessageToSend(Message message)
     {
-        messagesToSend.remove(message);
+        sendQueue.remove(message);
 
     }
 
@@ -690,13 +619,13 @@ public class Session
      * 
      * @param tls says if this is a secure connection or not.
      * 
-     * @param failureReport sets the failure-report value
+     * @param failureReport sets the failure-failureReport value
      * 
-     * @param relays says if this sessions uses relays or not
+     * @param isRelay says if this sessions uses isRelay or not
      * 
      * @return Session the newly created session with the failureport altered
      * 
-     * public Session(boolean tls, boolean failureReport, boolean relays) {
+     * public Session(boolean tls, boolean failureReport, boolean isRelay) {
      * super(); }
      * 
      * /**
@@ -705,36 +634,36 @@ public class Session
      * 
      * @param successReport sets the value of the success-Report field
      * 
-     * @param failureReport sets the failure-report value
+     * @param failureReport sets the failure-failureReport value
      * 
-     * @param relays does this session uses relays
+     * @param isRelay does this session uses isRelay
      * 
      * @return a newly created session
      * 
      * public Session(boolean tls, boolean successReport, boolean failureReport,
-     * boolean relays) { super(); }
+     * boolean isRelay) { super(); }
      */
 
     /**
      * FIXME This method shouldn't usually be used by the user, but it is
      * required due to the package structure.. related with Issue #27
      * 
-     * @return the transactionManager
+     * @return the txManager
      */
     public TransactionManager getTransactionManager()
     {
-        return transactionManager;
+        return txManager;
     }
 
     /**
      * Method that should only be called by the transaction manager addSession
      * method
      * 
-     * @param transactionManager the transactionManager to set
+     * @param txManager the txManager to set
      */
     protected void setTransactionManager(TransactionManager transactionManager)
     {
-        this.transactionManager = transactionManager;
+        this.txManager = transactionManager;
     }
 
     /**
@@ -804,7 +733,7 @@ public class Session
      * trigger for the registered MSRPSessionListener callback.
      * 
      * @see MSRPSessionListener
-     * @param report the transaction associated with the report request
+     * @param failureReport the transaction associated with the failureReport request
      */
     protected void triggerReceivedReport(Transaction report)
     {
@@ -912,10 +841,10 @@ public class Session
      */
 
 	/**
-	 * @return the address
+	 * @return the localAddress
 	 */
 	public InetAddress getAddress() {
-		return address;
+		return localAddress;
 	}
 
 	/*
@@ -928,7 +857,7 @@ public class Session
 	 * @return true if it exists on the queue or false otherwise
     private boolean existsInMessagesToSend(String messageID)
     {
-        for (Message message : messagesToSend)
+        for (Message message : sendQueue)
         {
             if (message.getMessageID().equals(messageID))
                 return true;
@@ -950,7 +879,7 @@ public class Session
      * Exception { try { Message messageToSend = new
      * Message(this,contentType,byteContent);
      * 
-     * messagesToSend.add(messageToSend); return messageToSend; } catch
+     * sendQueue.add(messageToSend); return messageToSend; } catch
      * (Exception e) { IOInterface.debugln(e.getMessage()); throw e; } }
      * 
      * 
@@ -958,7 +887,7 @@ public class Session
      * Exception { try { Message messageToSend = new
      * Message(this,contentType,stream);
      * 
-     * messagesToSend.add(messageToSend); return messageToSend; } catch
+     * sendQueue.add(messageToSend); return messageToSend; } catch
      * (Exception e) { IOInterface.debugln(e.getMessage()); throw e; } }
      */
 
