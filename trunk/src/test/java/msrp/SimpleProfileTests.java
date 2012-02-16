@@ -84,8 +84,8 @@ public class SimpleProfileTests
             receivingSession =
                 new Session(false, false, sendingSession.getURI(), address);
 
-            receivingSession.addMSRPSessionListener(receivingSessionListener);
-            sendingSession.addMSRPSessionListener(sendingSessionListener);
+            receivingSession.addListener(receivingSessionListener);
+            sendingSession.addListener(sendingSessionListener);
             if (tempFileDir != null)
             {
                 System.out.println("Using temporary file directory: "
@@ -215,7 +215,7 @@ public class SimpleProfileTests
         messageToBeSent.setSuccessReport(true);
 
         /* add the listener */
-        sendingSession.addMSRPSessionListener(sendingSessionListener);
+        sendingSession.addListener(sendingSessionListener);
 
         /*
          * set up the receiving session handler to receive the data to the
@@ -235,7 +235,7 @@ public class SimpleProfileTests
         }
         receivingSessionListener.setDataContainer(receivedFileDC);
 
-        receivingSession.addMSRPSessionListener(receivingSessionListener);
+        receivingSession.addListener(receivingSessionListener);
 
         /* start the transfer by adding the toPath to the sendingSession */
         ArrayList<URI> toPathSendSession = new ArrayList<URI>();

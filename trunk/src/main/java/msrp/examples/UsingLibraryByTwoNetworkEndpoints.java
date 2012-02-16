@@ -101,11 +101,11 @@ public class UsingLibraryByTwoNetworkEndpoints
             InetAddress receivingBoundAddress =
                 InetAddress.getByName("10.0.0.1");
 
-            receivingSession =
-                new Session(false, false, uriEndpoint, receivingBoundAddress);
+            receivingSession =Session.create(false, false, uriEndpoint,
+            						receivingBoundAddress);
 
             /* bound the session with the created MSRPSessionListener */
-            receivingSession.addMSRPSessionListener(receivingSessionListener);
+            receivingSession.addListener(receivingSessionListener);
             System.out.println("Generated URI by the receiver:"
                 + receivingSession.getURI());
             return receivingSession.getURI();
@@ -153,13 +153,13 @@ public class UsingLibraryByTwoNetworkEndpoints
              * but the use of the protocol requires that the generated URI be
              * exchanged somehow (by an external entity to the library)
              */
-            sendingSession = new Session(false, false, sendingBoundAddress);
+            sendingSession = Session.create(false, false, sendingBoundAddress);
 
             System.out.println("The generated URI for the MessageSender is:"
                 + sendingSession.getURI());
 
             /* bound the session with the created MSRPSessionListener */
-            sendingSession.addMSRPSessionListener(sendingSessionListener);
+            sendingSession.addListener(sendingSessionListener);
             return sendingSession.getURI();
 
         }
@@ -187,13 +187,11 @@ public class UsingLibraryByTwoNetworkEndpoints
              * Create the message and bind it from the beginning to the
              * sendingSession:
              */
-            Message messageToReturn =
-                new OutgoingMessage(sendingSession, "raw/whatever", data);
+            Message messageToReturn = sendingSession.sendMessage("raw/whatever", data);
             /* let us disable the success report for this example */
             messageToReturn.setSuccessReport(false);
 
             return messageToReturn;
-
         }
     }
 
@@ -206,7 +204,6 @@ public class UsingLibraryByTwoNetworkEndpoints
         System.out.println("or, instead: programName"
             + " manual [receiver URIsender|sender]");
         System.out.println();
-
     }
 
     /**
@@ -237,12 +234,10 @@ public class UsingLibraryByTwoNetworkEndpoints
             {
                 try
                 {
-
                     /*
                      * "Automatic" mode, create the message receiver and sender,
                      * generate the message, send it and await its receiver
                      */
-
                     URI senderUri = MessageSender.setUpConnection();
 
                     MessageSender.generateRandomMemoryMessage(3000);

@@ -313,8 +313,8 @@ public class MiscTests
         Session sessionReceive = new Session(false, false, uri, address);
         uri = sessionReceive.getURI();
         System.out.println("Received the following URI:" + uri);
-        sessionSend.addMSRPSessionListener(instance);
-        sessionReceive.addMSRPSessionListener(instance);
+        sessionSend.addListener(instance);
+        sessionReceive.addListener(instance);
 
         // This does what the SIP negotiation should do, get the uris for the
         // MSRP Transaction

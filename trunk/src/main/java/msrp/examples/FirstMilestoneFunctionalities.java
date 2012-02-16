@@ -47,7 +47,6 @@ import msrp.messages.*;
  */
 public class FirstMilestoneFunctionalities
 {
-
     /**
      * This method describes the use of simple sending and receiving sessions.
      * 
@@ -83,7 +82,7 @@ public class FirstMilestoneFunctionalities
              * setting the first two arguments to something different than false
              * has no practical effect.
              */
-            sendingSession = new Session(false, false, address);
+            sendingSession = Session.create(false, false, address);
             URI sendingSessionUri = sendingSession.getURI();
             /*
              * at this point usually one retrieves the URI of the sending
@@ -97,7 +96,7 @@ public class FirstMilestoneFunctionalities
             // so unlegitimate connections done here don't get disconnected see
             // planning]
             receivingSession =
-                new Session(false, false, sendingSessionUri, address);
+                Session.create(false, false, sendingSessionUri, address);
 
             // ALTERNATIVE: for both or one of the sessions, one could easily
             // add another report mechanism, however this isn't tested yet. See
@@ -130,9 +129,8 @@ public class FirstMilestoneFunctionalities
             try
             {
                 byte[] someData = null;
-                Message exampleMessage =
-                    new OutgoingMessage(sendingSession, "MIMEType/MIMEsubType",
-                        someData);
+                Message exampleMessage = sendingSession.sendMessage(
+                		"MIMEType/MIMEsubType", someData);
             }
             catch (IllegalUseException e)
             {
@@ -145,8 +143,7 @@ public class FirstMilestoneFunctionalities
             File someFile = null;
             try
             {
-                Message exampleFileMessage =
-                    new OutgoingFileMessage(sendingSession,
+                Message exampleFileMessage = sendingSession.sendMessage(
                         "MIMEType/MIMEsubType", someFile);
             }
             catch (FileNotFoundException e)
@@ -192,7 +189,6 @@ public class FirstMilestoneFunctionalities
             // this exception is usually used as a wrapper for other exceptions
             e.printStackTrace();
         }
-
     }
 
     /**
@@ -205,7 +201,6 @@ public class FirstMilestoneFunctionalities
     private class MSRPExampleSessionHandler
         implements MSRPSessionListener
     {
-
         /*
          * (non-Javadoc)
          * 
@@ -311,7 +306,6 @@ public class FirstMilestoneFunctionalities
             // either way it's wise to dispose of the resources associated with
             // the file container after the data is used
             receivedMessage.getDataContainer().dispose();
-
         }
 
         /*
@@ -333,7 +327,6 @@ public class FirstMilestoneFunctionalities
          */
         public void receivedReport(Session session, Transaction report)
         {
-
             // to get more info about on what bytes is this REPORT reporting at:
             report.getByteRange();
             // see msrp.Transaction.byteRange field javadoc's comments for more
@@ -349,7 +342,6 @@ public class FirstMilestoneFunctionalities
 
             // or just it's id
             report.getMessageID();
-
         }
 
         /*
@@ -369,21 +361,16 @@ public class FirstMilestoneFunctionalities
         {
             System.out.println("This means we sent " + numberBytesSent
                 + " of Message with id: " + message.getMessageID());
-
         }
 
         public void abortedMessage(Session session, IncomingMessage message)
         {
             // Deprecated, use abortedMessageEvent
-
         }
 
         public void abortedMessageEvent(MessageAbortedEvent abortEvent)
         {
             // TODO Auto-generated method stub
-
         }
-
     }
-
 }

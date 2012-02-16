@@ -81,8 +81,8 @@ public class TestSendingASCIIMessages
             receivingSession =
                 new Session(false, false, sendingSession.getURI(), address);
 
-            receivingSession.addMSRPSessionListener(receivingSessionListener);
-            sendingSession.addMSRPSessionListener(sendingSessionListener);
+            receivingSession.addListener(receivingSessionListener);
+            sendingSession.addListener(sendingSessionListener);
             if (tempFileDir != null)
             {
                 System.out.println("Using temporary file directory: "
