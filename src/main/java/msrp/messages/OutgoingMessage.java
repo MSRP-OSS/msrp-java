@@ -44,11 +44,11 @@ public class OutgoingMessage
     private static final Logger logger =
         LoggerFactory.getLogger(OutgoingMessage.class);
 
-    public OutgoingMessage(Session sendingSession, String string,
+    public OutgoingMessage(Session sendingSession, String contentType,
         byte[] someData)
         throws IllegalUseException
     {
-        super(sendingSession, string, someData);
+        super(sendingSession, contentType, someData);
     }
 
     /**
