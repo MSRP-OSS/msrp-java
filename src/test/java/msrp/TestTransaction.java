@@ -138,7 +138,6 @@ public class TestTransaction
         throws InvalidHeaderException,
         ImplementationException, IllegalUseException, ConnectionParserException
     {
-
         Transaction newTransaction =
             new Transaction(tID, TransactionType.REPORT,
                 dummyTransactionManager, Transaction.IN);
