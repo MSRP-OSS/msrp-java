@@ -160,31 +160,6 @@ public class Session
         }
     }
 
-    /** Create a session with an active connection using the given report mechanism.
-     * 
-     * @param isSecure	Is it a secure connection or not (use TLS)?
-     * @param isRelay	is this a relaying session?
-     * @param address	the address to use as local endpoint.
-     * @param reportMechanism	the reporting mechanism to use.
-     * @throws InternalErrorException if any error ocurred. More info about the
-     *             error in the accompanying Throwable.
-     */
-    public static Session create(boolean isSecure, boolean isRelay, InetAddress address,
-            ReportMechanism reportMechanism)
-            throws InternalErrorException {
-    	Session s = new Session(isSecure, isRelay, address);
-    	s.reportMechanism = reportMechanism;
-    	return s;
-    }
-
-    Session(boolean isSecure, boolean isRelay, InetAddress address,
-        ReportMechanism reportMechanism)
-        throws InternalErrorException
-    {
-        this(isSecure, isRelay, address);
-        this.reportMechanism = reportMechanism;
-    }
-
     /** Creates a session with the local address
      * The associated connection will be a passive one.
      * 
@@ -226,36 +201,26 @@ public class Session
             + "], toURI=[" + toURI + "], InetAddress:" + address);
     }
 
-    /** Create a session with a passive connection using the given report mechanism.
-     * 
-     * @param isSecure	Is it a secure connection or not (use TLS)?
-     * @param isRelay	is this a relaying session?
-     * @param toUri		the destination URI that will contact this session.
-     * @param address	the address to use as local endpoint.
-     * @param reportMechanism	the reporting mechanism to use.
-     * @throws InternalErrorException if any error ocurred. More info about the
-     *             error in the accompanying Throwable.
-     */
-    public static Session create(boolean isSecure, boolean isRelay, URI toURI,
-            InetAddress address, ReportMechanism reportMechanism)
-            throws InternalErrorException
-    {
-    	Session s = new Session(isSecure, isRelay, toURI, address);
-        s.reportMechanism = reportMechanism;
-        return s;
-    }
-
-    Session(boolean isSecure, boolean isRelay, URI toURI,
-        InetAddress address, ReportMechanism reportMechanism)
-        throws InternalErrorException
-    {
-        this(isSecure, isRelay, toURI, address);
-        this.reportMechanism = reportMechanism;
-    }
-
     public String toString()
     {
         return this.getURI().toString();
+    }
+
+    /** Add your own {@code ReportMechanism} class.
+     * This'll enable you to define your own granularity.
+     * @param reportMechanism the ReportMechanism to use
+     */
+    public void setReportMechanism(ReportMechanism reportMechanism)
+    {
+        this.reportMechanism = reportMechanism;
+    }
+
+    /**
+     * @return the current {@code ReportMechanism} in use in this session.
+     */
+    public ReportMechanism getReportMechanism()
+    {
+        return reportMechanism;
     }
 
     /** Add a listener to this session to catch any incoming traffic.
@@ -327,6 +292,42 @@ public class Session
 	{
 		return new OutgoingFileMessage(this, contentType, content);
 	}
+
+    /**
+     * Release all of the resources associated with this session.
+     * It could eventually, but not necessarily, close connections conforming to
+     * RFC 4975.
+     * After teardown, this session can no longer be used.
+     */
+    public void tearDown()
+    {
+		// clear local resources
+		toUris = null;
+
+		if (sendQueue != null) {
+			Iterator<Message> it = sendQueue.iterator();
+			while (it.hasNext()) {
+				DataContainer buffer = it.next().getDataContainer();
+				if (buffer != null)
+					buffer.dispose();
+			}
+			sendQueue = null;
+		}
+
+		if (txManager != null) {
+			txManager.removeSession(this);
+			txManager = null;
+		}
+		// FIXME: (msrp-31) allow connection reuse by sessions.
+		if (connection != null) {
+			connection.close();
+			connection = null;
+		}
+		if (stack != null) {
+			stack.removeActiveSession(this);
+			stack = null;
+		}
+    }
 
     public ArrayList<URI> getToPath()
     {
@@ -421,14 +422,6 @@ public class Session
     }
 
     /**
-     * @param reportMechanism the reportMechanism to set
-     */
-    public void setReportMechanism(ReportMechanism reportMechanism)
-    {
-        this.reportMechanism = reportMechanism;
-    }
-
-    /**
      * Adds the given message to the top of the message to send queue
      * 
      * this method is used when a message sending is paused so that when this
@@ -488,49 +481,6 @@ public class Session
     }
 
     /**
-     * @return the reportMechanism associated with this session
-     */
-    public ReportMechanism getReportMechanism()
-    {
-        return reportMechanism;
-    }
-
-    /**
-     * This method releases all of the resources associated with this session.
-     * It could eventually, but not necessarily, close connections conforming to
-     * the Connection Model on RFC 4975.
-     */
-    public void tearDown()
-    {
-		// clear local resources
-		toUris = null;
-
-		if (sendQueue != null) {
-			Iterator<Message> it = sendQueue.iterator();
-			while (it.hasNext()) {
-				DataContainer buffer = it.next().getDataContainer();
-				if (buffer != null)
-					buffer.dispose();
-			}
-		sendQueue = null;
-		}
-
-		if (txManager != null) {
-			txManager.removeSession(this);
-			txManager = null;
-		}
-		// FIXME: (msrp-31) allow connection reuse by sessions.
-		if (connection != null) {
-			connection.close();
-			connection = null;
-		}
-		if (stack != null) {
-			stack.removeActiveSession(this);
-			stack = null;
-		}
-    }
-
-    /**
      * at this point this is used by the generation of the success failureReport to
      * assert if it should be sent or not quoting the RFC:
      * 
@@ -559,7 +509,6 @@ public class Session
     public void delMessageToSend(Message message)
     {
         sendQueue.remove(message);
-
     }
 
     /**
@@ -596,7 +545,6 @@ public class Session
     protected Message getSentOrSendingMessage(String messageID)
     {
         return messagesSentOrSending.get(messageID);
-
     }
 
     /**
@@ -611,7 +559,6 @@ public class Session
     protected Message getReceivingMessage(String messageID)
     {
         return messagesReceive.get(messageID);
-
     }
 
     /**
@@ -728,7 +675,6 @@ public class Session
         msrpSessionListener.abortedMessage(session, message);
         fireMessageAbortedEvent(message, MessageAbortedEvent.CONTINUATIONFLAG,
             null, transaction);
-
     }
     /*
      * End of triggers to the Listener
