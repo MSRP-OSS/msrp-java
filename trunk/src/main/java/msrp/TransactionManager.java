@@ -134,7 +134,6 @@ public class TransactionManager
      * @param responseComment the optional string 'comment' as specified in rfc
      *            4975 syntax
      * 
-     * @throws InternalErrorException if queuing the response got us an error
      * @throws IllegalUseException if the arguments or their state is invalid
      */
     public void generateResponse(Transaction transaction, int responseCode,

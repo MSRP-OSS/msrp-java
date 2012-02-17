@@ -572,14 +572,15 @@ public class Transaction
          */
         if (!receivingBinaryData)
         {
+            /* Trims and assembles received data via the toParse string
+             * so that we get a buffer with all headers before trying to
+             * analyze it
+             */
             String toParse = new String(incData, offset, length, TextUtils.utf8);
-            // Trims and assembles the received data via the toParse string
-            // so that we get a buffer with the whole headers before we try to
-            // analyze it
-
-            // if the transaction is marked as complete or invalid, calls to
-            // this
-            // method will do nothing
+            /*
+             * if the transaction is marked as complete or invalid, calls to
+             * this method will do nothing
+             */
             if (!validTransaction)
                 return;
             if (completeTransaction)
@@ -588,8 +589,8 @@ public class Transaction
                  * are still parsing data to it, so throw an exception
                  */
                 throw new ImplementationException(
-                    "Error: trying to parse data to"
-                        + "a complete transaction!");
+                    "Error: trying to parse data to a complete transaction!");
+
             int i = 0;
             while (i < toParse.length())
             {
@@ -597,50 +598,41 @@ public class Transaction
                 {
                     try
                     {
-                        for (; i < toParse.length()
-                            && !hasCompleteHeaderBuffer(); i++)
+                        int j;
+                        while (i < toParse.length() && !isHeaderBufferComplete())
                         {
-                            addHeaderBuffer(toParse.charAt(i));
+                        	j = toParse.indexOf("\r\n", i);
+                        	if (j == -1) {
+                                addHeaderBuffer(toParse.substring(i));
+                                i = toParse.length();
+                        	} else {
+                        		addHeaderBuffer(toParse.substring(i, j + 2));
+                        		i = j + 2;
+                        	}
                         }
-                        if (hasCompleteHeaderBuffer())
+                        if (isHeaderBufferComplete())
                         {
                             recognizeHeader();
                             proccessHeader();
-                            // TODO (?!) implement the recognition of an
-                            // existence
-                            // of a body (by looking at the headers to see if
-                            // content-stuff exists)
-                            // and do the next two calls only in such case (?!)
                             headerComplete = true;
-                            logger
-                                .trace("completely parsed the header of transaction: "
-                                    + tID);
+                            logger.trace("Parsed header of Tx[" + tID + "]");
                         }
                     }
                     catch (Exception e)
                     {
                         validTransaction = false;
-                        logger
-                            .warn("an exception made this transaction: "
-                                + tID
-                                + " method:"
-                                + TransactionType.TransactionType
-                                + " an invalid transaction, returning without parsing");
+                        logger.warn("Exception parsing Tx-"
+                                    + TransactionType.TransactionType + "["
+                                    + tID + "] returning without parsing");
                         return;
                     }
-
-                }// if (!headercomplete)
+                }						// if (!headercomplete)
                 if (headerComplete)
                 {
-                    /*
-                     * if we don't have a valid transaction at this point,
-                     * return
-                     */
                     if (!isValid())
-                    {
-                        logger
-                            .warn("parsing an invalid transaction, returning without parsing tID:"
-                                + tID);
+                    { 		// no valid transaction at this point? -> return
+                        logger.warn("parsing invalid Tx[" + tID
+                        		+ "] returning without parsing");
                         return;
                     }
                     try
@@ -659,56 +651,50 @@ public class Transaction
                              * validated to make sure they have no negative
                              * values etc
                              */
-                            long startingIndex =
+                            long startIndex =
                                 (byteRange[CHUNKSTARTBYTEINDEX] - 1)
                                     + realChunkSize;
                             logger.trace("parsing the non binary body of "
-                                + "the send transaction with tID: " + tID
-                                + " startingIndex: " + startingIndex
-                                + " toParse.length - i (the nr of bytes?!): "
-                                + (toParse.length() - i));
+                                + "Tx-SEND[" + tID
+                                + "] start at " + startIndex
+                                + ", size " + (toParse.length() - i));
+
                             while (toParse.length() - i != 0)
                             {
-
-                                if (message.getReportMechanism()
-                                    .getTriggerGranularity() >= toParse
-                                    .length()
-                                    - i)
+                                if (message.getReportMechanism().getTriggerGranularity()
+                                					>= toParse.length() - i)
                                 {
                                     /*
-                                     * put all of the remaining data on the data
-                                     * container and update the realchunksize,
-                                     * account the reported bytes (that
+                                     * Put all of the remaining data on the data
+                                     * container and update the realchunksize.
+                                     * Account the reported bytes (that
                                      * automatically calls the trigger TODO)
                                      */
                                     byteData =
                                         toParse.substring(i).getBytes(TextUtils.utf8);
-                                    message.getDataContainer().put(
-                                        startingIndex, byteData);
+                                    message.getDataContainer()
+                                    			.put(startIndex, byteData);
                                     realChunkSize += byteData.length;
                                     message.getReportMechanism()
                                         .countReceivedBodyBlock(message, this,
-                                            startingIndex, byteData.length);
+                                            startIndex, byteData.length);
                                     i += byteData.length;
                                 }
                                 else
                                 {
                                     byteData =
                                         toParse.substring(
-                                            i,
-                                            i
-                                                + (message.getReportMechanism()
-                                                    .getTriggerGranularity()))
-                                            .getBytes(TextUtils.utf8);
-                                    message.getDataContainer().put(
-                                        startingIndex, byteData);
+                                            i, i + (message.getReportMechanism()
+                                                .getTriggerGranularity()))
+                                                	.getBytes(TextUtils.utf8);
+                                    message.getDataContainer()
+                                    			.put(startIndex, byteData);
                                     realChunkSize += byteData.length;
                                     message.getReportMechanism()
                                         .countReceivedBodyBlock(message, this,
-                                            startingIndex, byteData.length);
+                                            startIndex, byteData.length);
                                     i += byteData.length;
-                                    startingIndex += byteData.length;
-
+                                    startIndex += byteData.length;
                                 }
                             }
                         }
@@ -716,9 +702,8 @@ public class Transaction
                         {
                             byteData = toParse.substring(i).getBytes(TextUtils.utf8);
                             logger.trace("parsing the body of  non-send or non"
-                                + " message associated transaction"
-                                + " with tID: " + tID + " the nr of bytes:"
-                                + byteData.length);
+                                + " message from Tx-<?>["
+                                + tID + "], nr of bytes=" + byteData.length);
                             if (byteData.length > 0)
                             {
                                 bodyByteBuffer.put(byteData);
@@ -734,27 +719,22 @@ public class Transaction
                     }
                     catch (Exception e)
                     {
-                        logger.error("caught an exception while parsing tID: "
-                            + tID + " generating a 400 response", e);
-                        e.printStackTrace();
-                        // FIXME ?! give a 400 response?!
+                        logger.error("caught an exception while parsing Tx["
+                        		+ tID + "], generating 400 response", e);
                         try
                         {
                             transactionManager.generateResponse(this, 400,
-                                "Parsing exception: " + e.getMessage());
+                            		"Parsing exception: " + e.getMessage());
                         }
                         catch (IllegalUseException e2)
-                        {
-                            // This should never happen! if it does it's an
-                            // implementation exception
+                        {				// This should never happen!
                             throw new ImplementationException(e2);
                         }
                     }
                 }
-
                 if (completeTransaction)
                 {
-                    logger.trace("transaction tID: " + tID + " is complete");
+                    logger.trace("Tx[" + tID + "] is complete");
                     break;
                 }
             }
@@ -766,13 +746,10 @@ public class Transaction
 
             if (headerComplete)
             {
-                /*
-                 * if we don't have a valid transaction at this point, return
-                 */
-                if (!isValid())
+                if (!isValid())			// no valid transaction? -> return
                 {
-                    logger.warn("parsing an invalid transaction, returning"
-                        + " without parsing tID:" + tID);
+                    logger.warn("parsing invalid Tx[" + tID
+                    		+ "] returning without parsing");
                     return;
                 }
                 try
@@ -791,20 +768,17 @@ public class Transaction
                          * TODO validate the byteRange values for non negatives
                          * etc
                          */
-                        long startingIndex =
+                        long startIndex =
                             (byteRange[CHUNKSTARTBYTEINDEX] - 1)
                                 + realChunkSize;
-                        logger.trace("parsing the binary body of "
-                            + "the send transaction with tID: " + tID
-                            + " startingIndex: " + startingIndex
-                            + " the nr of bytes: " + incByteBuffer.remaining());
+                        logger.trace("parsing the non binary body of "
+                                + "Tx-SEND[" + tID
+                                + "] start at " + startIndex
+                                + ", size " + incByteBuffer.remaining());
                         while (incByteBuffer.hasRemaining())
                         {
-
-                            if (message.getReportMechanism()
-                                .getTriggerGranularity() >= incByteBuffer
-                                .limit()
-                                - incByteBuffer.position())
+                            if (message.getReportMechanism().getTriggerGranularity()
+                            		>= incByteBuffer.limit() - incByteBuffer.position())
                             {
                                 /*
                                  * put all of the remaining data on the data
@@ -814,40 +788,36 @@ public class Transaction
                                  */
                                 byteData = new byte[incByteBuffer.remaining()];
                                 incByteBuffer.get(byteData);
-                                message.getDataContainer().put(startingIndex,
-                                    byteData);
+                                message.getDataContainer()
+                                				.put(startIndex, byteData);
                                 realChunkSize += byteData.length;
                                 message.getReportMechanism()
                                     .countReceivedBodyBlock(message, this,
-                                        startingIndex, byteData.length);
-                                startingIndex += byteData.length;
+                                    			startIndex, byteData.length);
+                                startIndex += byteData.length;
                             }
                             else
                             {
                                 byteData =
                                     new byte[message.getReportMechanism()
-                                        .getTriggerGranularity()];
+                                             	.getTriggerGranularity()];
                                 incByteBuffer.get(byteData, 0, message
-                                    .getReportMechanism()
-                                    .getTriggerGranularity());
-                                message.getDataContainer().put(startingIndex,
-                                    byteData);
+                                    .getReportMechanism().getTriggerGranularity());
+                                message.getDataContainer()
+                                				.put(startIndex, byteData);
                                 realChunkSize += byteData.length;
                                 message.getReportMechanism()
                                     .countReceivedBodyBlock(message, this,
-                                        startingIndex, byteData.length);
-                                startingIndex += byteData.length;
-
+                                    			startIndex, byteData.length);
+                                startIndex += byteData.length;
                             }
                         }
-                    }// if (!isIncomingResponse() && message != null
-                    // && transactionType.equals(TransactionType.SEND))
+                    }
                     else
                     {
-                        logger.trace("parsing the binary body of "
-                            + "a non-send or w/o a message transaction"
-                            + " with tID: " + tID + " the nr of bytes: "
-                            + incByteBuffer.remaining());
+                        logger.trace("parsing the body of  non-send or non"
+                                + " message from Tx-<?>[" + tID
+                                + "], nr of bytes=" + incByteBuffer.remaining());
                         byteData = new byte[incByteBuffer.remaining()];
                         incByteBuffer.get(byteData);
                         if (byteData.length > 0)
@@ -859,71 +829,30 @@ public class Transaction
                         {
                             bodyByteBuffer = ByteBuffer.wrap(byteData);
                         }
-
                     }
                 }
                 catch (Exception e)
                 {
-                    logger.error("caught an exception while parsing tID: "
-                        + tID + " generating a 400 response", e);
-                    e.printStackTrace();
-                    // FIXME ?! give a 400 response?!
+                    logger.error("caught an exception while parsing Tx["
+                    		+ tID + "], generating 400 response", e);
                     try
                     {
-
                         transactionManager.generateResponse(this, 400,
-                            "Parsing exception: " + e.getMessage());
+                    			"Parsing exception: " + e.getMessage());
                     }
                     catch (IllegalUseException e2)
                     {
-                        // if it happens here it means it's an implementation
-                        // exception
                         throw new ImplementationException(e2);
                     }
                 }
             }
-
         }
     }
 
-    /*
-     * REMOVED! too much overhead used to parse the body of the transaction, one
-     * char at a time. Will fill the body of the TODO message according to the
-     * byte-range total number of bytes field in the header of this transaction
-     * 
-     * @param charAt
-     */
-    /*
-     * private void parseBody(byte byteToAdd) { / We'll have three main
-     * categories of data storage on the transactions:
-     * 
-     * However all are handled by the DataContainer class
-     */
-    /* if we don't have a valid transaction at this point return */
-    /*
-     * if (!isValid()) return;
-     * 
-     * try { if (!isIncomingResponse() && message != null &&
-     * transactionType.equals(TransactionType.SEND)) {
-     * message.dataContainer.put((byteRange[0] - 1) + realChunkSize, byteToAdd);
-     * realChunkSize += 1; // call the associated report mechanism add byte
-     * message.getReportMechanism().countReceivedBodyByte(message, this); } else
-     * { bodyByteBuffer.put(byteToAdd); realChunkSize += 1; } } catch (Exception
-     * e) { // TODO log it e.printStackTrace(); // FIXME ?! give a 400
-     * response?! this.generateResponse(400); try {
-     * transactionManager.addPriorityTransaction(this); } catch
-     * (InternalErrorException e1) { // TODO log it e1.printStackTrace(); } }
-     * 
-     * // TODO Throw an exception if the transaction is not valid/complete
-     * 
-     * }
-     */
-
     /**
-     *TODO do what is needed if it receives an # char (that being: mark the
+     * TODO do what is needed if it receives an # char (that being: mark the
      * message as aborted and "send" it to the transactionmanager thread to deal
      * with so that this thread can focus on reading from the socket)
-     * 
      * 
      * Responsible for marking the needed elements so that further processing
      * could be correctly done Note: this method is called by the reader thread,
@@ -956,7 +885,6 @@ public class Transaction
                 validTransaction = false;
                 e.printStackTrace();
             }
-
         }
         if (headerComplete)
         {
@@ -967,8 +895,8 @@ public class Transaction
                  * update of the chunk size with the actual data bytes that were
                  * parsed
                  */
-
                 byteRange[1] = realChunkSize;
+
             /*
              * signal the counter that one received the end of message
              * continuation flag
@@ -1005,7 +933,6 @@ public class Transaction
         String aux = headerBuffer.toString();
         headerBytes = aux.getBytes(TextUtils.utf8);
         completeTransaction = true;
-
     }
 
     /**
@@ -1468,7 +1395,6 @@ public class Transaction
      * @throws InternalErrorException if there was some kind of exception this
      *             exception is thrown with the triggering exception within
      */
-
     protected byte[] getBody(int size) throws InternalErrorException
     {
         if (!transactionType.equals(TransactionType.SEND))
@@ -1559,7 +1485,6 @@ public class Transaction
             bodyBytes = new byte[MSRPStack.MAXNONSENDBODYSIZE];
             bodyByteBuffer = ByteBuffer.wrap(bodyBytes);
         }
-
     }
 
     private void setTID(String tid)
@@ -1579,7 +1504,6 @@ public class Transaction
      */
     private void addHeaderBuffer(char charToAdd) throws InvalidHeaderException
     {
-
         if (2 + headerBuffer.length() > MAXHEADERBYTES)
             throw new InvalidHeaderException("Trying to parse a line of "
                 + (2 + headerBuffer.length()) + " bytes" + "when the limit is "
@@ -1588,68 +1512,50 @@ public class Transaction
         {
             headerBuffer.append(charToAdd);
         }
-
     }
 
-    /**
-     * @return true if the headerBuffer has all of the data of the header
-     */
-    private boolean hasCompleteHeaderBuffer()
+    private void addHeaderBuffer(String toAdd) throws InvalidHeaderException
     {
-        Matcher endOfHeaderMatcher;
-        if (isIncomingResponse())
+        if (toAdd.length() + headerBuffer.length() > MAXHEADERBYTES)
+            throw new InvalidHeaderException("Trying to parse a line of "
+                + (toAdd.length() + headerBuffer.length()) + " bytes" + "when the limit is "
+                + MAXHEADERBYTES);
+        else
         {
-            /*
-             * in the case we are dealing with an incoming response the header
-             * ends with the from-path last uri and \r\n
-             */
-            // TODO support multiple From-Path URIs and support the rest of the
-            // headers that could exist on the Header even of a response
-            // (although it's not usual)
-            Pattern endOfHeaderWithoutContentStuff =
-                Pattern.compile(
-                    "(^To-Path:) (.{7,120})(\r\n)(From-Path:) (.{7,})(\r\n)",
-                    Pattern.DOTALL);
-            endOfHeaderMatcher =
-                endOfHeaderWithoutContentStuff.matcher(headerBuffer);
-
-            if (endOfHeaderMatcher.matches())
-            {
-                return true;
-            }
-            return false;
+            headerBuffer.append(toAdd);
         }
-        /* In the case that his is a transaction with 'content-stuff' */
-        Pattern endOfHeaderWithContentStuff =
-            Pattern.compile("(.*)(\r\n){2}(.*)", Pattern.DOTALL);
-        endOfHeaderMatcher = endOfHeaderWithContentStuff.matcher(headerBuffer);
-        if (endOfHeaderMatcher.matches())
+    }
+
+    // TODO support the rest of the headers that could be present,
+	// even in a response (although not usual)
+    private static Pattern endOfHeaderWithoutContent =
+            Pattern.compile(
+                "^To-Path: .{7,}\r\nFrom-Path: .{7,}\r\n",
+                Pattern.DOTALL);
+
+    private static Pattern endOfHeaderWithContent =
+            Pattern.compile(".*(\r\n){2}.*", Pattern.DOTALL);
+
+    /** Has headerbuffer all of the header data?
+     * @return true if headerBuffer has all of header-data
+     */
+    private boolean isHeaderBufferComplete()
+    {
+    	/*
+	     * in case of incoming response the header
+	     * ends with the from-paths last uri and CRLF
+    	 */
+        Matcher isHeaderComplete;
+        if (isIncomingResponse())
+            isHeaderComplete = endOfHeaderWithoutContent.matcher(headerBuffer);
+        else
+	        /* In case of a transaction with 'content-stuff' */
+	        isHeaderComplete = endOfHeaderWithContent.matcher(headerBuffer);
+
+        if (isHeaderComplete.matches())
             return true;
         return false;
     }
-
-    /**
-     * Retrieves the first line it encounters on the headerBuffer that is going
-     * to be processed by the calling method the line is removed from the buffer
-     * 
-     * @return a string with the line including the \r\n chars or null if none
-     *         found
-    private String getLineHeaderBuffer()
-    {
-        try
-        {
-            String stringToReturn =
-                headerBuffer.substring(0, headerBuffer.indexOf("\r\n"));
-            headerBuffer.delete(0, headerBuffer.indexOf("\r\n")
-                + "\r\n".length());
-            return stringToReturn.concat("\r\n");
-        }
-        catch (StringIndexOutOfBoundsException e)
-        {
-            return null;
-        }
-    }
-     */
 
     /**
      * Method that takes into account the validTransaction field of the
@@ -1730,7 +1636,6 @@ public class Transaction
                 e.printStackTrace();
             }
         }
-
         if (transactionManager.associatedSession((getToPath())[0]) == null)
         {
             // It doesn't have this session associated
@@ -1772,7 +1677,6 @@ public class Transaction
                     {
                         logger.error("Generating 481 response", e);
                     }
-
                 }
             }
             else
@@ -1795,7 +1699,6 @@ public class Transaction
                         logger.error("Generating 506 response", e);
 
                     }
-
                     logger.error("Error! received a request"
                         + " that is yet to identify and is associated with"
                         + " another session!");
@@ -1809,7 +1712,6 @@ public class Transaction
                 this.session = newSession;
                 transactionManager.addSession(newSession);
                 associateMessage();
-
             }
         }
         else
@@ -1822,9 +1724,7 @@ public class Transaction
                 transactionManager.associatedSession((getToPath())[0]);
             this.session = sessionToAssociate;
             associateMessage();
-
         }
-
     }
 
     /**
@@ -1859,11 +1759,9 @@ public class Transaction
                 session.delMessageToReceive((IncomingMessage) message);
                 message = null;
             }
-
         }
         if (message == null)
         {
-
             if (this.transactionType.equals(TransactionType.SEND))
             {
                 message =
@@ -1900,7 +1798,6 @@ public class Transaction
                          * message discarded because he didn't filled out the
                          * dataContainer field
                          */
-
                     }
                     else
                     {
@@ -1910,7 +1807,6 @@ public class Transaction
                          */
                         session.putReceivingMessage(incomingMessage);
                     }
-
                 }
                 if (!result)
                 {
@@ -1939,12 +1835,9 @@ public class Transaction
                                 "Exception caught generating 413 response for transaction: "
                                     + this, e1);
                         }
-
                     }
                 }
-
             }
-
             if (this.transactionType.equals(TransactionType.REPORT))
             {
                 validTransaction = false;
@@ -1963,9 +1856,7 @@ public class Transaction
             && this.transactionType.equals(TransactionType.SEND))
         {
             message.setLastSendTransaction(this);
-
         }
-
     }
 
     /**
@@ -2029,14 +1920,12 @@ public class Transaction
         {
             newToPath[0] = URI.create(toAndFromMatcher.group(2));
             setToPath(newToPath);
-
         }
         catch (Exception e)
         {
             throw new InvalidHeaderException(
                 "Problems parsing the to-path URI", e);
         }
-
         try
         {
             // TODO support multiple From-Path URIs
@@ -2282,14 +2171,6 @@ public class Transaction
     }
 
     /**
-     * @param message the message to set
-    private void setMessage(Message message)
-    {
-        this.message = message;
-    }
-     */
-
-    /**
      * Gets a byte for the end of transaction line
      * 
      * @return a byte of the end of transaction line
@@ -2300,7 +2181,6 @@ public class Transaction
     {
         if (hasContentStuff && offsetRead[DATAINDEX] < 2)
         {
-
             /*
              * Add the extra CRLF separating the data and the end-line
              */
@@ -2339,5 +2219,4 @@ public class Transaction
         offsetRead[ENDLINEINDEX]++;
         return continuationFlagByte;
     }
-
 }
