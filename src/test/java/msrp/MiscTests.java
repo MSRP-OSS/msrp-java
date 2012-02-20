@@ -661,7 +661,7 @@ public class MiscTests
                     incomingTransaction =
                         new Transaction(tID, newTransactionType, dummyManager,
                             Transaction.IN);
-                    if (newTransactionType.equals(TransactionType.UNSUPPORTED))
+                    if (newTransactionType == TransactionType.UNSUPPORTED)
                         incomingTransaction.signalizeEnd('$');
 
                     // DEBUG REMOVE
