@@ -223,7 +223,7 @@ public class TestCorrectlyBreaksSentData
             for (Transaction transaction : existingTransactions)
             {
                 if (transaction.getTID().equals(tidString)
-                    && transaction.transactionType.equals(TransactionType.SEND))
+                    && transaction.transactionType == TransactionType.SEND)
                 {
                     if (foundFirstSendTransaction)
                         fail("Something odd happened, there was "
@@ -233,7 +233,7 @@ public class TestCorrectlyBreaksSentData
                     foundFirstSendTransaction = true;
                 }
                 if (!transaction.getTID().equals(tidString)
-                    && transaction.transactionType.equals(TransactionType.SEND))
+                    && transaction.transactionType == TransactionType.SEND)
                 {
                     if (foundSecondSendTransaction)
                         fail("Something odd happened, there was "
