@@ -115,7 +115,7 @@ public class OutgoingMessage
         boolean firstTransactionFound = false;
         for (Transaction transaction : transactionsToSend)
         {
-            if (transaction.transactionType.equals(TransactionType.SEND)
+            if (transaction.transactionType == TransactionType.SEND
                 && transaction.getMessage().equals(this))
             {
                 logger.debug("Found transaction: " + transaction
