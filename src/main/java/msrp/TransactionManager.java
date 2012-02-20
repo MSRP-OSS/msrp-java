@@ -16,7 +16,6 @@
  */
 package msrp;
 
-import msrp.Transaction.TransactionType;
 import msrp.events.MessageAbortedEvent;
 import msrp.exceptions.*;
 import msrp.messages.*;

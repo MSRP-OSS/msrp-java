@@ -25,7 +25,6 @@ import java.util.*;
 import org.junit.*;
 
 import msrp.utils.*;
-import msrp.Transaction.TransactionType;
 import msrp.messages.Message;
 import msrp.messages.OutgoingMessage;
 import msrp.testutils.*;

@@ -436,37 +436,6 @@ public class Transaction
         logger.info("transaction created by the empty constructor");
     }
 
-    public enum TransactionType
-    {
-
-        /**
-         * SEND, transaction associated with the method SEND
-         */
-        SEND,
-
-        /**
-         * REPORT, transaction associated with the method REPORT
-         */
-        REPORT,
-
-        /**
-         * UNSUPPORTED, represents the unsupported methods
-         */
-        UNSUPPORTED,
-        /**
-         * SENDRESPONSE, transaction that is a response to another of the method
-         * SEND
-         */
-        SENDRESPONSE,
-
-        /**
-         * constructor, implicitly public
-         */
-        TransactionType()
-        {
-        };
-    }
-
     /**
      * Asserts if the transaction is Incoming or Outgoing {@link #IN} or
      * {@link #OUT}
@@ -622,7 +591,7 @@ public class Transaction
                     {
                         validTransaction = false;
                         logger.warn("Exception parsing Tx-"
-                                    + TransactionType.TransactionType + "["
+                                    + transactionType + "["
                                     + tID + "] returning without parsing");
                         return;
                     }
