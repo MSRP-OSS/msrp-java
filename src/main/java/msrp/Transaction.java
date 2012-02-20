@@ -1465,41 +1465,27 @@ public class Transaction
      * the maximum limit of bytes without an \r\n in that case an Exception is
      * thrown
      * 
-     * @param charToAdd the string to add to the buffer used for storage of
+     * @param toAdd the string to add to the buffer used for storage of
      *            complete lines for analyzing posteriorly
-     * @throws InvalidHeaderException if MAXBYTES would be passed with the
-     *             addition of stringToAdd
+     * @throws InvalidHeaderException if MAXHEADERBYTES would be passed with the
+     *             addition of toAdd
      */
-    private void addHeaderBuffer(char charToAdd) throws InvalidHeaderException
-    {
-        if (2 + headerBuffer.length() > MAXHEADERBYTES)
-            throw new InvalidHeaderException("Trying to parse a line of "
-                + (2 + headerBuffer.length()) + " bytes" + "when the limit is "
-                + MAXHEADERBYTES);
-        else
-        {
-            headerBuffer.append(charToAdd);
-        }
-    }
-
     private void addHeaderBuffer(String toAdd) throws InvalidHeaderException
     {
-        if (toAdd.length() + headerBuffer.length() > MAXHEADERBYTES)
+    	int len = toAdd.length() + headerBuffer.length();
+
+    	if ( len > MAXHEADERBYTES)
             throw new InvalidHeaderException("Trying to parse a line of "
-                + (toAdd.length() + headerBuffer.length()) + " bytes" + "when the limit is "
-                + MAXHEADERBYTES);
+                + len + " bytes when the limit is " + MAXHEADERBYTES);
         else
-        {
             headerBuffer.append(toAdd);
-        }
     }
 
     // TODO support the rest of the headers that could be present,
-	// even in a response (although not usual)
+	// even in a response (although not commonplace)
     private static Pattern endOfHeaderWithoutContent =
             Pattern.compile(
-                "^To-Path: .{7,}\r\nFrom-Path: .{7,}\r\n",
-                Pattern.DOTALL);
+                "^To-Path: .{7,}\r\nFrom-Path: .{7,}\r\n", Pattern.DOTALL);
 
     private static Pattern endOfHeaderWithContent =
             Pattern.compile(".*(\r\n){2}.*", Pattern.DOTALL);
