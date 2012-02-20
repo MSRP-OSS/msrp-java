@@ -298,7 +298,7 @@ public abstract class Message
             transactionManager.getTransactionsToSend();
         for (Transaction transaction : transactionsToSend)
         {
-            if (transaction.transactionType.equals(TransactionType.SEND)
+            if (transaction.transactionType == TransactionType.SEND
                 && transaction.getMessage().equals(this)
                 && transaction.isInterruptible())
                 try

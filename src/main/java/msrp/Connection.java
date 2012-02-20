@@ -1078,8 +1078,7 @@ class Connection extends Observable implements Runnable
                                 + "an incoming transaction", e);
                         }
 
-                        if (newTransactionType
-                            .equals(TransactionType.UNSUPPORTED))
+                        if (newTransactionType == TransactionType.UNSUPPORTED)
                         {
                             incomingTransaction.signalizeEnd('$');
                             logger

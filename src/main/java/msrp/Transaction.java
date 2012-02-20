@@ -364,7 +364,7 @@ public class Transaction
         this.transactionManager = manager;
         tID = manager.generateNewTID();
         message = messageBeingSent;
-        if (transactionType.equals(TransactionType.SEND))
+        if (transactionType == TransactionType.SEND)
         {
             if (messageBeingSent.isComplete())
                 throw new IllegalArgumentException("The constructor of "
@@ -644,7 +644,7 @@ public class Transaction
                          */
                         byte[] byteData;
                         if (!isIncomingResponse() && message != null
-                            && transactionType.equals(TransactionType.SEND))
+                            && transactionType == TransactionType.SEND)
                         {
                             /*
                              * TODO the byteRange header fields should be
@@ -760,7 +760,7 @@ public class Transaction
                      */
                     byte[] byteData;
                     if (!isIncomingResponse() && message != null
-                        && transactionType.equals(TransactionType.SEND))
+                        && transactionType == TransactionType.SEND)
                     {
                         /*
                          * if this isn't an incoming response, has a message
@@ -890,7 +890,7 @@ public class Transaction
         {
             // body from the end of transaction line
             if (byteRange[1] != 0 && byteRange[1] != UNINTIALIZED
-                && transactionType.equals(TransactionType.SEND))
+                && transactionType == TransactionType.SEND)
                 /*
                  * update of the chunk size with the actual data bytes that were
                  * parsed
@@ -904,7 +904,7 @@ public class Transaction
              * call the report mechanism function so that it can call the should
              * generate report
              */
-            if (transactionType.equals(TransactionType.SEND)
+            if (transactionType == TransactionType.SEND
                 && !isIncomingResponse() && message != null
                 && continuationFlag == ENDMESSAGE)
             {
@@ -912,7 +912,7 @@ public class Transaction
                     .receivedEndOfMessage();
             }
 
-            if (transactionType.equals(TransactionType.SEND)
+            if (transactionType == TransactionType.SEND
                 && !isIncomingResponse()
                 && continuationFlagByte == ABORTMESSAGE)
             {
@@ -1144,7 +1144,7 @@ public class Transaction
     {
         /*
          * if (dataBytes.length + headerBytes.length > 2048 && !hasResponse() &&
-         * !(transactionType.equals(TransactionType.REPORT))) return true;
+         * (transactionType != TransactionType.REPORT)) return true;
          * return false;
          */
         return interruptible;
@@ -1170,11 +1170,10 @@ public class Transaction
      */
     protected boolean isRequest()
     {
-        if (transactionType.equals(TransactionType.REPORT)
-            || transactionType.equals(TransactionType.SEND))
+        if (transactionType == TransactionType.REPORT
+            || transactionType == TransactionType.SEND)
             return true;
         return false;
-
     }
 
     /**
@@ -1397,7 +1396,7 @@ public class Transaction
      */
     protected byte[] getBody(int size) throws InternalErrorException
     {
-        if (!transactionType.equals(TransactionType.SEND))
+        if (transactionType != TransactionType.SEND)
         {
             if (size == ALLBYTES)
             {
@@ -1416,7 +1415,7 @@ public class Transaction
             return dst;
 
         }
-        else if (transactionType.equals(TransactionType.SEND))
+        else if (transactionType == TransactionType.SEND)
 
         {
             DataContainer dc = message.getDataContainer();
@@ -1480,7 +1479,7 @@ public class Transaction
      */
     private void initializeDataStructures()
     {
-        if (!transactionType.equals(TransactionType.SEND))
+        if (transactionType != TransactionType.SEND)
         {
             bodyBytes = new byte[MSRPStack.MAXNONSENDBODYSIZE];
             bodyByteBuffer = ByteBuffer.wrap(bodyBytes);
@@ -1612,7 +1611,7 @@ public class Transaction
         if (isIncomingResponse())
             return;
 
-        if (getTransactionType().equals(TransactionType.UNSUPPORTED))
+        if (getTransactionType() == TransactionType.UNSUPPORTED)
         {
             /* TODO if this isn't a valid method send back a 501 response */
             /*
@@ -1762,7 +1761,7 @@ public class Transaction
         }
         if (message == null)
         {
-            if (this.transactionType.equals(TransactionType.SEND))
+            if (this.transactionType == TransactionType.SEND)
             {
                 message =
                     new IncomingMessage(session, messageID, this.contentType,
@@ -1838,7 +1837,7 @@ public class Transaction
                     }
                 }
             }
-            if (this.transactionType.equals(TransactionType.REPORT))
+            if (this.transactionType == TransactionType.REPORT)
             {
                 validTransaction = false;
                 /*
@@ -1853,7 +1852,7 @@ public class Transaction
         // lets update the reference in the Message to this transaction if this
         // is a SEND transaction and an associated message has been found
         if (message != null
-            && this.transactionType.equals(TransactionType.SEND))
+            && this.transactionType == TransactionType.SEND)
         {
             message.setLastSendTransaction(this);
         }
