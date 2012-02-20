@@ -22,7 +22,7 @@ import msrp.MSRPSessionListener;
 import msrp.Session;
 import msrp.Transaction;
 import msrp.TransactionManager;
-import msrp.Transaction.TransactionType;
+import msrp.TransactionType;
 import msrp.exceptions.IllegalUseException;
 import msrp.exceptions.InternalErrorException;
 

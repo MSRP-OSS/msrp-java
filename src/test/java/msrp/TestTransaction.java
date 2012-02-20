@@ -26,7 +26,6 @@ import org.junit.*;
 import static org.junit.Assert.*;
 
 import msrp.utils.TextUtils;
-import msrp.Transaction.TransactionType;
 import msrp.exceptions.ConnectionParserException;
 import msrp.exceptions.IllegalUseException;
 import msrp.exceptions.ImplementationException;

@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import msrp.Connections;
 import msrp.Session;
-import msrp.Transaction.TransactionType;
 import msrp.exceptions.ConnectionParserException;
 import msrp.exceptions.ConnectionReadException;
 import msrp.exceptions.ConnectionWriteException;
