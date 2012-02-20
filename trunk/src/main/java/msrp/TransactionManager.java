@@ -345,7 +345,7 @@ public class TransactionManager
                 }
             }
         }
-        if (transaction.getTransactionType().equals(TransactionType.REPORT))
+        if (transaction.getTransactionType() == TransactionType.REPORT)
         {
             StatusHeader transactionStatusHeader =
                 transaction.getStatusHeader();
@@ -455,8 +455,7 @@ public class TransactionManager
         /*
          * If the transaction is an incoming response, atm do nothing. TODO(?!)
          */
-        if (transaction.getTransactionType().equals(
-            TransactionType.SENDRESPONSE))
+        if (transaction.getTransactionType() == TransactionType.SENDRESPONSE)
         {
             TransactionResponse transactionResponse =
                 (TransactionResponse) transaction;
@@ -468,8 +467,7 @@ public class TransactionManager
             processResponse(transactionResponse);
             return;
         }
-        if (transaction.getTransactionType()
-            .equals(TransactionType.UNSUPPORTED))
+        if (transaction.getTransactionType() == TransactionType.UNSUPPORTED)
         {
             /*
              * "important" question: does this 501 response precedes the 506 or
@@ -1027,7 +1025,7 @@ public class TransactionManager
             // account for the bytes sent from this transaction if they should
             // be accounted for
             if (!t.isIncomingResponse()
-                && t.transactionType.equals(TransactionType.SEND)
+                && t.transactionType == TransactionType.SEND
                 && !t.hasResponse())
             {
                 /*
@@ -1153,7 +1151,7 @@ public class TransactionManager
             }
 
             if (!t.isIncomingResponse()
-                && t.transactionType.equals(TransactionType.SEND)
+                && t.transactionType == TransactionType.SEND
                 && !t.hasResponse())
             {
                 /*

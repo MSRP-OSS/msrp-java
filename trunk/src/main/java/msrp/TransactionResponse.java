@@ -38,7 +38,7 @@ public class TransactionResponse
     {
         // sanity checks:
         // original transaction must be a SEND transaction
-        if (!transaction.transactionType.equals(TransactionType.SEND))
+        if (transaction.transactionType != TransactionType.SEND)
             throw new IllegalUseException(
                 "Constructing a SENDRESPONSE "
                     + "with an original transaction that isn't a SEND, transaction: "
@@ -92,7 +92,7 @@ public class TransactionResponse
         if (direction == OUT)
             throw new IllegalUseException("This constructor should only"
                 + " be used for incoming transactions");
-        if (!incomingTransaction.transactionType.equals(TransactionType.SEND))
+        if (incomingTransaction.transactionType != TransactionType.SEND)
             throw new IllegalUseException(
                 "Constructing a SENDRESPONSE "
                     + "with an original transaction that isn't a SEND, transaction: "
