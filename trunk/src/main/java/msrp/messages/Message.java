@@ -19,7 +19,6 @@ package msrp.messages;
 import java.util.ArrayList;
 
 import msrp.*;
-import msrp.Transaction.TransactionType;
 import msrp.exceptions.*;
 import msrp.utils.TextUtils;
 
