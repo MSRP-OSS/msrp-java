@@ -880,7 +880,7 @@ class Connection extends Observable implements Runnable
                         + " bytes, offset: " + offset + " bufferIncData "
                         + "position:" + bufferIncData.position()
                         + " smallbuffer content:"
-                        + new String(bufferIncData.array(), TextUtils.usascii)
+                        + new String(bufferIncData.array(), TextUtils.utf8)
                         		.substring(offset, bufferIncData.position())
                         + "|end of content excluding the | char");
                     throw e;
@@ -917,10 +917,23 @@ class Connection extends Observable implements Runnable
 
     private String remainderReceive = new String();
 
+    /* Find the MSRP start of the transaction stamp
+
+     * the TID has to be at least 64bits long = 8chars
+     * given as a reasonable limit of 20 for the transaction id
+     * although non normative. Also the method name will have the same 20 limit
+     *  and has to be a Upper case word like SEND
+     */
+    private static Pattern startRequest = Pattern.compile(
+                    "(^MSRP) ([\\p{Alnum}]{8,20}) ([\\p{Upper}]{1,20})\r\n(.*)",
+                    Pattern.DOTALL);
+    private static Pattern startResponse = Pattern.compile(
+                    "(^MSRP) ([\\p{Alnum}]{8,20}) ((\\d{3})([^\r\n]*)\r\n)(.*)",
+                    Pattern.DOTALL);
+
     /**
-     * receives the incoming data and identifies a transaction's start and end
-     * and creates a new transaction the needed things according to the MSRP
-     * norms
+     * Parse the incoming data, identifying transaction start or end,
+     * creating a new transaction according RFC.
      * 
      * @param incomingBytes raw byte data to be handled
      * @param offset the starting position in the given byte array we should
@@ -929,8 +942,7 @@ class Connection extends Observable implements Runnable
      *            position
      * @param receivingBodyData true if it is receiving data regarding the body
      *            of a transaction, false otherwise
-     * @throws ConnectionParserException Generic error exception TODO specialize
-     *             in the future
+     * @throws ConnectionParserException Generic parsing exception
      */
     private void parser(byte[] incomingBytes, int offset, int length,
         boolean receivingBodyData) throws ConnectionParserException
@@ -949,7 +961,6 @@ class Connection extends Observable implements Runnable
             }
             catch (Exception e)
             {
-                // TODO log it
                 e.printStackTrace();
             }
         }
@@ -961,7 +972,7 @@ class Connection extends Observable implements Runnable
              * text data
              */
             String incomingString =
-                new String(incomingBytes, offset, length, TextUtils.usascii);
+                new String(incomingBytes, offset, length, TextUtils.utf8);
             String toParse;
             String tID;
             boolean complete = false;
@@ -981,12 +992,12 @@ class Connection extends Observable implements Runnable
             }
 
             /*
-             * Variable used in the case that a call to this method is done with
+             * Variable used in case a call to this method is done with
              * more than one transaction in the incomingString
              */
-            ArrayList<String> restTransactions = new ArrayList<String>();
+            ArrayList<String> txRest = new ArrayList<String>();
             while (!complete
-                && (toParse.length() >= 10 || restTransactions.size() != 0))
+                && (toParse.length() >= 10 || txRest.size() != 0))
             {
                 /*
                  * Transaction trim mechanism: (used to deal with the receipt of
@@ -994,180 +1005,104 @@ class Connection extends Observable implements Runnable
                  * every transaction back to the toParse string for it to be
                  * dealt with
                  */
-                if (restTransactions.size() > 0)
+                if (txRest.size() > 0)
                 {
-                    toParse = toParse.concat(restTransactions.get(0));
-                    restTransactions.remove(0);
+                    toParse = toParse.concat(txRest.get(0));
+                    txRest.remove(0);
                 }
-                if (restTransactions.size() > 1)
+                if (txRest.size() > 1)
                     throw new RuntimeException(
-                        "Error! the restTransactions was never meant "
+                    		"restTransactions were never meant "
                             + "to have more than one element!");
-
                 /* end Transaction trim mechanism. */
 
                 if (!receivingTransaction)
                 {
-                    // Find the MSRP start of the transaction stamp
+                    Matcher matchRequest = startRequest.matcher(toParse);
+                    Matcher matchResponse = startResponse.matcher(toParse);
 
-                    // the TID has to be at least 64bits long = 8chars
-                    // given as a reasonable limit of 20 for the transaction id
-                    // although non normative
-                    // also the method name will have the same 20 limit and has
-                    // to
-                    // be a Upper
-                    // case word like SEND
-                    Pattern startTransactionRequest =
-                        Pattern.compile(
-                                "(^MSRP) ([\\p{Alnum}]{8,20}) ([\\p{Upper}]{1,20})\r\n(.*)",
-                                Pattern.DOTALL);
-                    Pattern startTransactionResponse =
-                        Pattern.compile(
-                                "(^MSRP) ([\\p{Alnum}]{8,20}) ((\\d{3})([^\r\n]*)\r\n)(.*)",
-                                Pattern.DOTALL);
-                    Matcher matcherTransactionResponse =
-                        startTransactionResponse.matcher(toParse);
-
-                    // zero tolerance - If such pattern is not found,
-                    // make actions to drop the connection as this is an invalid
-                    // session
-                    Matcher matcherTransactionRequest =
-                        startTransactionRequest.matcher(toParse);
-                    if (matcherTransactionRequest.matches())
+                    if (matchRequest.matches())
                     {
+                        // Retrieve TID and create new transaction
                         receivingTransaction = true;
-                        // Retrieve the TID and create a new transaction
-                        // Transaction newTransaction = new
-                        // Transaction(matcherTransaction
-                        // .group(2),matcherTransaction.group(2));
-                        tID = matcherTransactionRequest.group(2);
-                        logger
-                            .debug("Recognised transaction request ["
-                                + tID + "]");
-                        TransactionType newTransactionType;
+                        tID = matchRequest.group(2);
+                        toParse = matchRequest.group(4);
+                        String type = matchRequest.group(3).toUpperCase();
+                        TransactionType newType;
                         try
                         {
-                            newTransactionType =
-                                TransactionType
-                                    .valueOf(matcherTransactionRequest.group(3)
-                                        .toUpperCase());
-                            logger.debug("Tx-" + matcherTransactionRequest.group(3)
-                            			+ "[" + tID + "]");
+                            newType = TransactionType.valueOf(type);
+                            logger.debug("Tx-" + newType + "[" + tID + "]");
                         }
-                        catch (IllegalArgumentException argExcptn)
+                        catch (IllegalArgumentException iae)
                         {
-                            // Then we have ourselves an unsupported method
-                            // create an unsupported transaction and signalize
-                            // it
-                            logger.warn("Unsupported type of transaction: Tx-"
-                        			+ matcherTransactionRequest.group(3)
-                        			+ "[" + tID + "]");
-                            newTransactionType = TransactionType.UNSUPPORTED;
+                            newType = TransactionType.UNSUPPORTED;
+                            logger.warn("Unsupported transaction type: Tx-"
+                        			+ type + "[" + tID + "]");
                         }
-
                         try
                         {
-                            incomingTransaction =
-                                new Transaction(tID, newTransactionType,
-                                    transactionManager, Transaction.IN);
+                            incomingTransaction = new Transaction(tID, newType,
+                            				transactionManager, Transaction.IN);
                         }
                         catch (IllegalUseException e)
                         {
-                            logger.error("Implementation error creating "
-                                + "an incoming transaction", e);
+                            logger.error("Cannot create an incoming transaction", e);
                         }
-
-                        if (newTransactionType == TransactionType.UNSUPPORTED)
+                        if (newType == TransactionType.UNSUPPORTED)
                         {
                             incomingTransaction.signalizeEnd('$');
                             logger
-                                .warn("Found an unsupported type of transaction, tID: "
+                                .warn("Found an unsupported transaction type for["
                                     + tID
-                                    + " signalized the end of it and called the update");
+                                    + "] signalised end and called update");
                             setChanged();
-                            notifyObservers(newTransactionType);
+                            notifyObservers(newType);
                         }
-
-                        // extract the start of transaction line
-                        toParse = matcherTransactionRequest.group(4);
                         complete = false;
 
-                    }// if (matcherTransactionRequest.matches())
-                    else if (matcherTransactionResponse.matches())
+                    }
+                    else if (matchResponse.matches())
                     {
                         receivingTransaction = true;
-                        /*
-                         * TODO properly log logit // Encountered a response
-                         * logger.info("response encountered MSRP:" +
-                         * matcherTransactionResponse.group(1) + ":MSRP");
-                         * l("tID:" + matcherTransactionResponse.group(2) +
-                         * ":tID"); IOInterface.debugln("group3:" +
-                         * matcherTransactionResponse.group(3) + ":group3");
-                         * IOInterface.debugln("group4:" +
-                         * matcherTransactionResponse.group(4) + ":group4");
-                         * IOInterface.debugln("group5:" +
-                         * matcherTransactionResponse.group(5) + ":group5");
-                         * IOInterface.debugln("group6:" +
-                         * matcherTransactionResponse.group(6) + ":group6");
-                         */
+                        tID = matchResponse.group(2);
+                        int status = Integer.parseInt(matchResponse.group(4));
+                        String comment = matchResponse.group(5);
+                        if (matchResponse.group(6) != null)
+                            toParse = matchResponse.group(6);
 
-                        tID = matcherTransactionResponse.group(2);
                         incomingTransaction =
                             transactionManager.getTransaction(tID);
                         if (incomingTransaction == null)
                         {
-                            logger
-                                .error("ERROR! received response for an unfound transaction");
+                            logger.error("Received response for unknown transaction");
                         }
-
                         // Has to encounter the end of the transaction as well
-                        // (not
-                        // sure this is true)
+                        // (not sure this is true)
 
-                        logger.debug("Found a response to transaction: " + tID);
+                        logger.debug("Found response to transaction: " + tID);
                         try
                         {
                             Transaction trResponse =
                                 new TransactionResponse(incomingTransaction,
-                                    Integer.parseInt(matcherTransactionResponse
-                                        .group(4)), Transaction.IN);
+                                			status, comment, Transaction.IN);
                             incomingTransaction = trResponse;
-                        }
-                        catch (NumberFormatException e)
-                        {
-                            throw new ConnectionParserException(
-                                "Creating transaction response", e);
                         }
                         catch (IllegalUseException e)
                         {
                             throw new ConnectionParserException(
-                                "Creating transaction response", e);
+                                "Cannot create transaction response", e);
                         }
-
-                        // transactionManager.gotResponse(foundTransaction,
-                        // matcherTransactionResponse.group(4));
-                        if (matcherTransactionResponse.group(6) != null)
-                        {
-                            toParse = matcherTransactionResponse.group(6);
-                        }
-
                     }
                     else
                     {
-                        // TODO alter the class of the Exception, get a more
-                        // complete exceptions infrastructure?!
-                        // TODO receive the exception by the connection and
-                        // treat it
-                        // accordingly
-                        logger
-                            .error("Start of transaction not found, parsing: "
+                        logger.error("Start of transaction not found while parsing: "
                                 + toParse.substring(0, toParse.length() > 80 ? 80 : toParse.length()));
                         throw new ConnectionParserException(
                             "Error, start of the transaction not found on thread: "
-                                + Thread.currentThread().getName());
+                            + Thread.currentThread().getName());
                     }
-
-                }// if (!receivingTransaction)
+                }
                 if (receivingTransaction)
                 {
                     /*
@@ -1183,33 +1118,24 @@ class Connection extends Observable implements Runnable
                     Pattern endTransaction;
                     tID = incomingTransaction.getTID();
                     endTransaction =
-                        Pattern.compile("(.*)(-------" + tID
-                            + ")([$+#])(\r\n)(.*)?", Pattern.DOTALL);
+                        Pattern.compile(
+                        		"(.*)(-------" + tID + ")([$+#])(\r\n)(.*)?",
+                        		Pattern.DOTALL);
                     Matcher matchEndTransaction =
                         endTransaction.matcher(toParse);
                     if (matchEndTransaction.matches())
                     {
-                        logger
-                            .trace("found the end of the transaction: " + tID);
-                        /*
-                         * add all of the transaction, including the endline in
-                         * the to parse and leave any eventual remaining
-                         * transactions
-                         */
-                        toParse =
-                            matchEndTransaction.group(1)
+                        logger.trace("found end of transaction: " + tID);
+                        toParse = matchEndTransaction.group(1)
                                 + matchEndTransaction.group(2)
                                 + matchEndTransaction.group(3)
                                 + matchEndTransaction.group(4);
                         /*
-                         * if we have remaining data, we add it to the
-                         * restTransactions
+                         * add any remaining data to restTransactions
                          */
-                        if (matchEndTransaction.group(5) != null
-                            && !matchEndTransaction.group(5).equalsIgnoreCase(
-                                ""))
-                            restTransactions.add(matchEndTransaction.group(5));
-
+                        if (matchEndTransaction.group(5) != null &&
+                    		!matchEndTransaction.group(5).equalsIgnoreCase( ""))
+                            txRest.add(matchEndTransaction.group(5));
                     }
                     /*
                      * End of transaction trim mechanism
@@ -1255,7 +1181,7 @@ class Connection extends Observable implements Runnable
                     if (matchEndTransaction.matches())
                     {
                         /*
-                         * log properly log all of the parts of the regex match:
+                         * log all of the parts of the regex match:
                          */
                         String endTransactionLogDetails =
                             "Found the end of transaction tID:" + tID
@@ -1287,13 +1213,12 @@ class Connection extends Observable implements Runnable
                         try
                         {
                             incomingTransaction.parse(matchEndTransaction
-                                .group(1).getBytes(TextUtils.usascii), 0,
+                                .group(1).getBytes(TextUtils.utf8), 0,
                                 matchEndTransaction.group(1).length(),
                                 receivingBodyData);
                         }
                         catch (Exception e)
                         {
-                            // TODO log it
                             e.printStackTrace();
                         }
                         if (incomingTransaction.hasContentStuff)
@@ -1324,18 +1249,15 @@ class Connection extends Observable implements Runnable
                         {
                             if (restData != null)
                                 toParse = restData;
-                            if (restTransactions.size() == 0)
-                                // then we have nothing more to analyze
+                            if (txRest.size() == 0)
                                 complete = true;
                         }
                     }
                     else
                     {
                         // we trim the toParse so that we don't abruptly cut an
-                        // end
-                        // of transaction
-                        // we save the characters that we trimmed to be analyzed
-                        // next
+                        // end of transaction we save the characters that
+                    	// we trimmed to be analyzed next
                         int j;
                         char[] toSave;
                         // we get the possible beginning of the trim characters
@@ -1351,13 +1273,11 @@ class Connection extends Observable implements Runnable
                             if (i < startOfDataMark)
                                 i = -1;
 
-                        for (j = 0, toSave = new char[toParse.length() - i]; i < toParse
-                            .length(); i++, j++)
+                        for (j = 0, toSave = new char[toParse.length() - i];
+                        		i < toParse.length(); i++, j++)
                         {
                             if (i == -1 || i == toParse.length())
-                            {
                                 break;
-                            }
 
                             toSave[j] = toParse.charAt(i);
                         }
@@ -1382,52 +1302,41 @@ class Connection extends Observable implements Runnable
                         String toSaveString = new String(toSave);
 
                         // toSaveString = "\n--r";
-
                         matchEndTransaction =
                             endTransactionTrim.matcher(toSaveString);
 
                         if (matchEndTransaction.matches())
                         {
                             // if we indeed have end of transaction characters
-                            // in
-                            // the end of the data
-                            // we add them to the string that will be analyzed
-                            // next
+                            // in the end of the data we add them to the
+                        	// string that will be analyzed next
                             remainderReceive =
                                 remainderReceive.concat(toSaveString);
 
-                            logger
-                                .trace("trimming end of transaction characters, before was parsing: "
-                                    + toParse);
+                            logger.trace("trimming end of transaction, before: "
+                                    	+ toParse);
                             // trimming of the data to parse
                             toParse =
                                 toParse.substring(0, toParse.lastIndexOf('\r'));
-                            logger
-                                .trace("trimming end of transaction characters, now is parsing: "
-                                    + toParse);
-
+                            logger.trace("trimming end of transaction, after: "
+                            			+ toParse);
                         }
                         try
                         {
                             incomingTransaction.parse(
-                                toParse.getBytes(TextUtils.usascii), 0, toParse.length(),
+                                toParse.getBytes(TextUtils.utf8), 0, toParse.length(),
                                 receivingBodyData);
                         }
                         catch (Exception e)
                         {
-                            // log it
-                            logger
-                                .error(
-                                    "Got an exception while parsing data to a transaction",
-                                    e);
-                            e.printStackTrace();
+                            logger.error(
+	                            "Got an exception while parsing data to a transaction",
+	                            e);
                         }
-                        if (restTransactions.size() == 0)
+                        if (txRest.size() == 0)
                             complete = true;
-
                     }
-                }// if (receivingTransaction)
-
+                }
             }
         }
     }
@@ -1467,7 +1376,6 @@ class Connection extends Observable implements Runnable
             new ThreadGroup(connectionsInstance.getConnectionsGroup(),
                 "IO OP connection " + uri.toString() + " group");
         connectionsInstance.startConnectionThread(this, ioOperationGroup);
-
     }
 
     /**

@@ -675,15 +675,15 @@ public class Transaction
                                 + tID + "], nr of bytes=" + byteData.length);
                             if (byteData.length > 0)
                             {
-                                bodyByteBuffer.put(byteData);
-                                realChunkSize += byteData.length;
-                                i += byteData.length;
+                            	if (bodyByteBuffer == null)
+                                    bodyByteBuffer = ByteBuffer.wrap(byteData);
+                            	else
+                            	{
+		                            bodyByteBuffer.put(byteData);
+		                            realChunkSize += byteData.length;
+		                            i += byteData.length;
+                            	}
                             }
-                            else if (bodyByteBuffer == null)
-                            {
-                                bodyByteBuffer = ByteBuffer.wrap(byteData);
-                            }
-
                         }
                     }
                     catch (Exception e)
@@ -791,12 +791,13 @@ public class Transaction
                         incByteBuffer.get(byteData);
                         if (byteData.length > 0)
                         {
-                            bodyByteBuffer.put(byteData);
-                            realChunkSize += byteData.length;
-                        }
-                        else if (bodyByteBuffer == null)
-                        {
-                            bodyByteBuffer = ByteBuffer.wrap(byteData);
+                        	if (bodyByteBuffer == null)
+                                bodyByteBuffer = ByteBuffer.wrap(byteData);
+                        	else
+                        	{
+	                            bodyByteBuffer.put(byteData);
+	                            realChunkSize += byteData.length;
+                        	}
                         }
                     }
                 }
@@ -1059,7 +1060,6 @@ public class Transaction
         int spaceRemainingOnBuffer = outData.length - offset;
         while ((bytesCopied < spaceRemainingOnBuffer) && !stopCopying)
         {
-
             if (offset > (outData.length - 1))
                 throw new IndexOutOfBoundsException();
 
@@ -1094,7 +1094,6 @@ public class Transaction
                 && (offsetRead[HEADERINDEX] >= headerBytes.length))
                 stopCopying = true;
         }
-
         return bytesCopied;
     }
 
@@ -1205,7 +1204,6 @@ public class Transaction
     protected boolean isValid()
     {
         return validTransaction;
-
     }
 
     protected String getContentType()
@@ -1221,7 +1219,6 @@ public class Transaction
     protected int getNrBodyBytes()
     {
         return realChunkSize;
-
     }
 
     /**
@@ -1328,13 +1325,11 @@ public class Transaction
         if (!hasContentStuff)
             throw new IllegalUseException("Trying to rewind an empty "
                 + "transaction");
-
         /*
          * rewinds the given nr of positions the data container
          */
         DataContainer dataContainer = message.getDataContainer();
         dataContainer.rewindRead(numberPositionsToRewind);
-
     }
 
     /**
@@ -1404,17 +1399,12 @@ public class Transaction
             }
             catch (Exception e)
             {
-
                 // TODO log it
                 throw new InternalErrorException(e);
             }
-
             return auxByteBuffer.array();
-
         }
-
         return null;
-
     }
 
     /**
@@ -1481,11 +1471,9 @@ public class Transaction
             headerBuffer.append(toAdd);
     }
 
-    // TODO support the rest of the headers that could be present,
-	// even in a response (although not commonplace)
     private static Pattern endOfHeaderWithoutContent =
             Pattern.compile(
-                "^To-Path: .{7,}\r\nFrom-Path: .{7,}\r\n", Pattern.DOTALL);
+                "^To-Path: .{10,}\r\nFrom-Path: .{10,}\r\n", Pattern.DOTALL);
 
     private static Pattern endOfHeaderWithContent =
             Pattern.compile(".*(\r\n){2}.*", Pattern.DOTALL);
@@ -1542,21 +1530,18 @@ public class Transaction
      * to validate the headers and to generate the needed responses ASAP. (It
      * also permits one to start receiving the body already knowing which
      * session it belongs, besides also generating the responses alot sooner)
-     * 
-     * TODO FIXME revise comments
      */
-
     private void proccessHeader()
     {
         /*
          * if this is a test (the connection of the TransactionManager is null)
-         * then skip this step! (THIS IS ONLY HERE FOR DEBUG PURPOSES) FIXME
-         * Ideally we would have a mock connection!! TODO (?!)
+         * then skip this step! (THIS IS ONLY HERE FOR DEBUG PURPOSES)
+         * FIXME: Ideally we would have a mock connection!!
          */
         if (transactionManager.getConnection() == null)
         {
             logger.debug("DEBUG MODE this line should only"
-                + "appear if the transaction is a dummy one!");
+                + " appear if the transaction is a dummy one!");
             return;
         }
 
@@ -1610,27 +1595,18 @@ public class Transaction
                  * response) - or this session doesn't exist at all (give a 481
                  * response)
                  */
+            	int rspCode;
                 if (instanceStack.isActive((getToPath())[0]))
+                	rspCode = 506;
+            	else
+            		rspCode = 481;
+                try
                 {
-                    try
-                    {
-                        transactionManager.generateResponse(this, 506, null);
-                    }
-                    catch (IllegalUseException e)
-                    {
-                        logger.error("Generating 506 response", e);
-                    }
+                    transactionManager.generateResponse(this, rspCode, null);
                 }
-                else
+                catch (IllegalUseException e)
                 {
-                    try
-                    {
-                        transactionManager.generateResponse(this, 481, null);
-                    }
-                    catch (IllegalUseException e)
-                    {
-                        logger.error("Generating 481 response", e);
-                    }
+                    logger.error("Generating " + rspCode + " response", e);
                 }
             }
             else
@@ -1813,280 +1789,162 @@ public class Transaction
         }
     }
 
+    private static Pattern asciiPattern = Pattern.compile("\\p{ASCII}+");
+
+    private static Pattern headers = Pattern.compile(
+                    "(^To-Path:) (.{10,})(\r\n)(From-Path:) (.{10,})(\r\n)(\\p{ASCII}*)",
+                    Pattern.CASE_INSENSITIVE);
+
+    private static Pattern messageIDPattern = Pattern.compile(
+                    "(.*)(Message-ID:) ((\\p{Alnum}|\\.|\\-|\\+|\\%|\\=){3,31})(\r\n)(.*)",
+                    Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+
+    private static Pattern byteRangePattern = Pattern.compile(
+                    "(.*)(Byte-Range:) (\\p{Digit}+)-(\\p{Digit}+|\\*)/(\\p{Digit}+|\\*)(\r\n)(.*)",
+                    Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+
+    private static Pattern contentTypePattern = Pattern.compile(
+                    "(.*)(Content-Type:) ([^/]{1,30}/[^;]{1,30})(;.*)?\r\n(.*)",
+                    Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+
+    private static Pattern fReportPattern = Pattern.compile(
+	                "(.*)(Failure-Report:) ([^\r\n]*)(\r\n)(.*)",
+	                Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+
+    private static Pattern sReportPattern = Pattern.compile(
+		    		"(.*)(Success-Report:) ([^\r\n]*)(\r\n)(.*)",
+		            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+
+    private static Pattern statusPattern = Pattern.compile(
+	                "(.*)(Status:) (\\p{Digit}{3}) (\\p{Digit}{3})([^\r\n]*)\r\n(.*)",
+	                Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+
     /**
-     * will recognize the header stored on headerBuffer initializing all of the
-     * variables related to the header and checking for some violations of the
+     * will recognize the headers stored on headerBuffer initializing all of the
+     * variables related to the header and checking for violations of the
      * protocol
      * 
      * @throws InvalidHeaderException if it's found that the header is invalid
      *             for some reason
-     * 
      */
     private void recognizeHeader() throws InvalidHeaderException
     {
-        // (msrps|MSRPS|msrp|MSRP){1}://((\d){3}\.(\d){3}
-        // the header should start with the To-Path containing one URI, going to
-        // extract it:
+    	Matcher matcher;
 
-        // If the characters aren't all ascii send an invalid header
-        /*
-         * To note, all of the "" in the formal syntax of the ABNF is compared
-         * case insensitive, hence all the patterns here should have it (See rfc
-         * 4975 and rfc 4234)
-         */
-        Pattern asciiPattern = Pattern.compile("\\p{ASCII}+");
-        Matcher asciiMatcher = asciiPattern.matcher(headerBuffer);
-        if (!asciiMatcher.matches())
+    	// If the characters aren't all ascii send an invalid header
+        matcher = asciiPattern.matcher(headerBuffer);
+        if (!matcher.matches())
             throw new InvalidHeaderException(
                 "Error, non-ascii characters contained in the header");
 
-        // TODO support multiple From-Path URIs
-        Pattern generalTransactionFields =
-            Pattern.compile(
-                    "(^To-Path:) (.{7,120})(\r\n)(From-Path:) (.{7,})(\r\n)(\\p{ASCII}*)",
-                    Pattern.CASE_INSENSITIVE);
-        Matcher toAndFromMatcher =
-            generalTransactionFields.matcher(headerBuffer);
-        if (!toAndFromMatcher.matches())
+        // headers = To-Path CRLF From-Path CRLF 1*( header CRLF )
+        matcher = headers.matcher(headerBuffer);
+        if (!matcher.matches())
         {
             throw new InvalidHeaderException(
-                "Error, transaction doesn't have a valid to-path and "
-                    + "from-path headers. Transaction of type: "
-                    + transactionType + " headerBuffer content: "
-                    + headerBuffer);
+                "Transaction doesn't have valid to/from-path headers."
+                    + " Transaction: " + transactionType
+                    + " headerBuffer: " + headerBuffer);
         }
-        /*
-         * TODO log it properly: IOInterface.debugln("Group:" +
-         * toAndFromMatcher.group(1) + ":Groupend");
-         * IOInterface.debugln("Group:" + toAndFromMatcher.group(2) +
-         * ":Groupend"); IOInterface.debugln("Group:" +
-         * toAndFromMatcher.group(3) + ":Groupend");
-         * IOInterface.debugln("Group:" + toAndFromMatcher.group(4) +
-         * ":Groupend"); IOInterface.debugln("Group:" +
-         * toAndFromMatcher.group(5) + ":Groupend");
-         * IOInterface.debugln("Group:" + toAndFromMatcher.group(6) +
-         * ":Groupend"); IOInterface.debugln("Group:" +
-         * toAndFromMatcher.group(7) + ":Groupend");
-         */
-        String yetToBeParsed = toAndFromMatcher.group(7);
-        URI[] newToPath = new URI[1];
         try
         {
-            newToPath[0] = URI.create(toAndFromMatcher.group(2));
-            setToPath(newToPath);
+            String[] toPaths = matcher.group(2).split(" +");
+            URI[] toPath = new URI[toPaths.length];
+            int i =0;
+            for (String path : toPaths) {
+            	toPath[i] = URI.create(path);
+            	i++;
+            }
+            setToPath(toPath);
         }
         catch (Exception e)
         {
-            throw new InvalidHeaderException(
-                "Problems parsing the to-path URI", e);
+            throw new InvalidHeaderException("Problem parsing to-path(s)", e);
         }
         try
         {
-            // TODO support multiple From-Path URIs
-            URI[] fromPath = new URI[1];
-            logger.trace("Recognized FromURI:" + toAndFromMatcher.group(5)
-                + ":FromURI");
-            fromPath[0] = URI.create(toAndFromMatcher.group(5));
+            String[] fromPaths = matcher.group(5).split(" +");
+            URI[] fromPath = new URI[fromPaths.length];
+            int i = 0;
+            for (String path : fromPaths) {
+            	fromPath[i] = URI.create(path);
+            	i++;
+            }
             setFromPath(fromPath);
         }
         catch (Exception e)
         {
-            throw new InvalidHeaderException(
-                "Problems parsing the from-path URI(s)", e);
+            throw new InvalidHeaderException("Problem parsing from-path(s)", e);
         }
-        // If we are receiving a response the processing ends here:
+        // If we are receiving a response the processing ends here
         if (isIncomingResponse())
             return;
-        // Method specific headers:
-        switch (transactionType)
+        switch (transactionType)		// Method specific headers
         {
         case REPORT:
         case SEND:
             /* Message-ID processing: */
-            Pattern messageIDPattern =
-                Pattern.compile(
-                        "(.*)(Message-ID:) ((\\p{Alnum}|\\.|\\-|\\+|\\%|\\=){3,31})(\r\n)(.*)",
-                        Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-            Matcher messageIDMatcher = messageIDPattern.matcher(yetToBeParsed);
-            if (messageIDMatcher.matches())
+            matcher = messageIDPattern.matcher(headerBuffer);
+            if (matcher.matches())
             {
                 // TODO get the corresponding message from the messageID or
                 // create a new one
-                messageID = messageIDMatcher.group(3);
-                yetToBeParsed =
-                    (new String()).concat(messageIDMatcher.group(1));
-                yetToBeParsed = yetToBeParsed.concat(messageIDMatcher.group(6));
+                messageID = matcher.group(3);
             }
             else
-            {
-                throw new InvalidHeaderException("Error, messageID not found");
-            }
+                throw new InvalidHeaderException("MessageID not found");
 
             /* Byte-Range processing: */
-            Pattern byteRangePattern =
-                Pattern.compile(
-                        "(.*)(Byte-Range:) (\\p{Digit}+)-(\\p{Digit}+|\\*)/(\\p{Digit}+|\\*)(\r\n)(.*)",
-                        Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-            Matcher byteRangeMatcher = byteRangePattern.matcher(yetToBeParsed);
-            if (byteRangeMatcher.matches())
+            matcher = byteRangePattern.matcher(headerBuffer);
+            if (matcher.matches())
             {
-                try
-                {
-                    byteRange[0] = Integer.parseInt(byteRangeMatcher.group(3));
-                    if (byteRangeMatcher.group(4).contentEquals("*"))
-                    {
-                        byteRange[1] = UNKNOWN;
-                    }
-                    else
-                    {
-                        byteRange[1] =
-                            Integer.parseInt(byteRangeMatcher.group(4));
-                    }
-                    if (byteRangeMatcher.group(5).contentEquals("*"))
-                    {
-                        totalMessageBytes = UNKNOWN;
-                    }
-                    else
-                    {
-                        totalMessageBytes =
-                            Integer.parseInt(byteRangeMatcher.group(5));
-                    }
-                }
-                catch (NumberFormatException e)
-                {
-                    throw new InvalidHeaderException(
-                        "Error, erroneously parsed part of the Byte-Range field as an INT",
-                        e);
-                }
+                byteRange[0] = Integer.parseInt(matcher.group(3));
+                if (matcher.group(4).equals("*"))
+                    byteRange[1] = UNKNOWN;
+                else
+                    byteRange[1] = Integer.parseInt(matcher.group(4));
+                if (matcher.group(5).equals("*"))
+                    totalMessageBytes = UNKNOWN;
+                else
+                    totalMessageBytes = Integer.parseInt(matcher.group(5));
             }
+            matcher = contentTypePattern.matcher(headerBuffer);
+            if (matcher.matches())
+                this.contentType = matcher.group(3);
 
-            /* Content-Type processing: */
-            // TODO change this pattern in order to match the one in the Formal
-            // Syntax that is a more complex one
-            // due to the possible existence of sub-types
-            // to note token on MSRP RFC equals any of the following characters:
-            // !#$%&'*+-.[0-9][A-Z][^-~]
-            // Pattern contentTypePattern = Pattern.compile(
-            // "(.*)(Content-Type:) (([!#$%&'*+\\-.][0-9][A-Z][^-~]){1,30}/([!#$%&'*+-.][0-9][A-Z][^-~]){1,30})(\r\n)(.*)"
-            // , Pattern.DOTALL);
-            Pattern contentTypePattern =
-                Pattern.compile(
-                        "(.*)(Content-Type:) ([^/]{1,30}/[^;]{1,30})(;.*)?\r\n(.*)",
-                        Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-            Matcher contentTypeMatcher =
-                contentTypePattern.matcher(yetToBeParsed);
-            if (contentTypeMatcher.matches())
+            /* Report processing: */
+            matcher = fReportPattern.matcher(headerBuffer);
+            if (matcher.matches())
             {
-                /*
-                 * TODO log it properly: IOInterface.debugln("Group:" +
-                 * contentTypeMatcher.group(1) + ":Groupend");
-                 * IOInterface.debugln("Group:" + contentTypeMatcher.group(2) +
-                 * ":Groupend"); IOInterface.debugln("Group:" +
-                 * contentTypeMatcher.group(3) + ":Groupend");
-                 * IOInterface.debugln("Group:" + contentTypeMatcher.group(4) +
-                 * ":Groupend"); IOInterface.debugln("Group:" +
-                 * contentTypeMatcher.group(5) + ":Groupend");
-                 */
-                this.contentType = contentTypeMatcher.group(3);
+            	String value = matcher.group(3).trim().toLowerCase();
+            	if (value.matches("yes|no|partial"))
+            		failureReport = value;
+            	else
+	                logger.warn("Failure-Report invalid value found: " + value);
             }
-
-            /* Failure-Report processing: */
-
-            Pattern failureReportErrorPattern =
-                Pattern.compile("(.*)(Failure-Report:)(.*)", Pattern.DOTALL
-                    | Pattern.CASE_INSENSITIVE);
-            Pattern failureReportPattern =
-                Pattern.compile(
-                    "(.*)(Failure-Report: )(yes|no|partial){1}(\r\n)(.*)",
-                    Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-            Matcher failureReportErrorMatcher =
-                failureReportErrorPattern.matcher(yetToBeParsed);
-            Matcher failureReportMatcher =
-                failureReportPattern.matcher(yetToBeParsed);
-            if (failureReportMatcher.matches())
+            matcher = sReportPattern.matcher(headerBuffer);
+            if (matcher.matches())
             {
-                // We found ourselves a valid header field
-                failureReport = failureReportMatcher.group(3);
-                yetToBeParsed =
-                    failureReportMatcher.group(1).concat(
-                        failureReportMatcher.group(5));
+            	String value = matcher.group(3).trim().toLowerCase();
+            	if (value.equals("yes"))
+            			successReport = true;
+            	else if (value.equals("no"))
+            			successReport = false;
+            	else
+	                logger.warn("Success-Report invalid value found: " + value);
             }
-            else if (failureReportErrorMatcher.matches())
-            {
-                /* we might have found an invalid syntax failure report field */
-                throw new InvalidHeaderException("Processing "
-                    + "Failure-Report failed");
-            }
-
-            /* Success-Report processing: */
-            Pattern successReportPattern =
-                Pattern.compile("(.*)(Success-Report: )(yes|no){1}(\r\n)(.*)",
-                    Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-            Matcher successReportMatcher =
-                successReportPattern.matcher(yetToBeParsed);
-
-            Pattern successReportErrorPattern =
-                Pattern.compile("(.*)(Success-Report:)(.*)", Pattern.DOTALL
-                    | Pattern.CASE_INSENSITIVE);
-            Matcher successReportErrorMatcher =
-                successReportErrorPattern.matcher(yetToBeParsed);
-            if (successReportMatcher.matches())
-            {
-                // We found ourselves a valid header field
-                try
-                {
-                    successReport =
-                        parserSuccessReport(successReportMatcher.group(3));
-                }
-                catch (ProtocolViolationException e)
-                {
-                    logger.error("got a parser exception!", e);
-
-                }
-                yetToBeParsed =
-                    successReportMatcher.group(1).concat(
-                        successReportMatcher.group(5));
-            }
-            else if (successReportErrorMatcher.matches())
-            {
-                /* we might have found an invalid syntax success report field */
-                throw new InvalidHeaderException("Processing "
-                    + "Success-Report failed");
-            }
-
             /* Report request specific headers: */
             if (transactionType == TransactionType.REPORT)
             {
                 /* 'Status:' processing */
-                Pattern statusHeaderPattern =
-                    Pattern.compile(
-                        "(.*)(Status:) (\\p{Digit}{3}) (\\p{Digit}{3})([^\r\n]*)\r\n(.*)",
-                        Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-                Pattern statusHeaderErrorPattern =
-                    Pattern.compile("(.*)(Status:)(.*)", Pattern.DOTALL
-                        | Pattern.CASE_INSENSITIVE);
-                Matcher statusHeaderMatcher =
-                    statusHeaderPattern.matcher(yetToBeParsed);
-                Matcher statusHeaderErrorMatcher =
-                    statusHeaderErrorPattern.matcher(yetToBeParsed);
-
-                if (statusHeaderMatcher.matches())
+                matcher = statusPattern.matcher(headerBuffer);
+                if (matcher.matches())
                 {
-                    String namespace = statusHeaderMatcher.group(3);
-                    String statusCode = statusHeaderMatcher.group(4);
-                    String comment = null;
+                    String namespace = matcher.group(3);
+                    String statusCode = matcher.group(4);
+                    String comment = matcher.group(5);
                     statusHeader =
                         new StatusHeader(namespace, statusCode, comment);
-                    yetToBeParsed =
-                        statusHeaderMatcher.group(1).concat(
-                            statusHeaderMatcher.group(6));
-
-                }
-                else if (statusHeaderErrorMatcher.matches())
-                {
-                    /* we might have found an invalid syntax status header field */
-                    throw new InvalidHeaderException("Processing "
-                        + "Status failed");
                 }
             }
             break;
@@ -2094,18 +1952,6 @@ public class Transaction
             // TODO
             break;
         }
-    }
-
-    private boolean parserSuccessReport(String successReportValue)
-        throws ProtocolViolationException
-    {
-        if (successReportValue.equalsIgnoreCase("yes"))
-            return true;
-        if (successReportValue.equalsIgnoreCase("no"))
-            return false;
-        throw new ProtocolViolationException(
-            "invalid value of success report header field, received: "
-                + successReportValue + " on transaction: " + this.tID);
     }
 
     /**

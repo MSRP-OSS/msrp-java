@@ -85,9 +85,9 @@ public class ReportTransaction
         URI[] toPathURIs = transaction.getFromPath();
         for (int i = 0; i < toPathURIs.length; i++)
         {
-            header.append(" ").append(toPathURIs[i].toString());
+            header.append(" ").append(toPathURIs[i]);
         }
-        header	.append("\r\nFrom-Path: ").append(message.getSession().getURI().toString())
+        header	.append("\r\nFrom-Path: ").append(message.getSession().getURI())
         		.append("\r\nMessage-ID: ").append(message.getMessageID());
 
         long totalBytes = transaction.getTotalMessageBytes();

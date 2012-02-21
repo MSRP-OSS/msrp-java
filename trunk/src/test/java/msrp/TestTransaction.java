@@ -74,7 +74,7 @@ public class TestTransaction
 
         emptyInvalidHeaderCompleteSendTransaction =
             ("To-Path: msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
-                + "From-Path: msrp://192.168.2.3:1324/123asd;tcp\r\n"
+                + "From-Path: msrp://192.168.2.3:1324/123asd;tcp msrp://from.a.logn.way.away/haha;tcp\r\n"
                 + "Message-ID: 12345\r\n" + "Byte-Range: 1-0/0\r\n"
                 + "Failure-report: ygs\r\n" + "Success-report: no\r\n");
         instanceMT = new MiscTests();
@@ -91,7 +91,7 @@ public class TestTransaction
         }
         byte[] tid = new byte[8];
         TextUtils.generateRandom(tid);
-        tID = new String(tid, usascii);
+        tID = new String(tid, TextUtils.utf8);
 
         // TODO add support for the content-type in MSRP (?) [at least the
         // parsing should be done to be present on the message type]
@@ -102,7 +102,7 @@ public class TestTransaction
                 + "From-Path: msrp://192.168.2.3:1324/123asd;tcp\r\n"
                 + "Message-ID: 12346\r\n" + "Byte-Range: 1-30/30\r\n"
                 + "Content-Type: somethingTODO/notimportantATM\r\n" + "\r\n" + new String(
-                randomData, usascii));
+                randomData, TextUtils.utf8));
         dummyTransactionManager = new TransactionManager();
 
     }
@@ -116,7 +116,7 @@ public class TestTransaction
         Transaction newTransaction =
             new Transaction(tID, TransactionType.REPORT,
                 dummyTransactionManager, Transaction.IN);
-        newTransaction.parse(completeSendTransaction.getBytes(usascii), 0,
+        newTransaction.parse(completeSendTransaction.getBytes(TextUtils.utf8), 0,
             completeSendTransaction.length(), false);
         newTransaction.signalizeEnd('$');
 
@@ -133,45 +133,58 @@ public class TestTransaction
     }
 
     @Test
+    public void testParseBotchedHeader()
+        throws InvalidHeaderException,
+        ImplementationException, IllegalUseException, ConnectionParserException
+    {
+        Transaction tx =
+                new Transaction(tID, TransactionType.SEND,
+                    dummyTransactionManager, Transaction.IN);
+    	tx.parse(emptyInvalidHeaderCompleteSendTransaction.getBytes(TextUtils.utf8), 0,
+    			emptyInvalidHeaderCompleteSendTransaction.length(), false);
+		tx.signalizeEnd('$');
+		assertEquals(2, tx.getFromPath().length);
+		assertEquals("yes", tx.getFailureReport());
+    }
+
+    @Test
     public void testParsingEmptySendHeaders()
         throws InvalidHeaderException,
         ImplementationException, IllegalUseException, ConnectionParserException
     {
-        Transaction newTransaction =
+        Transaction tx =
             new Transaction(tID, TransactionType.REPORT,
                 dummyTransactionManager, Transaction.IN);
-        newTransaction.parse(emptyCompleteSendTransaction.getBytes(usascii), 0,
+        tx.parse(emptyCompleteSendTransaction.getBytes(TextUtils.utf8), 0,
             emptyCompleteSendTransaction.length(), false);
-        newTransaction.signalizeEnd('$');
+        tx.signalizeEnd('$');
 
         URI[] toPathExpected = new URI[1];
         toPathExpected[0] = URI.create("msrp://192.168.2.3:1234/asd23asd;tcp");
         assertArrayEquals("Problem encountered parsing the To-Path",
-            toPathExpected, newTransaction.getToPath());
+            toPathExpected, tx.getToPath());
 
         URI[] fromPathExpected = new URI[1];
         fromPathExpected[0] = URI.create("msrp://192.168.2.3:1324/123asd;tcp");
         assertArrayEquals("Problem encountered parsing the From-Path",
-            fromPathExpected, newTransaction.getFromPath());
+            fromPathExpected, tx.getFromPath());
 
         String msgIDExpected = "12345";
         assertEquals("Problem encountered parsing the Message-ID",
-            msgIDExpected, newTransaction.getMessageID());
+            msgIDExpected, tx.getMessageID());
 
         long[] expectedByteRange = new long[2];
         expectedByteRange[0] = 1;
         expectedByteRange[1] = 0;
-        System.out.println("Byterange[0]:" + newTransaction.getByteRange()[0]);
-        System.out.println("Byterange[1]:" + newTransaction.getByteRange()[1]);
         assertArrayEquals(
             "Problem encountered parsing the Byte-Range X-Y values (as in X-Y"
-                + "/Z", expectedByteRange, newTransaction.getByteRange());
+                + "/Z", expectedByteRange, tx.getByteRange());
 
         int expectedMessageTotalBytes = 0;
 
         assertEquals(
             "Problem encountered parsing the Byte-Range Z value (as in X-Y"
-                + "/Z", expectedMessageTotalBytes, newTransaction
+                + "/Z", expectedMessageTotalBytes, tx
                 .getTotalMessageBytes());
 
         String failureReportExpected = "yes";
@@ -180,38 +193,6 @@ public class TestTransaction
          * validates the string
          */
         assertEquals("Error parsing the failure report", failureReportExpected,
-            newTransaction.getFailureReport().toLowerCase());
-
+            tx.getFailureReport().toLowerCase());
     }
-
-    /*
-     * @Test(expected=msrp.exceptions.InvalidHeaderException.class) public void
-     * testInvalidHeaderFailureReport() throws InvalidHeaderException {
-     * 
-     * / Should throw an exception here:
-     * 
-     * Transaction newTransaction = new Transaction(tID, TransactionType.SEND);
-     * try { newTransaction.parse(emptyInvalidHeaderCompleteSendTransaction);
-     * newTransaction.sinalizeEnd('$'); fail("Exception not thrown!"); } catch
-     * (InvalidHeaderException e) {
-     * 
-     * } }
-     */
-
-    @Test
-    public void testParsingReportFields()
-    {
-
-        String emptyCompleteSendTransaction =
-            ("To-Path: msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
-                + "From-Path: msrp://192.168.2.3:1324/123asd;tcp\r\n"
-                + "Message-ID: 12345\r\n" + "Byte-Range: 1-0/0\r\n");
-        String completeSendTransactionFailureReport =
-            ("To-Path: msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
-                + "From-Path: msrp://192.168.2.3:1324/123asd;tcp\r\n"
-                + "Message-ID: 12346\r\n" + "Byte-Range: 1-30/30\r\n"
-                + "Content-Type: somethingTODO/notimportantATM\r\n" + "\r\n" + new String(
-                randomData, usascii));
-    }
-
 }
