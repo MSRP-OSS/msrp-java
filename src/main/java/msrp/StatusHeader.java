@@ -40,43 +40,21 @@ public class StatusHeader
      * @param namespace String representing the namespace defined in RFC4975
      * @param statusCode String representing the status-code as defined in
      *            RFC4975
-     * @param optionalComment String representing the comment as defined in
+     * @param comment String representing the comment as defined in
      *            RFC4975
      * @throws InvalidHeaderException if it was found any error with the parsing
      *             of this status header field
      */
-    protected StatusHeader(String namespace, String statusCode,
-        String optionalComment)
+    protected StatusHeader(String namespace, String statusCode, String comment)
         throws InvalidHeaderException
     {
-        // REMOVE(?!)
         /*
          * sanity checks, exceptions should never be thrown here due to the fact
          * that the strings are already filtered by the regexp pattern.
          */
-        try
-        {
-            this.statusCode = Integer.parseInt(statusCode);
-        }
-        catch (NumberFormatException e)
-        {
-            throw new InvalidHeaderException(
-                "The given status code is not recognizable as a digit: "
-                    + statusCode);
-        }
-
-        try
-        {
-            this.namespace = Integer.parseInt(namespace);
-        }
-        catch (NumberFormatException e)
-        {
-            throw new InvalidHeaderException(
-                "The given namespace is not recognizable as a digit: "
-                    + namespace);
-        }
-
-        this.comment = optionalComment;
+        this.statusCode = Integer.parseInt(statusCode);
+        this.namespace = Integer.parseInt(namespace);
+        this.comment = comment;
 
         /* Validate the status code */
         if (this.statusCode != 200 && this.statusCode != 400
@@ -86,20 +64,25 @@ public class StatusHeader
             && this.statusCode != 501 && this.statusCode != 506)
             throw new InvalidHeaderException("Error in Status header field, "
                 + "the given status code is not supported");
-        
+
         /* Validate the namespace */
         if (this.namespace != 000)
             throw new InvalidHeaderException("Error in Status header field, "
                 + "the given namespace is not supported");
-
     }
-    
-    public int getStatusCode() 
+
+    public int getStatusCode()
     {
         return statusCode;
     }
-    public int getNamespace() 
+
+    public int getNamespace()
     {
         return namespace;
+    }
+
+    public String getComment()
+    {
+        return comment;
     }
 }

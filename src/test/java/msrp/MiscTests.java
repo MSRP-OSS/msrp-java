@@ -36,7 +36,6 @@ import java.util.regex.Pattern;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
-import msrp.Transaction.*;
 import msrp.events.MessageAbortedEvent;
 import msrp.messages.IncomingMessage;
 import msrp.messages.Message;
@@ -104,14 +103,12 @@ public class MiscTests
                     System.out.println("Found out that: "
                         + local[i].getHostAddress() + " is equal to:"
                         + lUrl.getHost());
-
             }
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-
     }
 
     private static void testSocketChannelsAndTransactionID()
@@ -188,7 +185,6 @@ public class MiscTests
             byte[] teste = responseWithComment.getBytes(TextUtils.usascii);
             ByteBuffer outByteBuffer = ByteBuffer.wrap(teste);
             outgoing.write(outByteBuffer);
-
         }
         catch (IOException e)
         {
@@ -292,7 +288,6 @@ public class MiscTests
                 // do nothing
             }
         }
-
         URI newLocalURI =
             new URI("msrp", null, address.getHostAddress(), socket
                 .getLocalPort(), null, null, null);
@@ -458,7 +453,6 @@ public class MiscTests
     {
         System.out.println("Debug: on: " + session.toString()
             + " Received a response from a message!");
-
     }
 
     public void updateSendStatus(Session session, Message message,
@@ -468,7 +462,6 @@ public class MiscTests
             + " Received a status update for the message:"
             + message.getMessageID() + " with total nr bytes:"
             + totalNumberBytesSent);
-
     }
 
     /**
@@ -505,7 +498,6 @@ public class MiscTests
                 }
                 catch (IOException e)
                 {
-
                     // do nothing
                 }
             }
