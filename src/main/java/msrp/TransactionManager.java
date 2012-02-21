@@ -127,21 +127,18 @@ public class TransactionManager
      * generates and queues the response of the given transaction, taking into
      * account the Report header fields.
      * 
-     * 
      * @param transaction the transaction that we are responding to
      * @param responseCode the response code to respond with
-     * @param responseComment the optional string 'comment' as specified in rfc
-     *            4975 syntax
+     * @param comment the optional string 'comment' as specified in rfc 4975
      * 
      * @throws IllegalUseException if the arguments or their state is invalid
      */
     public void generateResponse(Transaction transaction, int responseCode,
-        String responseComment) throws IllegalUseException
+        String comment) throws IllegalUseException
     {
-
         logger.trace("Response being sent for Transaction tId: "
             + transaction.tID + " response code: " + responseCode);
-        String failureReport = transaction.getFailureReport();
+        String reportFlag = transaction.getFailureReport();
 
         if (responseCode != 200 && responseCode != 400 && responseCode != 403
             && responseCode != 408 && responseCode != 413
@@ -153,24 +150,21 @@ public class TransactionManager
         // that will be defined in RegexMSRPFactory
         // TODO generate the responses based on the success report field
 
-        // generate the responses based on the failure report field
-        if (failureReport == null || failureReport.equalsIgnoreCase("yes")
-            || failureReport.equalsIgnoreCase("partial"))
+        // generate response based on failure report field
+        if (reportFlag == null || reportFlag.equalsIgnoreCase("yes")
+            || reportFlag.equalsIgnoreCase("partial"))
         {
-            if (failureReport != null
-                && failureReport.equalsIgnoreCase("partial")
+            if (reportFlag != null && reportFlag.equalsIgnoreCase("partial")
                 && responseCode == 200)
             {
                 return;
             }
             else
             {
-                // Generate transaction response
-
                 try
                 {
                     generateAndQueueResponse(transaction, responseCode,
-                        responseComment);
+                        comment);
                 }
                 catch (InternalErrorException e)
                 {
@@ -184,13 +178,11 @@ public class TransactionManager
                         new ImplementationException(
                             "In the processResponse of TransactionManager", e);
                     logger.error(
-                        "Implementation error generating response for "
-                            + "transaction: " + transaction, exception);
+	                        "Implementation error generating response for "
+	                        + "transaction: " + transaction, exception);
                 }
             }
-
         }
-
     }
 
     /**
@@ -203,12 +195,7 @@ public class TransactionManager
     private Session getAssociatedSession(Transaction transaction)
     {
         return MSRPStack.getInstance().getSession((transaction.getToPath())[0]);
-
     }
-
-    /**
-     * private String uniqueTransaction() { return ""; }
-     */
 
     /**
      * Getter of the property <tt>_message</tt>
@@ -368,9 +355,7 @@ public class TransactionManager
             {
                 logger.error("Calling triggerReceivedReport", e);
             }
-
         }
-
     }
 
     /**
@@ -432,16 +417,14 @@ public class TransactionManager
 
         if (connectionObservable.getClass().getName() != "msrp.Connection")
         {
-            logger
-                .error("Error! TransactionManager was notified with the wrong type of object associated");
+            logger.error("Error! TransactionManager was notified with the wrong type of object associated");
             return;
         }
         // Sanity check, check if this is the right type of Observable
         if (transactionObject.getClass().getName() != "msrp.Transaction"
             && transactionObject.getClass().getName() != "msrp.TransactionResponse")
         {
-            logger
-                .error("Error! TransactionManager was notified with the wrong observable type");
+            logger.error("Error! TransactionManager was notified with the wrong observable type");
             return;
         }
 
@@ -541,7 +524,6 @@ public class TransactionManager
     protected Session associatedSession(URI uriSession)
     {
         return associatedSessions.get(uriSession);
-
     }
 
     /**
@@ -556,7 +538,6 @@ public class TransactionManager
     {
         session.setTransactionManager(this);
         associatedSessions.put(session.getURI(), session);
-
     }
 
     protected void removeSession(Session session) {
@@ -592,12 +573,10 @@ public class TransactionManager
             // has related with Issue #31
             generateTransactionsToSend();
             // connection.notifyWriteThread();
-
         }
         else
         {
             // TODO send an empty body send message
-
         }
     }
 
@@ -650,7 +629,6 @@ public class TransactionManager
         else
             transactionsToSend.add(transaction);
         connection.notifyWriteThread();
-
     }
 
     /**
@@ -888,10 +866,8 @@ public class TransactionManager
                             parserState = INITIALSTATE;
                     }
                     break;
-
                 }
             }
-
         }
 
         /**
@@ -903,7 +879,6 @@ public class TransactionManager
         {
             return toRewind;
         }
-
     }
 
     private OutgoingDataValidator outgoingDataValidator =
@@ -1038,11 +1013,9 @@ public class TransactionManager
                     transactionMessage.reportMechanism.countSentBodyBytes(
                         transactionMessage, bytesToAccount);
                     bytesToAccount = 0;
-
                 }
             }
         }// end of main while, the one that goes across transactions
-
         return byteCounter;
 
     }
@@ -1075,7 +1048,6 @@ public class TransactionManager
 
             while (i < outData.length)
             {
-
                 if (!t.hasData())
                 {
                     if (t.hasEndLine())
@@ -1128,7 +1100,6 @@ public class TransactionManager
                     bytesToAccount++;
                     outData[i++] = t.get();
                 }
-
             } /*
                * End of while, the buffer is full and or the transaction has
                * been removed from the list of transactions to send and if that
@@ -1190,7 +1161,6 @@ public class TransactionManager
      */
     protected Transaction getTransaction(String tid)
     {
-
         return existingTransactions.get(tid);
     }
 
@@ -1220,7 +1190,6 @@ public class TransactionManager
             throw new IllegalUseException(" the addPriorityTransaction was"
                 + "called with an invalid direction transaction, "
                 + "direction: " + transaction.getDirection());
-
         try
         {
             /*
@@ -1238,11 +1207,9 @@ public class TransactionManager
                         addTransactionToSend(transaction, i);
                     trans.interrupt();
                     generateTransactionsToSend();
-
                     return;
                 }
             }
-
         }
         catch (IndexOutOfBoundsException e)
         {
@@ -1250,5 +1217,4 @@ public class TransactionManager
             addTransactionToSend(transaction, UNIMPORTANT);
         }
     }
-
 }

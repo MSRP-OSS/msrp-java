@@ -42,7 +42,7 @@ import org.junit.*;
  * @author João André Pereira Antunes
  * 
  */
-public class SimpleProfileTests
+public class SimpleProfileTest
 {
     InetAddress address;
 
