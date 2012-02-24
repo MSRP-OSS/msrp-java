@@ -497,419 +497,284 @@ class Connection extends Observable implements Runnable
     class PreParser
     {
         /**
-         * Variable that tells if this instance of the connection is currently
-         * receiving header data or body data, if it's false it's because it
-         * should be receiving header data.
+         * Is this instance of the connection currently receiving header or
+         * body data; false=should be receiving header data.
          * 
-         * This variable is changed by the preParser method and read by the
-         * parser method.
+         * Changed by preParse() and read by parser().
          * 
-         * @see PreParser#preParser(byte[])
+         * @see PreParser#preParse(byte[])
          * @see #parser(String)
          */
         private boolean receivingBodyData = false;
 
-        /**
-         * Variable used by the method preParser in order to ascertain the state
-         * of the machine
-         */
-        private short parserState = 0;
+        private short preState = 0;
 
         /**
-         * This variable is used to save the possible start of the end-line.
-         * It's maximum size can is of: 2 bytes for the initial CRLF after the
-         * data; 7 bytes for the '-' char; 32 bytes for the transactid; 1 byte
-         * for the continuation flag; 2 bytes for the ending CRLF; + Total: 44
-         * bytes.
-         * 
+         * Save the possible start of the end-line.
+         * Maximum size: 2 bytes for CRLF after data; 7 for '-';
+         * 				32 for transactid; 1 for continuation flag;
+         * 				2 for closing CRLF; == Total: 44 bytes.
          */
-        private ByteBuffer smallBuffer = ByteBuffer.allocate(44);
+        private ByteBuffer endLine = ByteBuffer.allocate(44);
 
         /**
-         * Method that implements a small state machine in order to identify if
-         * the incomingData belongs to the headers or to the body. This method
-         * is responsible for changing the value of the variable
-         * receivingBinaryData to the correct value and then calling the parser.
+         * Method implementing a state machine in order to identify if
+         * the incomingData belongs to headers or body.
+         * It is responsible for changing the value of receivingBodyData
+         * and then calling the parser (glue data chunks together).
          * 
-         * @param incomingData the incoming byte array that contains the data
-         *            received
-         * @param length the number of bytes of the given incomingData array to
-         *            be considered for preprocessing.
-         * @throws ConnectionParserException if there ocurred an exception while
+         * @param incomingData the buffer containing received data
+         * @param length the number of bytes of received data
+         * @throws ConnectionParserException if an exception occurred while
          *             calling the parser method of this class
          * @see #receivingBinaryData
          */
         private void preParse(byte[] incomingData, int length)
             throws ConnectionParserException
         {
-            ByteBuffer bufferIncData = ByteBuffer.wrap(incomingData, 0, length);
+            ByteBuffer data = ByteBuffer.wrap(incomingData, 0, length);
             /*
-             * this variable keeps the index of the last time the data was sent
-             * to be processed
+             * The index of the last time data was sent to be processed
              */
-            int indexLastTimeChanged = 0;
+            int indexLastChange = 0;
 
-            if (smallBuffer.position() != 0)
+            if (endLine.position() != 0)
             {
                 /* in case we have data to append, append it */
-                int positionSmallBuffer = smallBuffer.position();
+                int positionSmallBuffer = endLine.position();
                 byte[] incAppendedData =
                     new byte[(positionSmallBuffer + incomingData.length)];
-                smallBuffer.flip();
-                smallBuffer.get(incAppendedData, 0, positionSmallBuffer);
-                smallBuffer.clear();
-                bufferIncData.get(incAppendedData, positionSmallBuffer, length);
+                endLine.flip();
+                endLine.get(incAppendedData, 0, positionSmallBuffer);
+                endLine.clear();
+                data.get(incAppendedData, positionSmallBuffer, length);
                 /*
                  * now we substitute the old data for the new one with the
                  * appended bytes
                  */
-                bufferIncData = ByteBuffer.wrap(incAppendedData);
+                data = ByteBuffer.wrap(incAppendedData);
 
                 /*
                  * now we must set forward the position of the buffer so that it
                  * doesn't read again the stored bytes
                  */
-                bufferIncData.position(positionSmallBuffer);
+                data.position(positionSmallBuffer);
 
             }
-            while (bufferIncData.hasRemaining())
+            while (data.hasRemaining())
             {
                 /*
-                 * we have two distinct points of start for the algorithm,
-                 * either we are in the binary state or in the text state
+                 * 2 distinct points of start for the algorithm: headers or body
                  */
                 if (!receivingBodyData)
-                {
-                    switch (parserState)
+                {						// hunt for CRLF CRLF (end of headers)
+                    switch (preState)
                     {
                     case 0:
-                        if (bufferIncData.get() == '\r')
-                        {
-                            parserState = 1;
-                        }
+                        if (data.get() == '\r')
+                            preState++;
                         break;
                     case 1:
-                        if (bufferIncData.get() == '\n')
-                        {
-                            parserState = 2;
-                        }
+                        if (data.get() == '\n')
+                            preState++;
                         else
-                        {
-                            parserState = 0;
-                            rewindOnePosition(bufferIncData);
-                        }
+                            reset(data);
                         break;
                     case 2:
-                        if (bufferIncData.get() == '\r')
-                        {
-                            parserState = 3;
-                        }
+                        if (data.get() == '\r')
+                            preState++;
                         else
-                        {
-                            parserState = 0;
-                            rewindOnePosition(bufferIncData);
-                        }
+                            reset(data);
                         break;
                     case 3:
-                        if (bufferIncData.get() == '\n')
+                        if (data.get() == '\n')
                         {
-                            parserState = 0;
-                            /*
-                             * if the state (binary or text) changed since the
-                             * beginning of the preprocessing of the data, then
-                             * we should call the parser with the data we have
-                             * so far
-                             */
-                            parser(
-                                bufferIncData.array(),
-                                indexLastTimeChanged,
-                                bufferIncData.position() - indexLastTimeChanged,
+                            preState = 0;
+                            parser(data.array(), indexLastChange,
+                                data.position() - indexLastChange,
                                 receivingBodyData);
-                            indexLastTimeChanged = bufferIncData.position();
+                            indexLastChange = data.position();
                             if (incomingTransaction == null)
-                            {
-                                // TODO FIXME ?! maybe throw an exception, if we
-                                // are here it means that the protocol was
-                                // violated
-                                logger
-                                    .error("The incomingTransaction is null on the preParser in a state where it should not be (receiving binary data)!");
-                            }
+                            	throw new ConnectionParserException(
+                            					"no transaction found");
 
                             receivingBodyData = true;
                         }
                         else
-                        {
-                            rewindOnePosition(bufferIncData);
-                            parserState = 0;
-                        }
-                    }// switch (parserState)
-                }// if (!receivingBinaryData)
-                else
+                            reset(data);
+                    }
+                }						// if (!receivingBinaryData)
+                else					// hunt for end-line
                 {
-                    /*
-                     * if we are receiving binary data we should/must be in a
-                     * transaction
-                     */
-
-                    switch (parserState)
+                    switch (preState)
                     {
                     case 0:
-                        if (bufferIncData.get() == '\r')
-                        {
-                            parserState = 1;
-                        }
+                        if (data.get() == '\r')
+                            preState++;
                         break;
                     case 1:
-                        if (bufferIncData.get() == '\n')
-                        {
-                            parserState = 2;
-                        }
+                        if (data.get() == '\n')
+                            preState++;
                         else
-                        {
-                            parserState = 0;
-                            rewindOnePosition(bufferIncData);
-                        }
+                            reset(data);
                         break;
                     case 2:
-                        if (bufferIncData.get() == '-')
-                        {
-                            parserState = 3;
-                        }
+                        if (data.get() == '-')
+                            preState++;
                         else
-                        {
-                            parserState = 0;
-                            rewindOnePosition(bufferIncData);
-                        }
+                            reset(data);
                         break;
                     case 3:
-                        if (bufferIncData.get() == '-')
-                        {
-                            parserState = 4;
-                        }
+                        if (data.get() == '-')
+                            preState++;
                         else
-                        {
-                            parserState = 0;
-                            rewindOnePosition(bufferIncData);
-                        }
+                            reset(data);
                         break;
                     case 4:
-                        if (bufferIncData.get() == '-')
-                        {
-                            parserState = 5;
-                        }
+                        if (data.get() == '-')
+                            preState++;
                         else
-                        {
-                            parserState = 0;
-                            rewindOnePosition(bufferIncData);
-                        }
+                            reset(data);
                         break;
                     case 5:
-                        if (bufferIncData.get() == '-')
-                        {
-                            parserState = 6;
-                        }
+                        if (data.get() == '-')
+                            preState++;
                         else
-                        {
-                            parserState = 0;
-                            rewindOnePosition(bufferIncData);
-                        }
+                            reset(data);
                         break;
                     case 6:
-                        if (bufferIncData.get() == '-')
-                        {
-                            parserState = 7;
-                        }
+                        if (data.get() == '-')
+                            preState++;
                         else
-                        {
-                            parserState = 0;
-                            rewindOnePosition(bufferIncData);
-                        }
+                            reset(data);
                         break;
                     case 7:
-
-                        if (bufferIncData.get() == '-')
-                        {
-                            parserState = 8;
-                        }
+                        if (data.get() == '-')
+                            preState++;
                         else
-                        {
-                            parserState = 0;
-                            rewindOnePosition(bufferIncData);
-                        }
+                            reset(data);
                         break;
                     case 8:
-                        if (bufferIncData.get() == '-')
-                        {
-                            parserState = 9;
-                        }
+                        if (data.get() == '-')
+                            preState++;
                         else
-                        {
-                            parserState = 0;
-                            rewindOnePosition(bufferIncData);
-                        }
+                            reset(data);
                         break;
                     default:
-                        if (parserState >= 9)
+                        if (preState >= 9)
                         {
                             /*
-                             * at this point if we don't have any
-                             * incomingTransaction associated with this
-                             * connection then something wrong happened, log it!
+                             * if we don't have any incomingTransaction
+                             * associated with this connection at this point
+                             * then something wrong happened, log it!
                              */
                             if (incomingTransaction == null)
-                            {
-                                // log the fact that the incoming
-                                // transaction was null
-                                // TODO FIXME ?! maybe throw an exception, if we
-                                // are here it means that the protocol was
-                                // violated
-                                logger
-                                    .error("The incomingTransaction is null on the preParser in a state where it should not be (receiving binary data)!");
-                            }
-                            else if (incomingTransaction.getTID().length() == (parserState - 9))
+                            	throw new ConnectionParserException(
+                    					"no transaction found");
+
+                            int tidLength = incomingTransaction.getTID().length();
+                            if (tidLength == (preState - 9))
                             {
                                 /*
-                                 * it means that we reached the end of the
-                                 * transact-id then we must lookout for a valid
-                                 * continuation flag
+                                 * End of Tx-id, look for valid continuation flag.
                                  */
-                                char incChar = (char) bufferIncData.get();
+                                char incChar = (char) data.get();
                                 if (incChar == '+' || incChar == '$'
                                     || incChar == '#')
                                 {
-                                    parserState++;
+                                    preState++;
                                 }
                                 else
-                                {
-                                    rewindOnePosition(bufferIncData);
-                                    parserState = 0;
-                                }
+                                    reset(data);
                             }
-                            else if ((parserState - 9) > incomingTransaction
-                                .getTID().length())
+                            else if ((preState - 9) > tidLength)
                             {
-                                if ((parserState - 9) == incomingTransaction
-                                    .getTID().length() + 1)
-                                {
-                                    /* we should expect the CR here */
-                                    if (bufferIncData.get() == '\r')
-                                    {
-                                        parserState++;
-                                    }
+                                if ((preState - 9) == tidLength + 1)
+                                {		/* expect the CR here */
+                                    if (data.get() == '\r')
+                                        preState++;
                                     else
-                                    {
-                                        parserState = 0;
-                                        rewindOnePosition(bufferIncData);
-                                    }
+                                        reset(data);
                                 }
-                                else if ((parserState - 9) == incomingTransaction
-                                    .getTID().length() + 2)
-                                {
-                                    /* we should expect the LF here */
-                                    if (bufferIncData.get() == '\n')
+                                else if ((preState - 9) == tidLength + 2)
+                                {		/* expect the LF here */
+                                    if (data.get() == '\n')
                                     {
-                                        parserState++;
+                                        preState++;
                                         /*
-                                         * so from now on we are on text mode
-                                         * again so we process all of the binary
-                                         * data we have so far excluding "\r\n"
+                                         * body received so process all of the
+                                         * data we have so far excluding CRLF
                                          * and "end-line" that later must be
-                                         * parsed as text
+                                         * parsed as text.
                                          */
-                                        bufferIncData.position(bufferIncData
-                                            .position()
-                                            - parserState);
-                                        parser(bufferIncData.array(),
-                                            indexLastTimeChanged, bufferIncData
-                                                .position()
-                                                - indexLastTimeChanged,
-                                            receivingBodyData);
-                                        indexLastTimeChanged =
-                                            bufferIncData.position();
+                                        data.position(data.position() - preState);
+                                        parser(data.array(), indexLastChange,
+                                    		data.position() - indexLastChange,
+                                    		receivingBodyData);
+                                        indexLastChange = data.position();
                                         receivingBodyData = false;
-                                        parserState = 0;
+                                        preState = 0;
                                     }
                                     else
-                                    {
-                                        rewindOnePosition(bufferIncData);
-                                        parserState = 0;
-                                    }
+                                        reset(data);
                                 }
                             }
-
-                            else if ((incomingTransaction.getTID().length() > (parserState - 9))
-                                && bufferIncData.get() == incomingTransaction
-                                    .getTID().charAt(parserState - 9))
-                            {
-                                parserState++;
-                            }
+                            else if (tidLength > (preState - 9) &&
+                            		data.get() == incomingTransaction.getTID().charAt(preState - 9))
+                                preState++;
                             else
-                            {
-
-                                rewindOnePosition(bufferIncData);
-                                parserState = 0;
-                            }
-                        }// end of default:
+                                reset(data);
+                        }				// end of default:
                         break;
                     }
-
-                }// else from if(!receivingBinaryData)
-            }// while (bufferIncData.hasRemaining())
-
+                }
+            }							// while (bufferIncData.hasRemaining())
             /*
-             * we pre processed everything, unless we are in binary mode and in
-             * a state different than zero we should process all the remaining
-             * data
+             * we pre-processed everything, unless we are in body and in
+             * a state different than zero we should process all remaining data
              */
-            if (receivingBodyData && parserState != 0)
+            if (receivingBodyData && preState != 0)
             {
                 /* here we append the remaining data and process the rest */
-                int offset =
-                    (bufferIncData.position() - parserState)
-                        - indexLastTimeChanged;
-                // try added to catch an overflow bug! Issue #
+                int offset = (data.position() - preState) - indexLastChange;
                 try
                 {
-                    smallBuffer.put(bufferIncData.array(), offset,
-                        bufferIncData.position() - offset);
+                    endLine.put(data.array(), offset, data.position() - offset);
                 }
                 catch (BufferOverflowException e)
                 {
-                    logger.error("PreParser smallBuffer Overflow, trying to "
-                        + "put: " + (bufferIncData.position() - offset)
+                    logger.error("PreParser endLine Overflow, trying to "
+                        + "put: " + (data.position() - offset)
                         + " bytes, offset: " + offset + " bufferIncData "
-                        + "position:" + bufferIncData.position()
+                        + "position:" + data.position()
                         + " smallbuffer content:"
-                        + new String(bufferIncData.array(), TextUtils.utf8)
-                        		.substring(offset, bufferIncData.position())
+                        + new String(data.array(), TextUtils.utf8)
+                        		.substring(offset, data.position())
                         + "|end of content excluding the | char");
                     throw e;
                 }
-                parser(bufferIncData.array(), indexLastTimeChanged, offset,
-                    receivingBodyData);
+                parser(data.array(), indexLastChange, offset, receivingBodyData);
             }
             else
             {
-                parser(bufferIncData.array(), indexLastTimeChanged,
-                    bufferIncData.position() - indexLastTimeChanged,
-                    receivingBodyData);
+                parser(data.array(), indexLastChange,
+                    data.position() - indexLastChange, receivingBodyData);
             }
         }
 
         /**
-         * Rewinds one position in the given buffer, if possible, i.e. if it's
-         * at the beginning it will not rewind
+         * Rewind 1 position in given buffer (if possible) and reset state.
          * 
          * @param buffer the buffer to rewind
          */
-        private void rewindOnePosition(ByteBuffer buffer)
+        private void reset(ByteBuffer buffer)
         {
+        	preState = 0;
             int position = buffer.position();
-            if (position == 0)
-                return;
-            buffer.position(position - 1);
+            if (position != 0)
+            	buffer.position(position - 1);
         }
-    }// class PreParser
+    }									// class PreParser
 
     private boolean receivingTransaction = false;
 
@@ -967,9 +832,9 @@ class Connection extends Observable implements Runnable
         else
         {
             /*
-             * here it means that we are receiving text and will have the same
-             * behavior than before we made the distinction between binary and
-             * text data
+             * here it means that we are receiving text (headers) and will have
+             * the same behavior as before we made the distinction between
+             * body and header data
              */
             String incomingString =
                 new String(incomingBytes, offset, length, TextUtils.utf8);
@@ -1022,8 +887,7 @@ class Connection extends Observable implements Runnable
                     Matcher matchResponse = startResponse.matcher(toParse);
 
                     if (matchRequest.matches())
-                    {
-                        // Retrieve TID and create new transaction
+                    {					// Retrieve TID and create new transaction
                         receivingTransaction = true;
                         tID = matchRequest.group(2);
                         toParse = matchRequest.group(4);
@@ -1117,25 +981,21 @@ class Connection extends Observable implements Runnable
                      */
                     Pattern endTransaction;
                     tID = incomingTransaction.getTID();
-                    endTransaction =
-                        Pattern.compile(
+                    endTransaction = Pattern.compile(
                         		"(.*)(-------" + tID + ")([$+#])(\r\n)(.*)?",
                         		Pattern.DOTALL);
-                    Matcher matchEndTransaction =
-                        endTransaction.matcher(toParse);
-                    if (matchEndTransaction.matches())
+                    Matcher matcher = endTransaction.matcher(toParse);
+                    if (matcher.matches())
                     {
                         logger.trace("found end of transaction: " + tID);
-                        toParse = matchEndTransaction.group(1)
-                                + matchEndTransaction.group(2)
-                                + matchEndTransaction.group(3)
-                                + matchEndTransaction.group(4);
+                        toParse = matcher.group(1) + matcher.group(2)
+                                + matcher.group(3) + matcher.group(4);
                         /*
                          * add any remaining data to restTransactions
                          */
-                        if (matchEndTransaction.group(5) != null &&
-                    		!matchEndTransaction.group(5).equalsIgnoreCase( ""))
-                            txRest.add(matchEndTransaction.group(5));
+                        if (matcher.group(5) != null &&
+                    		!matcher.group(5).equalsIgnoreCase( ""))
+                            txRest.add(matcher.group(5));
                     }
                     /*
                      * End of transaction trim mechanism
@@ -1152,33 +1012,32 @@ class Connection extends Observable implements Runnable
                     // subtype * (might not exist!) eventually pass this to the
                     // RegexMSRPFactory
                     String tokenRegex = RegexMSRPFactory.token.pattern();
-                    Pattern contentStuff =
-                        Pattern.compile("(.*)(Content-Type:) (" + tokenRegex
+                    Pattern contentStuff = Pattern.compile(
+                    		"(.*)(Content-Type:) (" + tokenRegex
                             + "/" + tokenRegex + ")(\r\n\r\n)(.*)",
                             Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
-                    Matcher matchContentStuff = contentStuff.matcher(toParse);
-                    if (matchContentStuff.matches())
+                    matcher = contentStuff.matcher(toParse);
+                    if (matcher.matches())
                     {
-                        logger.trace("transaction " + tID
-                            + " was found to have contentstuff");
+                        logger.trace("transaction [" + tID
+                        			+ "] was found to have contentstuff");
                         incomingTransaction.hasContentStuff = true;
-                        startOfDataMark = matchContentStuff.end(4);
+                        startOfDataMark = matcher.end(4);
                     }
                     // note if this is a response the hasContentStuff is set to
                     // false on the gotResponse method, so no need to set it
-                    // here
-                    // although it should be here for legibility reasons
+                    // here although it should be here for legibility reasons
                     if (incomingTransaction.hasContentStuff)
-                        endTransaction =
-                            Pattern.compile("(.*)(\r\n)(-------" + tID
+                        endTransaction = Pattern.compile(
+                        		"(.*)(\r\n)(-------" + tID
                                 + ")([$+#])(\r\n)(.*)?", Pattern.DOTALL);
                     else
-                        endTransaction =
-                            Pattern.compile("(.*)(-------" + tID
+                        endTransaction = Pattern.compile(
+                        		"(.*)(-------" + tID
                                 + ")([$+#])(\r\n)(.*)?", Pattern.DOTALL);
-                    matchEndTransaction = endTransaction.matcher(toParse);
+                    matcher = endTransaction.matcher(toParse);
                     // DEBUG -start here- REMOVE
-                    if (matchEndTransaction.matches())
+                    if (matcher.matches())
                     {
                         /*
                          * log all of the parts of the regex match:
@@ -1189,32 +1048,32 @@ class Connection extends Observable implements Runnable
                         endTransactionLogDetails =
                             endTransactionLogDetails
                                 .concat("pre-end-line body: "
-                                    + matchEndTransaction.group(1)
+                                    + matcher.group(1)
                                     + " end of line withouth C.F.:");
                         int aux = 2;
                         if (incomingTransaction.hasContentStuff)
                             aux = 3;
                         endTransactionLogDetails =
-                            endTransactionLogDetails.concat(matchEndTransaction
+                            endTransactionLogDetails.concat(matcher
                                 .group(aux++)
                                 + " C.F.: "
-                                + matchEndTransaction.group(aux++)
+                                + matcher.group(aux++)
                                 + " rest of the message: "
-                                + matchEndTransaction.group(aux++));
+                                + matcher.group(aux++));
                         logger.trace(endTransactionLogDetails);
                     }
                     // DEBUG -end here- REMOVE
 
                     int i = 0;
                     // if we have a complete end of transaction:
-                    if (matchEndTransaction.matches())
+                    if (matcher.matches())
                     {
                         String restData;
                         try
                         {
-                            incomingTransaction.parse(matchEndTransaction
-                                .group(1).getBytes(TextUtils.utf8), 0,
-                                matchEndTransaction.group(1).length(),
+                            incomingTransaction.parse(
+                        		matcher.group(1).getBytes(TextUtils.utf8), 0,
+                                matcher.group(1).length(),
                                 receivingBodyData);
                         }
                         catch (Exception e)
@@ -1224,16 +1083,14 @@ class Connection extends Observable implements Runnable
                         if (incomingTransaction.hasContentStuff)
                         {
                             incomingTransaction
-                                .signalizeEnd(matchEndTransaction.group(4)
-                                    .charAt(0));
-                            restData = matchEndTransaction.group(6);
+                                .signalizeEnd(matcher.group(4).charAt(0));
+                            restData = matcher.group(6);
                         }
                         else
                         {
                             incomingTransaction
-                                .signalizeEnd(matchEndTransaction.group(3)
-                                    .charAt(0));
-                            restData = matchEndTransaction.group(5);
+                                .signalizeEnd(matcher.group(3).charAt(0));
+                            restData = matcher.group(5);
                         }
                         setChanged();
                         notifyObservers(incomingTransaction);
@@ -1302,10 +1159,9 @@ class Connection extends Observable implements Runnable
                         String toSaveString = new String(toSave);
 
                         // toSaveString = "\n--r";
-                        matchEndTransaction =
-                            endTransactionTrim.matcher(toSaveString);
+                        matcher = endTransactionTrim.matcher(toSaveString);
 
-                        if (matchEndTransaction.matches())
+                        if (matcher.matches())
                         {
                             // if we indeed have end of transaction characters
                             // in the end of the data we add them to the

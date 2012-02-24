@@ -110,10 +110,11 @@ public class TestSendingBinaryMessages
     {
         // TODO needs: tear down of the sessions
         // TODO needs: (?!) timer to mantain connection active even though
-        // sessions
-        // are over (?!)
-        receivingSessionListener.getReceiveMessage().getDataContainer()
-            .dispose();
+        // sessions are over (?!)
+    	DataContainer dc = 
+    			receivingSessionListener.getReceiveMessage().getDataContainer();
+    	if (dc != null)
+            dc.dispose();
 
         tempFile.delete();
         /* To remove: */
