@@ -270,7 +270,7 @@ public class Transaction
 
     private StatusHeader statusHeader = null;
 
-    private MSRPStack instanceStack = MSRPStack.getInstance();
+    private MSRPStack stack = MSRPStack.getInstance();
 
     /**
      * The session associated with this transaction
@@ -1596,7 +1596,7 @@ public class Transaction
                  * response)
                  */
             	int rspCode;
-                if (instanceStack.isActive((getToPath())[0]))
+                if (stack.isActive((getToPath())[0]))
                 	rspCode = 506;
             	else
             		rspCode = 481;
@@ -1614,7 +1614,7 @@ public class Transaction
                 /*
                  * if it was found a session in the toIdentify list
                  */
-                if (instanceStack.isActive((getToPath())[0]))
+                if (stack.isActive((getToPath())[0]))
                 {
                     /*
                      * but also with another, then give the r506 response and
