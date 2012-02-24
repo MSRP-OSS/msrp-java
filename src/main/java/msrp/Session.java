@@ -49,19 +49,30 @@ public class Session
      */
     private static final Logger logger = LoggerFactory.getLogger(Session.class);
 
+    private MSRPStack stack = MSRPStack.getInstance();
+
     /**
      * Associates an interface to the session, used to process incoming messages
-     * 
      */
     private MSRPSessionListener msrpSessionListener;
-
-    private MSRPStack stack = MSRPStack.getInstance();
 
     private ArrayList<URI> toUris = new ArrayList<URI>();
 
     private TransactionManager txManager;
 
     private InetAddress localAddress;
+
+    private boolean isSecure;
+
+    /**
+     * @uml.property name="_relays"
+     */
+    private boolean isRelay;
+
+    /** URI identifying this session
+     * @uml.property name="_URI"
+     */
+    private URI uri = null;
 
     /**
      * @desc the connection associated with this session
@@ -101,16 +112,6 @@ public class Session
         new HashMap<String, Message>();
 
     /**
-     * @uml.property name="_relays"
-     */
-    private boolean isRelay;
-
-    /** URI identifying this session
-     * @uml.property name="_URI"
-     */
-    private URI uri = null;
-
-    /**
      * The Report mechanism associated with this session.
      * The mechanism is basically used to decide on the granularity of reports.
      * Defaults to {@code DefaultReportMechanism}.
@@ -142,7 +143,8 @@ public class Session
         throws InternalErrorException
     {
         this.localAddress = address;
-        setRelay(isRelay);
+        this.isSecure = isSecure;
+        this.isRelay = isRelay;
         try
         {
             connection = new Connection(address);
@@ -153,9 +155,8 @@ public class Session
             logger.debug("MSRP Session created: secure?[" + isSecure + "], relay?["
             			+ isRelay + "] InetAddress: " + address);
         }
-        catch (Exception e)
+        catch (Exception e)				// wrap exceptions to InternalError
         {
-            // let's wrap the exceptions in an InternalError
             throw new InternalErrorException(e);
         }
     }
@@ -180,16 +181,16 @@ public class Session
         throws InternalErrorException
     {
         this.localAddress = address;
-        setRelay(isRelay);
+        this.isSecure = isSecure;
+        this.isRelay = isRelay;
         try
         {
             connection = MSRPStack.getConnectionsInstance(address);
             uri = ((Connections) connection).generateNewUri();
             stack.addConnection(uri, connection);
         }
-        catch (Exception e)
+        catch (Exception e)				// wrap exceptions to InternalError
         {
-            // let's wrap the exceptions in an InternalError
             logger.error("Error creating Connections: ", e);
             throw new InternalErrorException(e);
         }
