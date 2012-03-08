@@ -619,41 +619,11 @@ class Connection extends Observable implements Runnable
                             reset(data);
                         break;
                     case 2:
-                        if (data.get() == '-')
-                            preState++;
-                        else
-                            reset(data);
-                        break;
                     case 3:
-                        if (data.get() == '-')
-                            preState++;
-                        else
-                            reset(data);
-                        break;
                     case 4:
-                        if (data.get() == '-')
-                            preState++;
-                        else
-                            reset(data);
-                        break;
                     case 5:
-                        if (data.get() == '-')
-                            preState++;
-                        else
-                            reset(data);
-                        break;
                     case 6:
-                        if (data.get() == '-')
-                            preState++;
-                        else
-                            reset(data);
-                        break;
                     case 7:
-                        if (data.get() == '-')
-                            preState++;
-                        else
-                            reset(data);
-                        break;
                     case 8:
                         if (data.get() == '-')
                             preState++;
