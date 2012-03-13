@@ -172,15 +172,6 @@ public class TransactionManager
                         + " response for transaction: "
                         + transaction.toString(), e);
                 }
-                catch (IllegalUseException e)
-                {
-                    ImplementationException exception =
-                        new ImplementationException(
-                            "In the processResponse of TransactionManager", e);
-                    logger.error(
-	                        "Implementation error generating response for "
-	                        + "transaction: " + transaction, exception);
-                }
             }
         }
     }
