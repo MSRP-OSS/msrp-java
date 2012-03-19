@@ -176,13 +176,12 @@ public abstract class Message
                 "Error! message data too big, use file source or stream constructors");
         }
         this.session = session;
+        this.contentType = contentType;
         dataContainer = new MemoryDataContainer(data);
         size = data.length;
 		messageId = MSRPStack.getInstance().generateMessageID(session);
-        this.session.addMessageToSend(this);
         constructorAssociateReport(reportMechanism);
-        this.contentType = contentType;
-
+        this.session.addMessageToSend(this);
     }
 
     /**
