@@ -147,7 +147,7 @@ public class MockMSRPSessionListener
         acceptHookResult = null;
         synchronized (this)
         {
-            notifyAll();
+            this.notifyAll();
             logger.debug("AcceptHook returns: " + toReturn);
             return toReturn;
         }
@@ -159,9 +159,15 @@ public class MockMSRPSessionListener
         logger.debug("receiveMessage(id=[" + message.getMessageID() + "])");
         receiveMessage = message;
         receiveMessageSession = session;
+        /* 
+         * delay this thread to allow the other thread to be scheduled
+         * before acquiring a lock again.
+         */
+        try { Thread.sleep(50); } catch (InterruptedException e) { ; }
+
         synchronized (this)
         {
-            notifyAll();
+            this.notifyAll();
         }
     }
 
@@ -194,8 +200,9 @@ public class MockMSRPSessionListener
     public void updateSendStatus(Session session, Message message,
         long numberBytesSent)
     {
+    	final long size = message.getSize();
         logger.debug("updateSendStatus() bytes sent: " + numberBytesSent
-            + " == " + (numberBytesSent * 100) / message.getSize() + "%");
+            + " == " + (size == 0 ? 100 : (numberBytesSent * 100) / size) + "%");
         updateSendStatusSession = session;
         updateSendStatusMessage = message;
         synchronized (updateSendStatusCounter)
@@ -208,6 +215,7 @@ public class MockMSRPSessionListener
     @Override
     public void abortedMessageEvent(MessageAbortedEvent abortEvent)
     {
+    	final long size;
         messageAbortEvents.add(abortEvent);
         boolean incoming = false;
         if (abortEvent.getMessage().getDirection() == Message.IN)
@@ -215,16 +223,18 @@ public class MockMSRPSessionListener
             incoming = true;
 
             IncomingMessage message = (IncomingMessage) abortEvent.getMessage();
+        	size = message.getSize();
             logger.debug("abortedMessageEvent() bytes received: "
                 + message.getReceivedBytes() + " == "
-                + (message.getReceivedBytes() * 100) / message.getSize() + "%");
+                + (size == 0 ? 100 : (message.getReceivedBytes() * 100) / size) + "%");
         }
         else if (abortEvent.getMessage().getDirection() == Message.OUT)
         {
             OutgoingMessage message = (OutgoingMessage) abortEvent.getMessage();
+        	size = message.getSize();
             logger.debug("abortedMessageEvent() bytes sent: "
                 + message.getSentBytes() + " == "
-                + (message.getSentBytes() * 100) / message.getSize() + "%");
+                + (size == 0 ? 100 : (message.getSentBytes() * 100) / size) + "%");
         }
         abortedMessage = abortEvent.getMessage();
         abortedMessageSession = abortEvent.getSession();

@@ -107,9 +107,8 @@ public class TestSendingSmallMessages
     public void tearDownConnection()
     {
         // TODO needs: tear down of the sessions
-        // TODO needs: (?!) timer to mantain connection active even though
-        // sessions
-        // are over (?!)
+        // TODO needs: (?!) timer to maintain connection active even though
+        // sessions are over (?!)
         tempFile.delete();
     }
 
@@ -148,18 +147,12 @@ public class TestSendingSmallMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait();
             }
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow message to be received
-                 */
-                receivingSessionListener.wait(500);
-            }
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
                     .get(0, 0);
@@ -188,9 +181,9 @@ public class TestSendingSmallMessages
             byte[] smallData = new byte[2 * 1024];
             TextUtils.generateRandom(smallData);
 
-            Message threeHKbMessage =
+            Message twoKbMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
-            threeHKbMessage.setSuccessReport(false);
+            twoKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
 
@@ -212,22 +205,81 @@ public class TestSendingSmallMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait();
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(500);
-            }
-
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
+                    .get(0, 0);
+            byte[] receivedData = receivedByteBuffer.array();
+            /*
+             * assert that the received data matches the sent data
+             */
+            assertArrayEquals(smallData, receivedData);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+    }
+
+    /**
+     * Test sending Text Data from receiving to sending session
+     */
+    @Test
+    public void testReverseSending()
+    {
+        try
+        {
+        	byte[] space = new byte[] {' '};
+            byte[] smallData = new byte[2 * 1024];
+            TextUtils.generateRandom(smallData);
+
+            Message twoKbMessage =
+                new OutgoingMessage(receivingSession, "plain/text", smallData);
+            twoKbMessage.setSuccessReport(false);
+
+            /* connect the two sessions: */
+            ArrayList<URI> toPathSendSession = new ArrayList<URI>();
+            toPathSendSession.add(receivingSession.getURI());
+            sendingSession.addToPath(toPathSendSession);
+            sendingSession.sendMessage("text/plain", space);
+
+            /*
+             * message should be transfered or in the process of being
+             * completely transfered
+             */
+            synchronized (receivingSessionListener)
+            {
+                DataContainer dc = new MemoryDataContainer(1);
+                receivingSessionListener.setDataContainer(dc);
+                receivingSessionListener.setAcceptHookResult(new Boolean(true));
+                receivingSessionListener.notify();
+                receivingSessionListener.wait();
+            	receivingSessionListener.wait();
+            }
+
+            synchronized (sendingSessionListener)
+            {
+                DataContainer dc = new MemoryDataContainer(2 * 1024);
+                sendingSessionListener.setDataContainer(dc);
+                sendingSessionListener.setAcceptHookResult(new Boolean(true));
+                sendingSessionListener.notify();
+                sendingSessionListener.wait();
+                sendingSessionListener.wait();
+            }
+
+            if (sendingSessionListener.getAcceptHookMessage() == null
+                    || sendingSessionListener.getAcceptHookSession() == null)
+                    fail("The Mock didn't work, message not accepted");
+
+            ByteBuffer receivedByteBuffer =
+                sendingSessionListener.getReceiveMessage().getDataContainer()
                     .get(0, 0);
             byte[] receivedData = receivedByteBuffer.array();
             /*

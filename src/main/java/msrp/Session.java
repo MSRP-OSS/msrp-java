@@ -261,6 +261,8 @@ public class Session
         txManager.addSession(this);
         txManager.initialize(this);
 
+        stack.addActiveSession(this);
+
         logger.trace("Added "+ toUris.size() +" toPaths with URI[0]="
         				+ uris.get(0).toString());
     }
