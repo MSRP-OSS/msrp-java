@@ -112,8 +112,7 @@ public class TestReportMechanism
     {
         // TODO needs: tear down of the sessions
         // TODO needs: (?!) timer to mantain connection active even though
-        // sessions
-        // are over (?!)
+        // sessions are over (?!)
         receivingSessionListener.getReceiveMessage().getDataContainer()
             .dispose();
 
@@ -143,7 +142,6 @@ public class TestReportMechanism
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -159,18 +157,13 @@ public class TestReportMechanism
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(5000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(5000);
-            }
+
             synchronized (sendingSessionListener.successReportCounter)
             {
                 sendingSessionListener.successReportCounter.wait(5000);
@@ -295,18 +288,13 @@ public class TestReportMechanism
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(5000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(5000);
-            }
+
             synchronized (sendingSessionListener)
             {
                 sendingSessionListener.wait(5000);
@@ -412,18 +400,13 @@ public class TestReportMechanism
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(5000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(5000);
-            }
+
             synchronized (sendingSessionListener)
             {
                 sendingSessionListener.wait(5000);
@@ -536,7 +519,6 @@ public class TestReportMechanism
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -552,18 +534,13 @@ public class TestReportMechanism
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(500);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(500);
-            }
+
             synchronized (sendingSessionListener)
             {
                 sendingSessionListener.wait(500);

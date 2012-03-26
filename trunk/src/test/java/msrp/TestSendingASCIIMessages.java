@@ -107,8 +107,7 @@ public class TestSendingASCIIMessages
     {
         // TODO needs: tear down of the sessions
         // TODO needs: (?!) timer to mantain connection active even though
-        // sessions
-        // are over (?!)
+        // sessions are over (?!)
         receivingSessionListener.getReceiveMessage().getDataContainer()
             .dispose();
 
@@ -154,19 +153,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+"ms");
 
@@ -208,7 +201,6 @@ public class TestSendingASCIIMessages
 
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -224,19 +216,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime) + " ms");
 
@@ -284,7 +270,6 @@ public class TestSendingASCIIMessages
 
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -300,19 +285,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime) + "ms");
 
@@ -358,7 +337,6 @@ public class TestSendingASCIIMessages
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -372,19 +350,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+"ms");
 
@@ -436,7 +408,6 @@ public class TestSendingASCIIMessages
 
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -451,19 +422,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+"ms");
 
@@ -516,7 +481,6 @@ public class TestSendingASCIIMessages
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -554,19 +518,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+"ms");
 
@@ -658,7 +616,6 @@ public class TestSendingASCIIMessages
 
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -696,19 +653,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+"ms");
 
@@ -741,7 +692,6 @@ public class TestSendingASCIIMessages
                 && copiedByte == -1);
 
             /* free the resources: */
-
             receivedFileStream.close();
             originalFileStream.close();
         }
@@ -772,10 +722,8 @@ public class TestSendingASCIIMessages
             Long startTime = System.currentTimeMillis();
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -791,19 +739,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+"ms");
 
@@ -845,7 +787,6 @@ public class TestSendingASCIIMessages
 
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -861,19 +802,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+ "ms");
 
@@ -920,7 +855,6 @@ public class TestSendingASCIIMessages
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -936,19 +870,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+"ms");
 
@@ -994,7 +922,6 @@ public class TestSendingASCIIMessages
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -1008,19 +935,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+ "ms");
 
@@ -1072,7 +993,6 @@ public class TestSendingASCIIMessages
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -1086,19 +1006,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+"ms");
 
@@ -1152,7 +1066,6 @@ public class TestSendingASCIIMessages
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -1190,19 +1103,13 @@ public class TestSendingASCIIMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(6000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(6000);
-            }
             System.out.println(methodName + " took: "
                 + (System.currentTimeMillis() - startTime)+"ms");
 

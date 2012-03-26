@@ -59,7 +59,6 @@ public class TestCorrectlyBreaksSentData
     @Before
     public void setUpConnection()
     {
-
         sendingSessionListener =
             new MockMSRPSessionListener("sendingSessionListener");
         receivingSessionListener =
@@ -98,13 +97,11 @@ public class TestCorrectlyBreaksSentData
 
             receivingSession.addListener(receivingSessionListener);
             sendingSession.addListener(sendingSessionListener);
-
         }
         catch (Exception e)
         {
             e.printStackTrace();
         }
-
     }
 
     @After
@@ -112,8 +109,7 @@ public class TestCorrectlyBreaksSentData
     {
         // TODO needs: tear down of the sessions
         // TODO needs: (?!) timer to mantain connection active even though
-        // sessions
-        // are over (?!)
+        // sessions are over (?!)
         receivingSessionListener.getReceiveMessage().getDataContainer()
             .dispose();
 
@@ -138,7 +134,6 @@ public class TestCorrectlyBreaksSentData
             binaryRandom.nextBytes(smallData);
 
             /* let's fabricate the new TID */
-
             byte[] tid = new byte[8];
             String tidString;
             TextUtils.generateRandom(tid);
@@ -174,7 +169,6 @@ public class TestCorrectlyBreaksSentData
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
@@ -193,18 +187,12 @@ public class TestCorrectlyBreaksSentData
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(3000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait(3000);
-            }
 
             /*
              * after the message is received, let's check the list of
@@ -212,7 +200,6 @@ public class TestCorrectlyBreaksSentData
              * message was transfered in two SEND transactions with different
              * tIDs
              */
-
             Collection<Transaction> existingTransactions =
                 sendingSession.getTransactionManager()
                     .getExistingTransactions();
