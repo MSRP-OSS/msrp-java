@@ -147,7 +147,7 @@ public class TestSendingSmallMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(500);
             }
             if (receivingSessionListener.getAcceptHookMessage() == null
                 || receivingSessionListener.getAcceptHookSession() == null)
@@ -205,7 +205,7 @@ public class TestSendingSmallMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
-                receivingSessionListener.wait();
+                receivingSessionListener.wait(500);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -261,7 +261,7 @@ public class TestSendingSmallMessages
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
-            	receivingSessionListener.wait();
+            	receivingSessionListener.wait(500);
             }
 
             synchronized (sendingSessionListener)
@@ -271,7 +271,7 @@ public class TestSendingSmallMessages
                 sendingSessionListener.setAcceptHookResult(new Boolean(true));
                 sendingSessionListener.notify();
                 sendingSessionListener.wait();
-                sendingSessionListener.wait();
+                sendingSessionListener.wait(500);
             }
 
             if (sendingSessionListener.getAcceptHookMessage() == null

@@ -131,7 +131,6 @@ public class TestSendingExistingFile
          * set up the receiving session handler to receive the data to the
          * receivedFile
          */
-
         File receivedFile = new File("receivedFile");
 
         FileDataContainer receivedFileDC = null;
@@ -171,6 +170,7 @@ public class TestSendingExistingFile
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
+                receivingSessionListener.wait(10000);
             }
 
             // confirm that the message got accepted on the
@@ -179,13 +179,6 @@ public class TestSendingExistingFile
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow message to be received
-                 */
-                receivingSessionListener.wait(10000);
-            }
             System.out.println(sizeFileString + " took: "
                 + (System.currentTimeMillis() - startTime) + " ms");
 

@@ -88,9 +88,8 @@ public class TestAbortMechanism
                         .currentTimeMillis()), null, new File(tempFileDir));
             }
             else
-                tempFile =
-                    File.createTempFile(Long.toString(System
-                        .currentTimeMillis()), null, null);
+                tempFile = File.createTempFile(Long.toString(System
+                					.currentTimeMillis()), null, null);
 
             /* sets up the MSRP sessions */
             sendingSession = new Session(false, false, address);
@@ -111,8 +110,7 @@ public class TestAbortMechanism
     {
         // TODO needs: tear down of the sessions
         // TODO needs: (?!) timer to mantain connection active even though
-        // sessions
-        // are over (?!)
+        // sessions are over (?!)
         tempFile.delete();
         /* To remove: */
         System.gc();
@@ -127,7 +125,6 @@ public class TestAbortMechanism
     public void testAbortionUnsentMessage()
     {
         /* TODO after fixing Issue #11 */
-
     }
 
     /**
@@ -156,10 +153,8 @@ public class TestAbortMechanism
             fiveMegaByteMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -199,7 +194,6 @@ public class TestAbortMechanism
             synchronized (receivingSessionListener.abortMessageCounter)
             {
                 receivingSessionListener.abortMessageCounter.wait(6000);
-
             }
 
             /* confirm that we have an aborted message */
@@ -234,7 +228,6 @@ public class TestAbortMechanism
                     + (((IncomingMessage) receivingSessionListener
                         .getAbortedMessage()).getReceivedBytes()),
                 (obtainedPValue >= 10 && obtainedPValue <= expectedMaximumPValue));
-
         }
         catch (Exception e)
         {
