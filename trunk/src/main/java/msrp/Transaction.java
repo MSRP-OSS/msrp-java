@@ -366,7 +366,7 @@ public class Transaction
         message = messageBeingSent;
         if (transactionType == TransactionType.SEND)
         {
-            if (messageBeingSent.isComplete())
+            if (messageBeingSent.size > 0 && messageBeingSent.isComplete())
                 throw new IllegalArgumentException("The constructor of "
                     + "this transaction was called with a completely"
                     + "sent message");
@@ -405,19 +405,12 @@ public class Transaction
             headerString =
                 headerString.concat("Byte-Range: " + numberFirstByteChunk
                     + "-*" + "/" + messageBeingSent.getStringTotalSize()
-                    + "\r\n" + "Content-Type: "
-                    + messageBeingSent.getContentType() + "\r\n\r\n");
-            // }
-            // else
-            // {
-            // headerString =
-            // headerString.concat("Byte-Range: " + numberFirstByteChunk
-            // + "-" + messageBeingSent.getStringTotalSize() + "/"
-            // + messageBeingSent.getStringTotalSize() + "\r\n"
-            // + "Content-Type: " + messageBeingSent.getContentType()
-            // + "\r\n\r\n");
+                    + "\r\n");
+            String ct = messageBeingSent.getContentType();
+            if (ct != null && ct.length() > 0)
+            	headerString = headerString.concat("Content-Type: " + ct);
+            headerString = headerString.concat("\r\n\r\n");
 
-            // }
             headerBytes = headerString.getBytes(TextUtils.utf8);
 
             /* by default have the continuation flag to be the end of message */
