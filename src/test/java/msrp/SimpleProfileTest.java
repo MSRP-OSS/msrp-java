@@ -67,7 +67,6 @@ public class SimpleProfileTest
         Properties testProperties = new Properties();
         try
         {
-
             /* Set the limit to be of 30 MB of messages allowed in memory */
             MSRPStack.setShortMessageBytes(30024 * 1024);
 
@@ -112,8 +111,7 @@ public class SimpleProfileTest
     {
         // TODO needs: tear down of the sessions
         // TODO needs: (?!) timer to mantain connection active even though
-        // sessions
-        // are over (?!)
+        // sessions are over (?!)
         tempFile.delete();
     }
 
@@ -126,7 +124,6 @@ public class SimpleProfileTest
     {
         try
         {
-
             byte[] smallData = new byte[300 * 1024];
             TextUtils.generateRandom(smallData);
 
@@ -135,10 +132,8 @@ public class SimpleProfileTest
             threeHKbMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -153,6 +148,7 @@ public class SimpleProfileTest
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
+                receivingSessionListener.wait();
                 receivingSessionListener.wait(9000);
             }
 
@@ -160,14 +156,6 @@ public class SimpleProfileTest
                 || receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't worked and the message didn't got "
                     + "accepted");
-
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait();
-            }
 
             ByteBuffer receivedByteBuffer =
                 receivingSessionListener.getReceiveMessage().getDataContainer()
@@ -253,7 +241,6 @@ public class SimpleProfileTest
          * message should be transfered or in the process of being completely
          * transfered
          */
-
         try
         {
             /* make the mocklistener accept the message */
@@ -261,6 +248,7 @@ public class SimpleProfileTest
             {
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
+                receivingSessionListener.wait();
                 receivingSessionListener.wait(10000);
             }
 
@@ -271,13 +259,6 @@ public class SimpleProfileTest
                 fail("The Mock (?!) didn't worked and the message didn't got "
                     + "accepted");
 
-            synchronized (receivingSessionListener)
-            {
-                /*
-                 * allow the message to be received
-                 */
-                receivingSessionListener.wait();
-            }
             // stop further validations here as this is the test used for the
             // profiler
 
@@ -286,7 +267,5 @@ public class SimpleProfileTest
         {
             fail(e.getMessage());
         }
-
     }
-
 }
