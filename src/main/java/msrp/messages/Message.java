@@ -207,8 +207,12 @@ public abstract class Message
     public void setDataContainer(DataContainer dataContainer)
     {
         this.dataContainer = dataContainer;
-        logger.trace("Altered the data container of Message: " + messageId
-            + " to:" + dataContainer.getClass().getCanonicalName());
+        if (logger.isTraceEnabled()) {
+        	String className = dataContainer == null ?
+        				"null" : dataContainer.getClass().getCanonicalName();
+            logger.trace("Altered the data container of Message: " + messageId
+                    + " to:" + className);
+        }
     }
 
     /**
@@ -654,7 +658,8 @@ public abstract class Message
     public void gotAborted(Transaction transaction)
     {
         aborted = true;
-        dataContainer.dispose();
+        if (dataContainer != null)
+        	dataContainer.dispose();
         session.triggerAbortedMessage(session, (IncomingMessage) this, transaction);
 
     }
@@ -670,6 +675,16 @@ public abstract class Message
     public boolean wasAborted()
     {
         return aborted;
+    }
+
+    /**
+     * Let the message know it has served its' purpose.
+     * It will no longer be used and can be garbage collected. Free any resources.
+     */
+    public void discard()
+    {
+        if (dataContainer != null)
+        	dataContainer.dispose();
     }
 
     /**

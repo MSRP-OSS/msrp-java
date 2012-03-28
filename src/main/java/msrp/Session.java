@@ -308,11 +308,8 @@ public class Session
 		toUris = null;
 
 		if (sendQueue != null) {
-			Iterator<Message> it = sendQueue.iterator();
-			while (it.hasNext()) {
-				DataContainer buffer = it.next().getDataContainer();
-				if (buffer != null)
-					buffer.dispose();
+			for (Message msg : sendQueue) {
+				msg.discard();
 			}
 			sendQueue = null;
 		}
@@ -456,6 +453,9 @@ public class Session
 		if (txManager != null) {
         	synchronized(getTransactionManager().getTransactionsToSend()) {
         		if (!txManager.hasDataToSend()) {
+        			Message previousMsg = txManager.getMessageBeingSent();
+        			if (previousMsg != null)
+        				previousMsg.discard();
         			txManager.setMessageBeingSent(getMessageToSend());
         			txManager.generateTransactionsToSend();
         		}
