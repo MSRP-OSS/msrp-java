@@ -45,9 +45,10 @@ public class TestReportMechanism
 
     Random binaryRandom = new Random();
 
+    String tempFileDir;
     File tempFile;
 
-    String tempFileDir;
+    Message outMessage = null;
 
     InetAddress address;
 
@@ -110,11 +111,13 @@ public class TestReportMechanism
     @After
     public void tearDownConnection()
     {
-        // TODO needs: tear down of the sessions
         // TODO needs: (?!) timer to mantain connection active even though
         // sessions are over (?!)
-        receivingSessionListener.getReceiveMessage().getDataContainer()
-            .dispose();
+        receivingSessionListener.getReceiveMessage().discard();
+    	if (outMessage != null)
+    		outMessage.discard();
+    	sendingSession.tearDown();
+    	receivingSession.tearDown();
 
         tempFile.delete();
         /* To remove: */
@@ -135,9 +138,9 @@ public class TestReportMechanism
             byte[] smallData = new byte[messageSize];
             TextUtils.generateRandom(smallData);
 
-            Message lessFiveHundredMessage =
+            outMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
-            lessFiveHundredMessage.setSuccessReport(true);
+            outMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
@@ -145,8 +148,8 @@ public class TestReportMechanism
             sendingSession.addToPath(toPathSendSession);
 
             /*
-             * message should be transfered or in the process of being
-             * completely transfered
+             * message should be transferred or in the process of being
+             * completely transferred
              */
 
             /* make the mocklistener accept the message */
@@ -157,7 +160,7 @@ public class TestReportMechanism
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
-                receivingSessionListener.wait(5000);
+                receivingSessionListener.wait(1000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -166,7 +169,7 @@ public class TestReportMechanism
 
             synchronized (sendingSessionListener.successReportCounter)
             {
-                sendingSessionListener.successReportCounter.wait(5000);
+                sendingSessionListener.successReportCounter.wait(100);
             }
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter.size()
@@ -260,19 +263,16 @@ public class TestReportMechanism
             fileStream.write(bigData);
             fileStream.flush();
             fileStream.close();
-            System.out.println("Stoped generating and writing 5MB "
-                + "of random data took: "
+            System.out.println("Stopped generating and writing 5MB data took: "
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
-            Message fiveMegaByteMessage =
+            outMessage =
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
-            fiveMegaByteMessage.setSuccessReport(true);
+            outMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-
             sendingSession.addToPath(toPathSendSession);
 
             /*
@@ -288,7 +288,7 @@ public class TestReportMechanism
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
-                receivingSessionListener.wait(5000);
+                receivingSessionListener.wait(1000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -297,7 +297,7 @@ public class TestReportMechanism
 
             synchronized (sendingSessionListener)
             {
-                sendingSessionListener.wait(5000);
+                sendingSessionListener.wait(100);
             }
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter
@@ -377,9 +377,9 @@ public class TestReportMechanism
             byte[] smallData = new byte[499 * 1024];
             TextUtils.generateRandom(smallData);
 
-            Message lessFiveHundredMessage =
+            outMessage =
                 new OutgoingMessage(sendingSession, "plain/text", smallData);
-            lessFiveHundredMessage.setSuccessReport(true);
+            outMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
@@ -400,7 +400,7 @@ public class TestReportMechanism
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
-                receivingSessionListener.wait(5000);
+                receivingSessionListener.wait(1000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -409,7 +409,7 @@ public class TestReportMechanism
 
             synchronized (sendingSessionListener)
             {
-                sendingSessionListener.wait(5000);
+                sendingSessionListener.wait(100);
             }
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter.size()
@@ -453,7 +453,7 @@ public class TestReportMechanism
                     + "strange/unexpected number of bytes sent as argument",
                 100,
                 (sendingSessionListener.successReportCounter.get(1).longValue() * 100)
-                    / lessFiveHundredMessage.getSize());
+                    / outMessage.getSize());
 
             /*
              * assert that the received report message id belongs to the sent
@@ -508,13 +508,12 @@ public class TestReportMechanism
             fileStream.write(bigData);
             fileStream.flush();
             fileStream.close();
-            System.out.println("Stoped generating and writing 5MB "
-                + "of random data took: "
+            System.out.println("Stopped generating 5MB data took: "
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
-            Message fiveMegaByteMessage =
+            outMessage =
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
-            fiveMegaByteMessage.setSuccessReport(true);
+            outMessage.setSuccessReport(true);
 
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
@@ -534,7 +533,7 @@ public class TestReportMechanism
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
-                receivingSessionListener.wait(500);
+                receivingSessionListener.wait(1000);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
@@ -543,7 +542,7 @@ public class TestReportMechanism
 
             synchronized (sendingSessionListener)
             {
-                sendingSessionListener.wait(500);
+                sendingSessionListener.wait(100);
             }
             /*
              * 11 Times might be one time too many times, because the sender
@@ -588,65 +587,4 @@ public class TestReportMechanism
             fail(e.getMessage());
         }
     }
-
-    // @Test
-    // /**
-    // * @deprecated At the moment this test makes no sense because default
-    // * behavior is to send the success report only when the Message is
-    // complete
-    // */
-    // public void testDefaultReportMechanismBig() {
-    // try {
-    // byte[] bigData = new byte[1024 * 1024];
-    // TextUtils.generateRandom(bigData);
-    // Message oneMegaMessage = new Message(sendingSession, "plain/text",
-    // bigData);
-    // /* connect the two sessions: */
-    //
-    // ArrayList<URI> toPathSendSession = new ArrayList<URI>();
-    // toPathSendSession.add(receivingSession.getURI());
-    //
-    // receivingSession.addUriToIdentify(sendingSession.getURI());
-    //
-    // sendingSession.addToPath(toPathSendSession);
-    //
-    // /*
-    // * message should be transfered or in the process of being
-    // * completely transfered
-    // */
-    // /* make the mocklistener accept the message */
-    // synchronized (receivingSessionListener) {
-    // receivingSessionListener.setAcceptHookResult(new Boolean(true));
-    // receivingSessionListener.notify();
-    // receivingSessionListener.wait(3000);
-    // }
-    //
-    // if (receivingSessionListener.getAcceptHookMessage() == null
-    // || receivingSessionListener.getAcceptHookSession() == null)
-    // fail("The Mock didn't work, message not accepted");
-    // synchronized (sendingSessionListener) {
-    // sendingSessionListener.wait(4000);
-    // }
-    // assertTrue("Error the success report was called: "
-    // + sendingSessionListener.successReportCounter
-    // + " times and not 1",
-    // sendingSessionListener.successReportCounter == 1);
-    //
-    // synchronized (receivingSessionListener) {
-    // receivingSessionListener.wait(4000);
-    // }
-    // /*
-    // * assert that the received report message id belongs to the sent
-    // * and therefore received message
-    // */
-    // assertEquals(receivingSessionListener.getReceiveMessage()
-    // .getMessageID(), sendingSessionListener
-    // .getReceivedReportTransaction().getMessageID());
-    // } catch (Exception e) {
-    // e.printStackTrace();
-    // fail(e.getMessage());
-    //
-    // }
-    //
-    // }
 }
