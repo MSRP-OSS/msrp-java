@@ -163,7 +163,7 @@ public class MockMSRPSessionListener
          * delay this thread to allow the other thread to be scheduled
          * before acquiring a lock again.
          */
-        try { Thread.sleep(50); } catch (InterruptedException e) { ; }
+        try { Thread.sleep(100); } catch (InterruptedException e) { ; }
 
         synchronized (this)
         {

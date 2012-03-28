@@ -110,8 +110,7 @@ public class TestCorrectlyBreaksSentData
         // TODO needs: tear down of the sessions
         // TODO needs: (?!) timer to mantain connection active even though
         // sessions are over (?!)
-        receivingSessionListener.getReceiveMessage().getDataContainer()
-            .dispose();
+        receivingSessionListener.getReceiveMessage().discard();
 
         tempFile.delete();
         /* To remove: */
