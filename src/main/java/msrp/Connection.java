@@ -293,9 +293,14 @@ class Connection extends Observable implements Runnable
     	if (closing)
     		return;						// already closed
     	closing = true;
-    	writeThread.notifyAll();
+    	if (writeThread != null) {
+        	synchronized (writeThread) {
+            	writeThread.notifyAll();
+        	}
+    	}
     	try {
-			socketChannel.close();
+    		if (socketChannel != null)
+    			socketChannel.close();
 		} catch (IOException e) {
 			/* empty */;
 		}
