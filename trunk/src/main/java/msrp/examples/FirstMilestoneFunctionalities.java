@@ -305,7 +305,7 @@ public class FirstMilestoneFunctionalities
 
             // either way it's wise to dispose of the resources associated with
             // the file container after the data is used
-            receivedMessage.getDataContainer().dispose();
+            receivedMessage.discard();
         }
 
         /*
