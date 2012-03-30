@@ -143,12 +143,10 @@ public abstract class Message
      */
     protected Transaction lastSendTransaction = null;
 
-    public Message(Session session, String contentType, byte[] data,
-        ReportMechanism reportMechanism)
-        throws Exception
+    public Message(Session session, String contentType, byte[] data)
+        throws IllegalUseException
     {
-        this(session, contentType, data);
-        constructorAssociateReport(reportMechanism);
+        this(session, contentType, data, null);
     }
 
     /* End of wrappers for report mechanism */
@@ -165,7 +163,8 @@ public abstract class Message
      * @see MSRPStack#setShortMessageBytes(int)
      * 
      */
-    public Message(Session session, String contentType, byte[] data)
+    public Message(Session session, String contentType, byte[] data,
+            ReportMechanism reportMechanism)
         throws IllegalUseException
     {
 
@@ -177,9 +176,9 @@ public abstract class Message
         }
         this.session = session;
         this.contentType = contentType;
+		messageId = MSRPStack.getInstance().generateMessageID(session);
         dataContainer = new MemoryDataContainer(data);
         size = data.length;
-		messageId = MSRPStack.getInstance().generateMessageID(session);
         constructorAssociateReport(reportMechanism);
         this.session.addMessageToSend(this);
     }

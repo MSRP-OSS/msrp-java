@@ -36,7 +36,6 @@ import org.slf4j.LoggerFactory;
 public class OutgoingFileMessage
     extends OutgoingMessage
 {
-
     /**
      * The logger associated with this class
      */
@@ -44,36 +43,27 @@ public class OutgoingFileMessage
         LoggerFactory.getLogger(OutgoingFileMessage.class);
 
     public OutgoingFileMessage(Session session, String contentType,
-        File filePath, ReportMechanism reportMechanism)
-        throws FileNotFoundException,
-        SecurityException
+        File file)
+        throws FileNotFoundException, SecurityException
     {
-        this(session, contentType, filePath);
-        constructorAssociateReport(reportMechanism);
-        logger.trace("Outgoing File Message with custom report mechanism "
-            + "created. Associated objects, Session: " + session.getURI()
-            + " contentType: " + contentType + " File: "
-            + filePath.getAbsolutePath());
+        this(session, contentType, file, null);
     }
 
-    public OutgoingFileMessage(Session session, String contentType, File file)
-        throws FileNotFoundException,
-        SecurityException
+    public OutgoingFileMessage(Session session, String contentType, File file, ReportMechanism reportMechanism)
+        throws FileNotFoundException, SecurityException
     {
         this.session = session;
+        this.contentType = contentType;
+		messageId = MSRPStack.getInstance().generateMessageID(session);
         dataContainer = new FileDataContainer(file);
         size = dataContainer.size();
-		messageId = MSRPStack.getInstance().generateMessageID(session);
-        this.session.addMessageToSend(this);
         constructorAssociateReport(reportMechanism);
-        this.contentType = contentType;
         logger
-            .trace("File Message with normal (default) report mechanism created. Associated objects, Session: "
+            .trace("Outgoing file message created. Associated objects, Session: "
                 + session.getURI()
-                + " contentType: "
-                + contentType
-                + " File: "
-                + file.getAbsolutePath());
+                + " contentType: " + contentType
+                + " File: " + file.getAbsolutePath());
+        this.session.addMessageToSend(this);
     }
 
     /**
@@ -84,7 +74,6 @@ public class OutgoingFileMessage
     public long getSentBytes()
     {
         return dataContainer.currentReadOffset();
-
     }
 
     /*
@@ -103,5 +92,4 @@ public class OutgoingFileMessage
     {
         return OUT;
     }
-
 }

@@ -131,7 +131,6 @@ public class OutgoingMessage
                 }
             }
         }
-
     }
 
     /**
@@ -142,7 +141,6 @@ public class OutgoingMessage
     public long getSentBytes()
     {
         return dataContainer.currentReadOffset();
-
     }
 
     /*
@@ -154,7 +152,6 @@ public class OutgoingMessage
     public boolean isComplete()
     {
         return outgoingIsComplete(getSentBytes());
-
     }
 
     @Override
@@ -163,7 +160,8 @@ public class OutgoingMessage
         return OUT;
     }
 
-    public void validate() throws Exception {
+    public void validate() throws Exception
+    {
     	;
     }
 }
