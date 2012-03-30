@@ -399,7 +399,7 @@ class Connection extends Observable implements Runnable
                     // TODO FIXME do this in another way, maybe with notify!
                     synchronized (writeThread)
                     {
-                        writeThread.wait(2000);
+                        writeThread.wait(200);
                     }
                 }
             }
