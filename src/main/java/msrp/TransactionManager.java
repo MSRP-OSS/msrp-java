@@ -1001,7 +1001,7 @@ public class TransactionManager
                     (OutgoingMessage) t.getMessage();
                 if (transactionMessage != null)
                 {
-                    transactionMessage.reportMechanism.countSentBodyBytes(
+                    transactionMessage.getReportMechanism().countSentBodyBytes(
                         transactionMessage, bytesToAccount);
                     bytesToAccount = 0;
                 }
