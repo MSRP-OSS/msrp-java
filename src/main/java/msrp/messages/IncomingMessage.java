@@ -53,10 +53,9 @@ public class IncomingMessage
      * @param reportMechanism
      */
     public IncomingMessage(Session session, String messageId,
-        String contentType, long size, ReportMechanism reportMechanism)
+        String contentType, long size)
     {
-        this(session, messageId, contentType, size);
-        constructorAssociateReport(reportMechanism);
+        this(session, messageId, contentType, size, null);
     }
 
     /**
@@ -72,26 +71,25 @@ public class IncomingMessage
      *            and -1 for unknown (*) total size
      */
     public IncomingMessage(Session session, String messageId,
-        String contentType, long size)
+        String contentType, long size, ReportMechanism reportMechanism)
     {
         super();
-        if (size <= UNINTIALIZED)
+        if (size <= UNINTIALIZED) {
             try
             {
                 throw new ImplementationException(
-                    "Error! constructor of message "
-                        + "called with an invalid size field");
+                    "Message constructor with invalid size");
             }
             catch (ImplementationException e)
             {
                 e.printStackTrace();
             }
-
-        this.size = size;
+        }
         this.session = session;
-        constructorAssociateReport(reportMechanism);
-        this.messageId = messageId;
         this.contentType = contentType;
+        this.messageId = messageId;
+        this.size = size;
+        constructorAssociateReport(reportMechanism);
     }
 
     /**
@@ -110,7 +108,6 @@ public class IncomingMessage
     @Override
     public boolean isComplete()
     {
-
         boolean toReturn = getCounter().isComplete();
         logger.trace("Called isComplete, received bytes: "
             + getCounter().getCount() + " message size: " + size
@@ -160,7 +157,6 @@ public class IncomingMessage
      */
     public void reject() throws InternalErrorException
     {
-
         try
         {
             abort(MessageAbortedEvent.RESPONSE413, null);
@@ -170,7 +166,6 @@ public class IncomingMessage
             logger.error("Implementation error! abort called internally with"
                 + " invalid arguments", e);
         }
-
     }
 
     /**
@@ -222,6 +217,5 @@ public class IncomingMessage
         }
         // mark this message as aborted
         aborted = true;
-
     }
 }
