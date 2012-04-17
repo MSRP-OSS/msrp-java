@@ -1181,31 +1181,25 @@ public class TransactionManager
             throw new IllegalUseException(" the addPriorityTransaction was"
                 + "called with an invalid direction transaction, "
                 + "direction: " + transaction.getDirection());
-        try
+        /*
+         * Make sure that this response doesn't put itself ahead of other
+         * priority transactions:
+         */
+        for (int i = 0; i < transactionsToSend.size(); i++)
         {
-            /*
-             * Make sure that this response doesn't put itself ahead of other
-             * priority transactions:
-             */
-            for (int i = 0; i <= transactionsToSend.size(); i++)
+            Transaction trans = transactionsToSend.get(i);
+            if (trans.isInterruptible())
             {
-                Transaction trans = transactionsToSend.get(i);
-                if (trans.isInterruptible())
-                {
-                    if (i == 0)
-                        addTransactionToSend(transaction, 1);
-                    else
-                        addTransactionToSend(transaction, i);
-                    trans.interrupt();
-                    generateTransactionsToSend();
-                    return;
-                }
+                if (i == 0)
+                    addTransactionToSend(transaction, 1);
+                else
+                    addTransactionToSend(transaction, i);
+                trans.interrupt();
+                generateTransactionsToSend();
+                return;
             }
         }
-        catch (IndexOutOfBoundsException e)
-        {
-            // There are no transaction to send, just add the one given
-            addTransactionToSend(transaction, UNIMPORTANT);
-        }
+        // No interruptible transactions to send, just add the one given.
+        addTransactionToSend(transaction, UNIMPORTANT);
     }
 }
