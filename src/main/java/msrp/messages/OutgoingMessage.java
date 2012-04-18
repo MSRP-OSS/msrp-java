@@ -16,7 +16,7 @@
  */
 package msrp.messages;
 
-import java.util.ArrayList;
+import java.util.Vector;
 
 import msrp.MSRPSessionListener;
 import msrp.Session;
@@ -110,7 +110,7 @@ public class OutgoingMessage
          * abort it, remove eventually other transactions that serve the purpose
          * of sending this message
          */
-        ArrayList<Transaction> transactionsToSend =
+        Vector<Transaction> transactionsToSend =
             transactionManager.getTransactionsToSend();
         boolean firstTransactionFound = false;
         for (Transaction transaction : transactionsToSend)
