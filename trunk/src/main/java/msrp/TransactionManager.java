@@ -22,11 +22,11 @@ import msrp.messages.*;
 import msrp.utils.*;
 
 import java.net.*;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Vector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,8 +71,8 @@ public class TransactionManager
      * @uml.associationEnd multiplicity="(0 -1)"
      *                     inverse="_transactionManager:msrp.Transaction"
      */
-    private ArrayList<Transaction> transactionsToSend =
-        new ArrayList<Transaction>();
+    private Vector<Transaction> transactionsToSend =
+        new Vector<Transaction>();
 
     private HashMap<String, Transaction> existingTransactions =
         new HashMap<String, Transaction>();
@@ -250,7 +250,7 @@ public class TransactionManager
      * @return Returns the _transactions.
      * @uml.property name="_transactions"
      */
-    public ArrayList<Transaction> getTransactionsToSend()
+    public Vector<Transaction> getTransactionsToSend()
     {
         return transactionsToSend;
     }

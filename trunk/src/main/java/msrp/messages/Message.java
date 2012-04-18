@@ -16,7 +16,7 @@
  */
 package msrp.messages;
 
-import java.util.ArrayList;
+import java.util.Vector;
 
 import msrp.*;
 import msrp.exceptions.*;
@@ -295,7 +295,7 @@ public abstract class Message
          * End of sanity checks.
          */
 
-        ArrayList<Transaction> transactionsToSend =
+        Vector<Transaction> transactionsToSend =
             transactionManager.getTransactionsToSend();
         for (Transaction transaction : transactionsToSend)
         {
