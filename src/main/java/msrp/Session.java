@@ -255,7 +255,7 @@ public class Session
             // related with Issue #16
             toUris.add(uri);
         }
-        connection.addEndPoint(toUris.get(toUris.size() - 1), localAddress);
+        connection.addEndPoint(getNextURI(), localAddress);
 
         txManager = connection.getTransactionManager();
         txManager.addSession(this);
@@ -721,6 +721,10 @@ public class Session
 	public URI getURI() {
 		return uri;
 	}
+
+    public URI getNextURI() {
+    	return toUris.get(0);
+    }
 
 	protected Connection getConnection() {
 		return connection;
