@@ -1185,18 +1185,18 @@ class Connection extends Observable implements Runnable
          * i'll still create it but copy the values needed for automatic testing
          * SubIssue #1
          */
-        boolean testingOld = false;
-        String presetTidOld = new String();
         // -- start of the code that enables a transaction test.
-        if (transactionManager != null)
-        {
-            testingOld = transactionManager.testing;
-            presetTidOld = transactionManager.presetTID;
-
-        }
-        transactionManager = new TransactionManager(this);
-        transactionManager.testing = testingOld;
-        transactionManager.presetTID = presetTidOld;
+//        boolean testingOld = false;
+//        String presetTidOld = new String();
+//        if (transactionManager != null)
+//        {
+//            testingOld = transactionManager.testing;
+//            presetTidOld = transactionManager.presetTID;
+//
+//        }
+//        transactionManager = new TransactionManager(this);
+//        transactionManager.testing = testingOld;
+//        transactionManager.presetTID = presetTidOld;
         // -- end of the code that enables a transaction test.
 
         socketChannel.connect(remoteAddress);
