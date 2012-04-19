@@ -77,9 +77,9 @@ public class Connections
             localURI =
                 new URI("msrp", null, address.getHostAddress(), socket
                     .getLocalPort(), null, null, null);
-            Thread test = new Thread(this);
-            test.setName("Connections: " + localURI + "test");
-            test.start();
+            Thread server = new Thread(this);
+            server.setName("Connections: " + localURI + " server");
+            server.start();
         }
         catch (Exception e)
         {
@@ -203,6 +203,7 @@ public class Connections
             {
                 Connection connection =
                     new Connection(serverSocketChannel.accept());
+                stack.addConnection(connection);
                 Thread newConnThread = new Thread(connection);
                 newConnThread.setName("connection: " + connection.getLocalURI()
                     + " by connections newConnThread");
@@ -276,8 +277,10 @@ public class Connections
 
     protected void identifiedSession(Session session)
     {
-        urisSessionsToIdentify.remove(session.getURI());
+    	urisSessionsToIdentify.remove(session.getURI());
         existingURISessions.add(session.getURI());
+        session.setConnection(stack.getConnectionByLocalURI(
+        		NetworkUtils.getCompleteAuthority(session.getNextURI())));
         stack.addActiveSession(session);
         // TODO disable the alarm
     }
