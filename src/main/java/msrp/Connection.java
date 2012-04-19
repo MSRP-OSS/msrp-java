@@ -71,7 +71,7 @@ class Connection extends Observable implements Runnable
         Socket socket = socketChannel.socket();
         URI newLocalURI =
             new URI("msrp", null, socket.getInetAddress().getHostAddress(),
-                socket.getLocalPort(), null, null, null);
+                socket.getPort(), null, null, null);
         localURI = newLocalURI;
         transactionManager = new TransactionManager(this);
         // this.addObserver(transactionManager);
