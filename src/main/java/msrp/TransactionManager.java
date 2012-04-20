@@ -50,13 +50,6 @@ public class TransactionManager
         LoggerFactory.getLogger(TransactionManager.class);
 
     /**
-     * @uml.property name="_message"
-     * @uml.associationEnd multiplicity="(1 1)"
-     *                     inverse="_transactionManager:msrp.Message"
-     */
-    private Message messageBeingSent = null;
-
-    /**
      * @uml.property name="_connections"
      */
     private Connection connection = null;
@@ -186,29 +179,6 @@ public class TransactionManager
     private Session getAssociatedSession(Transaction transaction)
     {
         return MSRPStack.getInstance().getSession((transaction.getToPath())[0]);
-    }
-
-    /**
-     * Getter of the property <tt>_message</tt>
-     * 
-     * @return Returns the _message.
-     * @uml.property name="_message"
-     */
-
-    protected Message getMessageBeingSent()
-    {
-        return messageBeingSent;
-    }
-
-    /**
-     * Setter of the property <tt>_message</tt>
-     * 
-     * @param _message The _message to set.
-     * @uml.property name="_message"
-     */
-    protected void setMessageBeingSent(Message message)
-    {
-        this.messageBeingSent = message;
     }
 
     /**
@@ -553,38 +523,26 @@ public class TransactionManager
     protected void initialize(Session session)
     {
         if (session.hasMessagesToSend())
-        {
-
-            if (messageBeingSent == null)
-                messageBeingSent = session.getMessageToSend();
-            // FIXME TODO the generateTransactionsToSend might not initialize
-            // the session if the message being sent is not from this session.
-            // In that case, the connection should pause the messages being sent
-            // and send an empty message or a piece of the message this session
-            // has related with Issue #31
-            generateTransactionsToSend();
-            // connection.notifyWriteThread();
-        }
+            generateTransactionsToSend(session.getMessageToSend());
         else
-        {
-            // TODO send an empty body send message
-        }
+            ;		// TODO send an empty body send message
     }
 
     /**
-     * method used to generate the transactions to be sent based on the message
-     * also updates the reference in the Message of the lastSendTransaction of
-     * the newly created transaction
+     * Generate transactions to be sent based on the message offered.
+     * Also updates the lastSendTransaction-reference in that Message.
+     * 
+     * @param messageToSend	the message to queue.
      */
-    protected void generateTransactionsToSend()
+    protected void generateTransactionsToSend(Message messageToSend)
     {
-        if (messageBeingSent == null
-            || messageBeingSent.getDirection() != Message.OUT)
+        if (messageToSend == null ||
+            messageToSend.getDirection() != Message.OUT)
             return;
 
         Transaction newTransaction =
             new Transaction(TransactionType.SEND,
-                (OutgoingMessage) messageBeingSent, this);
+                (OutgoingMessage) messageToSend, this);
 
         // Add the transaction to the known list of existing transactions
         // this is used to generate unique TIDs in the connection and to
@@ -594,13 +552,10 @@ public class TransactionManager
         // possibly split the message into several transactions
 
         // change the reference to the lastSendTransaction of the message
-        messageBeingSent.setLastSendTransaction(newTransaction);
+        messageToSend.setLastSendTransaction(newTransaction);
 
-        // alert the writing thread that it has a job to do probably solves
-        // Issue #32 TODO VERIFY it does solve it with some new performance
-        // tests
+        // alert writing thread that it has a job to do
         connection.notifyWriteThread();
-
     }
 
     private static final int UNIMPORTANT = -1;
@@ -630,9 +585,7 @@ public class TransactionManager
      */
     protected boolean hasDataToSend()
     {
-        if (!transactionsToSend.isEmpty())
-            return true;
-        return false;
+         return !transactionsToSend.isEmpty();
     }
 
     /**
@@ -935,7 +888,6 @@ public class TransactionManager
                                 outgoingDataValidator.numberPositionsToRewind();
                             t.rewind(numberPositionsToRewind);
                             t.interrupt();
-                            generateTransactionsToSend();
                             byteCounter -= numberPositionsToRewind;
                             bytesToAccount -= numberPositionsToRewind;
                             continue;
@@ -981,7 +933,6 @@ public class TransactionManager
                     outgoingDataValidator.numberPositionsToRewind();
                 t.rewind(numberPositionsToRewind);
                 t.interrupt();
-                generateTransactionsToSend();
                 byteCounter -= numberPositionsToRewind;
                 bytesToAccount -= numberPositionsToRewind;
                 outgoingDataValidator.reset();
@@ -1061,7 +1012,6 @@ public class TransactionManager
                                 outgoingDataValidator.numberPositionsToRewind();
                             t.rewind(numberPositionsToRewind);
                             t.interrupt();
-                            generateTransactionsToSend();
                             i -= numberPositionsToRewind;
                             bytesToAccount -= numberPositionsToRewind;
                             continue;
@@ -1105,7 +1055,6 @@ public class TransactionManager
                     outgoingDataValidator.numberPositionsToRewind();
                 t.rewind(numberPositionsToRewind);
                 t.interrupt();
-                generateTransactionsToSend();
                 i -= numberPositionsToRewind;
                 bytesToAccount -= numberPositionsToRewind;
                 outgoingDataValidator.reset();
@@ -1195,11 +1144,12 @@ public class TransactionManager
                 else
                     addTransactionToSend(transaction, i);
                 trans.interrupt();
-                generateTransactionsToSend();
+                connection.notifyWriteThread();
                 return;
             }
         }
         // No interruptible transactions to send, just add the one given.
         addTransactionToSend(transaction, UNIMPORTANT);
+        connection.notifyWriteThread();
     }
 }
