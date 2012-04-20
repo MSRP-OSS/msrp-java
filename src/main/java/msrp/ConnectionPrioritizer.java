@@ -72,23 +72,13 @@ public abstract class ConnectionPrioritizer
         TransactionManager tm = session.getTransactionManager();
         if (message.isComplete())
         {
-            /*
-             * Sanity check, this message and the transaction manager message
-             * being sent should be the same
-             */
-            if (!tm.getMessageBeingSent().equals(message))
-                // TODO log it
-                throw new InternalError("Error! messages differ");
-
             sessionToRetrieveMessage = nextSession(tm.getAssociatedSessions());
             Message messageToSend = sessionToRetrieveMessage.getMessageToSend();
-            tm.setMessageBeingSent(messageToSend);
-            tm.generateTransactionsToSend();
+            tm.generateTransactionsToSend(messageToSend);
 
             // Store the sent message based on the success report
             if (message.getSuccessReport())
                 session.addSentOrSendingMessage(message);
-
         }
         else if (shouldSwap(tm.getAssociatedSessions(), session, message))
         {
@@ -103,10 +93,8 @@ public abstract class ConnectionPrioritizer
                 // TODO log it
                 e.printStackTrace();
             }
-            tm.setMessageBeingSent(messageToSend);
-            tm.generateTransactionsToSend();
+            tm.generateTransactionsToSend(messageToSend);
         }
-
     }
 
     /**
