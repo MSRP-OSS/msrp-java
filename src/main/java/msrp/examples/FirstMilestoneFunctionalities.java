@@ -372,5 +372,11 @@ public class FirstMilestoneFunctionalities
         {
             // TODO Auto-generated method stub
         }
+
+		@Override
+		public void connectionLost(Session session, Throwable cause) {
+			session.tearDown();
+			cause.printStackTrace();
+		}
     }
 }

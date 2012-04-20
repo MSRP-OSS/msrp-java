@@ -22,13 +22,11 @@ package msrp.exceptions;
  *
  */
 @SuppressWarnings("serial")
-public class ConnectionReadException
-    extends Exception
+public class ConnectionReadException extends ConnectionLostException
 {
 
-    public ConnectionReadException(Throwable e)
+    public ConnectionReadException(Throwable cause)
     {
-        super(e);
+        super(cause);
     }
-
 }

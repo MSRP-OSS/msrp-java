@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import msrp.Connections;
 import msrp.Session;
+import msrp.exceptions.ConnectionLostException;
 import msrp.exceptions.ConnectionParserException;
 import msrp.exceptions.ConnectionReadException;
 import msrp.exceptions.ConnectionWriteException;
@@ -486,9 +487,12 @@ class Connection extends Observable implements Runnable
                 readCycle();
                 readThread = null;
             }
-        }
-        catch (Exception e)
-        {
+        } catch (ConnectionLostException cle) {
+        	for (Session s : MSRPStack.getInstance().getActiveSessions()) {
+        		if (this.equals(s.getConnection()))
+        			s.triggerConnectionLost(cle.getCause());
+        	}
+        } catch (Exception e) {
         	logger.error(e.getLocalizedMessage());
         }
         return;
