@@ -849,5 +849,11 @@ public class MiscTests
     public void abortedMessageEvent(MessageAbortedEvent abortEvent)
     {
     }
+
+	@Override
+	public void connectionLost(Session session, Throwable cause) {
+		session.tearDown();
+		System.err.println("Connection lost, reason: " + cause.getMessage());
+	}
 }// end of class
 

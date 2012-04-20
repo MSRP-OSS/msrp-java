@@ -19,6 +19,7 @@ package msrp;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.URI;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
@@ -310,5 +311,9 @@ public class MSRPStack implements Observer {
 
 	protected Session getSession(URI uri) {
 		return activeSessions.get(uri);
+	}
+
+	protected Collection<Session> getActiveSessions() {
+		return activeSessions.values();
 	}
 }

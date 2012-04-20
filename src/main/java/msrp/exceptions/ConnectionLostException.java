@@ -1,4 +1,4 @@
-/* Copyright © João Antunes 2008
+/**
  This file is part of MSRP Java Stack.
 
     MSRP Java Stack is free software: you can redistribute it and/or modify
@@ -18,17 +18,34 @@
 package msrp.exceptions;
 
 /**
- * @author João André Pereira Antunes 2008
+ * @author tuijldert
  *
  */
 @SuppressWarnings("serial")
-public class ConnectionWriteException extends ConnectionLostException
-{
-    /**
-     * @param cause
-     */
-    public ConnectionWriteException(Throwable cause)
-    {
-        super(cause);
-    }
+public class ConnectionLostException extends Exception {
+
+	public ConnectionLostException() {
+	}
+
+	/**
+	 * @param message
+	 */
+	public ConnectionLostException(String message) {
+		super(message);
+	}
+
+	/**
+	 * @param cause
+	 */
+	public ConnectionLostException(Throwable cause) {
+		super(cause);
+	}
+
+	/**
+	 * @param message
+	 * @param cause
+	 */
+	public ConnectionLostException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }
