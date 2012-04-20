@@ -669,6 +669,11 @@ public class Session
         fireMessageAbortedEvent(message, MessageAbortedEvent.CONTINUATIONFLAG,
             null, transaction);
     }
+
+    public void triggerConnectionLost(Throwable cause) {
+    	logger.trace("triggerConnectionLost() called");
+    	msrpSessionListener.connectionLost(this, cause);
+    }
     /*
      * End of triggers to the Listener
      */

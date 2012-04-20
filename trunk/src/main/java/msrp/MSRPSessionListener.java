@@ -92,4 +92,12 @@ public interface MSRPSessionListener
      * @param numberBytesSent the total number of sent bytes from the message
      */
     void updateSendStatus(Session session, Message message, long numberBytesSent);
+
+	/** Notify application that underlying connection to this session has
+	 * ceased to be.
+	 * 
+	 * @param session	the session it pertains to
+	 * @param cause		why was it lost?
+	 */
+	void connectionLost(Session session, Throwable cause);
 }

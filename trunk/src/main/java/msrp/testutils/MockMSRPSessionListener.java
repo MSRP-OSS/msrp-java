@@ -350,4 +350,9 @@ public class MockMSRPSessionListener
         externalDataContainer = dc;
     }
 
+	@Override
+	public void connectionLost(Session session, Throwable cause) {
+		logger.warn("Connection broke, reason: " + cause.getMessage());
+		session.tearDown();
+	}
 }
