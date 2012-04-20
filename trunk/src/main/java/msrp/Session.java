@@ -27,7 +27,6 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -450,17 +449,8 @@ public class Session
 	 * Have txManager send awaiting messages from session.
 	 */
 	private void triggerSending() {
-		if (txManager != null) {
-        	synchronized(getTransactionManager().getTransactionsToSend()) {
-        		if (!txManager.hasDataToSend()) {
-        			Message previousMsg = txManager.getMessageBeingSent();
-        			if (previousMsg != null)
-        				previousMsg.discard();
-        			txManager.setMessageBeingSent(getMessageToSend());
-        			txManager.generateTransactionsToSend();
-        		}
-        	}
-        }
+		if (txManager != null)
+			txManager.generateTransactionsToSend(getMessageToSend());
 	}
 
     /**
