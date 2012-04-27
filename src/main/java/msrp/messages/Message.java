@@ -176,7 +176,7 @@ public abstract class Message
         }
         this.session = session;
         this.contentType = contentType;
-		messageId = MSRPStack.getInstance().generateMessageID(session);
+		messageId = MSRPStack.generateMessageID();
         dataContainer = new MemoryDataContainer(data);
         size = data.length;
         constructorAssociateReport(reportMechanism);

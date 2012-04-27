@@ -17,19 +17,18 @@
 package msrp;
 
 import java.net.InetAddress;
-import java.net.NetworkInterface;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import msrp.exceptions.*;
 import msrp.messages.*;
-import msrp.utils.TextUtils;
 
 /**
  * Global MSRP singleton class.
@@ -258,47 +257,13 @@ public class MSRPStack implements Observer {
 	 */
 	static short counter = 0;
 
-	/** Generate a new unique message-ID
-	 * 
-	 * Generates a message-ID relative to the stack as advised in the
-	 * RFC (taking into consideration the errata).
-	 * 
-	 * @param sessionBeingUsed
-	 *            the Session that should be used to transmit the message. This
-	 *            Session is only used to get the MAC address of the first
-	 *            non-local interface used in it to implement the advice on
-	 *            message-id generation given on RFC. If for some reason the MAC
-	 *            address can't be accessed, a random number is generated
-	 *            instead
-	 * 
-	 * @return quoting the RFC: "For example, an endpoint could concatenate an
-	 *         instance identifier such as a MAC address, its idea of the number
-	 *         of seconds since the epoch, a process ID, and a monotonically
-	 *         increasing 16-bit integer, all base-64 encoded. Alternately, an
-	 *         endpoint without an on-board clock could simply use a 64-bit |
-	 *         random number and base-64 encode it."
+	/**
+	 * Generate a new unique message-ID
 	 */
-	public String generateMessageID(Session sessionBeingUsed) {
-		InetAddress address = sessionBeingUsed.getAddress();
-		boolean gotMacAddress = false;
-		byte[] macAddress = null;
-		try {
-			macAddress = NetworkInterface.getByInetAddress(address)
-				.getHardwareAddress();
-			gotMacAddress = true;
-		} catch (Exception e) { /* empty */ }
-
-		if (!gotMacAddress || macAddress == null) {
-			// if we couldn't get the data to use the advice, we'll use an epoch
-			// representation plus a random number
-			return Long.toString(System.currentTimeMillis())
-						+ Short.toString(counter++);
-		} else {
-			// instead of a PID we'll use an hashcode for the class
-			// ID = 19 digits max. epoch + 12 digits mac addr = 31 max.
-			return Long.toString(System.currentTimeMillis())
-					+ TextUtils.toHexString(macAddress);
-		}
+	public static String generateMessageID() {
+		UUID id = UUID.randomUUID();
+		return 	Long.toHexString(id.getMostSignificantBits()) +
+				Long.toHexString(id.getLeastSignificantBits());
 	}
 
 	public void update(Observable arg0, Object arg1) {

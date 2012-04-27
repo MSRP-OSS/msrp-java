@@ -30,7 +30,7 @@ public class TextUtils
     public static Charset usascii = Charset.forName("US-ASCII");
     public static Charset utf8 = Charset.forName("UTF-8");
 
-    static Random randomGenerator = new Random();
+    public static Random randomGenerator = new Random();
 
     /**
      * Generates a number of random alpha-numeric characters in US-ASCII
