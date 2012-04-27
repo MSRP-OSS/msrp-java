@@ -1789,7 +1789,7 @@ public class Transaction
                     Pattern.CASE_INSENSITIVE);
 
     private static Pattern messageIDPattern = Pattern.compile(
-                    "(.*)(Message-ID:) ((\\p{Alnum}|\\.|\\-|\\+|\\%|\\=){3,31})(\r\n)(.*)",
+                    "(.*)(Message-ID:) (\\p{Alnum}(\\p{Alnum}|\\.|\\-|\\+|\\%|\\=){3,31})(\r\n)(.*)",
                     Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     private static Pattern byteRangePattern = Pattern.compile(

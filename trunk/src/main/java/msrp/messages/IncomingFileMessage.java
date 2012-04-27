@@ -51,7 +51,7 @@ public class IncomingFileMessage
     {
         this.session = session;
         this.contentType = contentType;
-		messageId = MSRPStack.getInstance().generateMessageID(session);
+		messageId = MSRPStack.generateMessageID();
         dataContainer = new FileDataContainer(file);
         size = dataContainer.size();
         constructorAssociateReport(reportMechanism);

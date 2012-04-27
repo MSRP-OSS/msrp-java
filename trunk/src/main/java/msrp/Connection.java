@@ -419,7 +419,7 @@ class Connection extends Observable implements Runnable
      * @see #readCycle()
      * @see PreParser#preParse(byte[])
      */
-    private PreParser preParser = new PreParser();
+    PreParser preParser = new PreParser();
 
     private void readCycle() throws ConnectionReadException
     {
@@ -539,7 +539,7 @@ class Connection extends Observable implements Runnable
          *             calling the parser method of this class
          * @see #receivingBinaryData
          */
-        private void preParse(byte[] incomingData, int length)
+        void preParse(byte[] incomingData, int length)
             throws ConnectionParserException
         {
             ByteBuffer data = ByteBuffer.wrap(incomingData, 0, length);
@@ -613,7 +613,7 @@ class Connection extends Observable implements Runnable
                         else
                             reset(data);
                     }
-                }						// if (!receivingBinaryData)
+                }
                 else					// hunt for end-line
                 {
                     switch (preState)
