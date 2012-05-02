@@ -121,9 +121,8 @@ public class TestCorrectlyBreaksSentData
 
     /**
      * This method asserts that if we try to send a message whose data contains
-     * a valid end-line characters the message is broken into at least two
+     * valid end-line characters, the message is broken into at least two
      * transactions
-     * 
      */
     @Test
     public void testBreakingOfTransactions()
@@ -141,7 +140,7 @@ public class TestCorrectlyBreaksSentData
             tidString = new String(tid, TextUtils.usascii);
 
             /* debug of the test: */
-            System.out.println("Generated the t. id:" + tidString);
+            System.out.println(this.getClass().getName() + ": Generated the Tx-id: " + tidString);
             /* assign it to the transaction manager of the sending session */
 
             sendingSession.getConnection().getTransactionManager().testing = true;
