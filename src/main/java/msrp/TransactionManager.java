@@ -641,31 +641,12 @@ public class TransactionManager
          * Variable used by the method parse to assert in which state the parser
          * is so that we can save the state of this state machine between calls
          */
-        private short parserState = INITIALSTATE;
-
-        /* constants to make the code a little bit more readable: */
-        private static final short INITIALSTATE = 0;
-
-        private static final short FIRSTHYPHEN = 1;
-
-        private static final short SECONDHYPHEN = 2;
-
-        private static final short THIRDHYPHEN = 3;
-
-        private static final short FOURTHHYPHEN = 4;
-
-        private static final short FIFTHHYPHEN = 5;
-
-        private static final short SIXTHHYPHEN = 6;
-
-        private static final short SEVENTHHYPHEN = 7;
+        private short state = 0;
 
         /**
-         * Method used to assert if the data we have so far has or not the end
-         * of line
+         * Assert if the data we have so far contains the end-line
          * 
-         * @return true if the data parsed so far has the end of line or false
-         *         otherwise
+         * @return true if the data parsed so far has the end-line, false otherwise
          * 
          *         NOTE: This method resets the hasEndLine variable so by doing
          *         two consecutive calls to this method the result of the second
@@ -734,85 +715,44 @@ public class TransactionManager
                         + "to the dataHasEndLine");
             for (int i = 0; i < length; i++)
             {
-                switch (parserState)
+                switch (state)
                 {
-                case INITIALSTATE:
+                case 0:
                     if (outputData[i] == '-')
-                        parserState = FIRSTHYPHEN;
+                        state++;
                     break;
 
-                case FIRSTHYPHEN:
+                case 1: case 2: case 3: case 4: case 5: case 6:
                     if (outputData[i] == '-')
-                        parserState = SECONDHYPHEN;
+                        state++;
                     else
-                        parserState = INITIALSTATE;
-                    break;
-
-                case SECONDHYPHEN:
-                    if (outputData[i] == '-')
-                        parserState = THIRDHYPHEN;
-                    else
-                        parserState = INITIALSTATE;
-                    break;
-
-                case THIRDHYPHEN:
-                    if (outputData[i] == '-')
-                        parserState = FOURTHHYPHEN;
-                    else
-                        parserState = INITIALSTATE;
-                    break;
-
-                case FOURTHHYPHEN:
-                    if (outputData[i] == '-')
-                        parserState = FIFTHHYPHEN;
-                    else
-                        parserState = INITIALSTATE;
-                    break;
-
-                case FIFTHHYPHEN:
-                    if (outputData[i] == '-')
-                        parserState = SIXTHHYPHEN;
-                    else
-                        parserState = INITIALSTATE;
-                    break;
-
-                case SIXTHHYPHEN:
-                    if (outputData[i] == '-')
-                        parserState = SEVENTHHYPHEN;
-                    else
-                        parserState = INITIALSTATE;
+                        state = 0;
                     break;
 
                 default:
-                    if (parserState >= SEVENTHHYPHEN)
+                    if (state >= 7)
                     {
-                        if ((parserState - SEVENTHHYPHEN) < transactionID
-                            .length()
-                            && outputData[i] == transactionID
-                                .charAt(parserState - SEVENTHHYPHEN))
-                            parserState++;
-                        else if ((parserState - SEVENTHHYPHEN >= transactionID
-                            .length() && (outputData[i] == '$'
-                            || outputData[i] == '#' || outputData[i] == '+')))
+                        if ((state - 7) < transactionID.length() &&
+                    		outputData[i] == transactionID.charAt(state - 7))
+                            state++;
+                        else if ((state - 7 >= transactionID.length() &&
+                        		 (outputData[i] == '$' || outputData[i] == '#' ||
+                        		  outputData[i] == '+')))
                         {
                             foundEndLine = true;
-                            toRewind = length - i + parserState;
+                            toRewind = length - i + state;
                             /*
-                             * if we had a end-line splitted by buffers we
+                             * if we had an end-line split by buffers we
                              * rewind to the beginning of the data in this
                              * buffer and then interrupt the transaction
                              */
                             if (toRewind > length)
                                 toRewind = length;
-
-                            parserState = INITIALSTATE;
-
-                            /* we exit the for */
-                            break;
-
+                            state = 0;
+                            break;					/* exit the for */
                         }
                         else
-                            parserState = INITIALSTATE;
+                            state = 0;
                     }
                     break;
                 }
@@ -820,9 +760,9 @@ public class TransactionManager
         }
 
         /**
-         * @return this method returns the number of positions we should rewind
-         *         on the buffer and on the transaction's read offset before we
-         *         interrupt the current transaction
+         * Returns the number of positions we should rewind
+         * on the buffer and on the transaction's read offset before we
+         * interrupt the current transaction.
          */
         private int numberPositionsToRewind()
         {
@@ -928,7 +868,7 @@ public class TransactionManager
              * the buffer is full and or the transaction has been removed from
              * the list of transactions to send and if that was the case the
              * outgoingValidator won't make a false positive because it has been
-             * reseted
+             * reset
              */
 
             outgoingDataValidator.parse(outData, byteCounter);
