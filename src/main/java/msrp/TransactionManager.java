@@ -524,8 +524,13 @@ public class TransactionManager
     {
         if (session.hasMessagesToSend())
             generateTransactionsToSend(session.getMessageToSend());
-        else
-            ;		// TODO send an empty body send message
+		else
+			try {
+				// TODO: should be empty message...
+				new OutgoingMessage(session, "text/plain", " ".getBytes());
+			} catch (IllegalUseException e) {
+				logger.warn(e.getMessage());
+			}
     }
 
     /**
