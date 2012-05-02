@@ -261,7 +261,6 @@ public class TestReportMechanism
             binaryRandom.nextBytes(bigData);
             FileOutputStream fileStream = new FileOutputStream(tempFile);
             fileStream.write(bigData);
-            fileStream.flush();
             fileStream.close();
             System.out.println("Stopped generating and writing 5MB data took: "
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
@@ -506,7 +505,6 @@ public class TestReportMechanism
             binaryRandom.nextBytes(bigData);
             FileOutputStream fileStream = new FileOutputStream(tempFile);
             fileStream.write(bigData);
-            fileStream.flush();
             fileStream.close();
             System.out.println("Stopped generating 5MB data took: "
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
@@ -528,8 +526,8 @@ public class TestReportMechanism
             /* make the mocklistener accept the message */
             synchronized (receivingSessionListener)
             {
-                DataContainer dc = new MemoryDataContainer(5 * 1024 * 1024);
-                receivingSessionListener.setDataContainer(dc);
+                       DataContainer dc = new MemoryDataContainer(5 * 1024 * 1024);
+         receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
@@ -553,8 +551,7 @@ public class TestReportMechanism
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter.size()
                 + " times and not 10",
-                sendingSessionListener.successReportCounter.size() == 11);
-
+                sendingSessionListener.successReportCounter.size() == 10);
             /*
              * assert that the received report message id belongs to the sent
              * and therefore received message

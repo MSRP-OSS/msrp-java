@@ -56,9 +56,6 @@ import msrp.utils.TextUtils;
  */
 class Connection extends Observable implements Runnable
 {
-    /**
-     * The logger associated with this class
-     */
     private static final Logger logger =
         LoggerFactory.getLogger(Connection.class);
 
@@ -419,7 +416,7 @@ class Connection extends Observable implements Runnable
      * @see #readCycle()
      * @see PreParser#preParse(byte[])
      */
-    PreParser preParser = new PreParser();
+    PreParser preParser = new PreParser(this);
 
     private void readCycle() throws ConnectionReadException
     {
@@ -498,281 +495,26 @@ class Connection extends Observable implements Runnable
         return;
     }
 
-    /**
-     * Pre-parse incoming data. Main purpose
-     * is to correctly set the receivingBinaryData variable so that it accurately
-     * states whether this connection is receiving binary data or not
-     * 
-     */
-    class PreParser
-    {
-        /**
-         * Is this instance of the connection currently receiving header or
-         * body data; false=should be receiving header data.
-         * 
-         * Changed by preParse() and read by parser().
-         * 
-         * @see PreParser#preParse(byte[])
-         * @see #parser(String)
-         */
-        private boolean receivingBodyData = false;
-
-        private short preState = 0;
-
-        /**
-         * Save the possible start of the end-line.
-         * Maximum size: 2 bytes for CRLF after data; 7 for '-';
-         * 				32 for transactid; 1 for continuation flag;
-         * 				2 for closing CRLF; == Total: 44 bytes.
-         */
-        private ByteBuffer endLine = ByteBuffer.allocate(44);
-
-        /**
-         * Method implementing a state machine in order to identify if
-         * the incomingData belongs to headers or body.
-         * It is responsible for changing the value of receivingBodyData
-         * and then calling the parser (glue data chunks together).
-         * 
-         * @param incomingData the buffer containing received data
-         * @param length the number of bytes of received data
-         * @throws ConnectionParserException if an exception occurred while
-         *             calling the parser method of this class
-         * @see #receivingBinaryData
-         */
-        void preParse(byte[] incomingData, int length)
-            throws ConnectionParserException
-        {
-            ByteBuffer data = ByteBuffer.wrap(incomingData, 0, length);
-            /*
-             * The index of the last time data was sent to be processed
-             */
-            int indexLastChange = 0;
-
-            if (endLine.position() != 0)
-            {
-                /* in case we have data to append, append it */
-                int positionSmallBuffer = endLine.position();
-                byte[] incAppendedData =
-                    new byte[(positionSmallBuffer + incomingData.length)];
-                endLine.flip();
-                endLine.get(incAppendedData, 0, positionSmallBuffer);
-                endLine.clear();
-                data.get(incAppendedData, positionSmallBuffer, length);
-                /*
-                 * now we substitute the old data for the new one with the
-                 * appended bytes
-                 */
-                data = ByteBuffer.wrap(incAppendedData);
-
-                /*
-                 * now we must set forward the position of the buffer so that it
-                 * doesn't read again the stored bytes
-                 */
-                data.position(positionSmallBuffer);
-
-            }
-            while (data.hasRemaining())
-            {
-                /*
-                 * 2 distinct points of start for the algorithm: headers or body
-                 */
-                if (!receivingBodyData)
-                {						// hunt for CRLF CRLF (end of headers)
-                    switch (preState)
-                    {
-                    case 0:
-                        if (data.get() == '\r')
-                            preState++;
-                        break;
-                    case 1:
-                        if (data.get() == '\n')
-                            preState++;
-                        else
-                            reset(data);
-                        break;
-                    case 2:
-                        if (data.get() == '\r')
-                            preState++;
-                        else
-                            reset(data);
-                        break;
-                    case 3:
-                        if (data.get() == '\n')
-                        {
-                            preState = 0;
-                            parser(data.array(), indexLastChange,
-                                data.position() - indexLastChange,
-                                receivingBodyData);
-                            indexLastChange = data.position();
-                            if (incomingTransaction == null)
-                            	throw new ConnectionParserException(
-                            					"no transaction found");
-
-                            receivingBodyData = true;
-                        }
-                        else
-                            reset(data);
-                    }
-                }
-                else					// hunt for end-line
-                {
-                    switch (preState)
-                    {
-                    case 0:
-                        if (data.get() == '\r')
-                            preState++;
-                        break;
-                    case 1:
-                        if (data.get() == '\n')
-                            preState++;
-                        else
-                            reset(data);
-                        break;
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 5:
-                    case 6:
-                    case 7:
-                    case 8:
-                        if (data.get() == '-')
-                            preState++;
-                        else
-                            reset(data);
-                        break;
-                    default:
-                        if (preState >= 9)
-                        {
-                            /*
-                             * if we don't have any incomingTransaction
-                             * associated with this connection at this point
-                             * then something wrong happened, log it!
-                             */
-                            if (incomingTransaction == null)
-                            	throw new ConnectionParserException(
-                    					"no transaction found");
-
-                            int tidLength = incomingTransaction.getTID().length();
-                            if (tidLength == (preState - 9))
-                            {
-                                /*
-                                 * End of Tx-id, look for valid continuation flag.
-                                 */
-                                char incChar = (char) data.get();
-                                if (incChar == '+' || incChar == '$'
-                                    || incChar == '#')
-                                {
-                                    preState++;
-                                }
-                                else
-                                    reset(data);
-                            }
-                            else if ((preState - 9) > tidLength)
-                            {
-                                if ((preState - 9) == tidLength + 1)
-                                {		/* expect the CR here */
-                                    if (data.get() == '\r')
-                                        preState++;
-                                    else
-                                        reset(data);
-                                }
-                                else if ((preState - 9) == tidLength + 2)
-                                {		/* expect the LF here */
-                                    if (data.get() == '\n')
-                                    {
-                                        preState++;
-                                        /*
-                                         * body received so process all of the
-                                         * data we have so far excluding CRLF
-                                         * and "end-line" that later must be
-                                         * parsed as text.
-                                         */
-                                        data.position(data.position() - preState);
-                                        parser(data.array(), indexLastChange,
-                                    		data.position() - indexLastChange,
-                                    		receivingBodyData);
-                                        indexLastChange = data.position();
-                                        receivingBodyData = false;
-                                        preState = 0;
-                                    }
-                                    else
-                                        reset(data);
-                                }
-                            }
-                            else if (tidLength > (preState - 9) &&
-                            		data.get() == incomingTransaction.getTID().charAt(preState - 9))
-                                preState++;
-                            else
-                                reset(data);
-                        }				// end of default:
-                        break;
-                    }
-                }
-            }							// while (bufferIncData.hasRemaining())
-            /*
-             * we pre-processed everything, unless we are in body and in
-             * a state different than zero we should process all remaining data
-             */
-            if (receivingBodyData && preState != 0)
-            {
-                /* here we append the remaining data and process the rest */
-                int offset = (data.position() - preState) - indexLastChange;
-                try
-                {
-                    endLine.put(data.array(), offset, data.position() - offset);
-                }
-                catch (BufferOverflowException e)
-                {
-                    logger.error("PreParser endLine Overflow, trying to "
-                        + "put: " + (data.position() - offset)
-                        + " bytes, offset: " + offset + " bufferIncData "
-                        + "position:" + data.position()
-                        + " smallbuffer content:"
-                        + new String(data.array(), TextUtils.utf8)
-                        		.substring(offset, data.position())
-                        + "|end of content excluding the | char");
-                    throw e;
-                }
-                parser(data.array(), indexLastChange, offset, receivingBodyData);
-            }
-            else
-            {
-                parser(data.array(), indexLastChange,
-                    data.position() - indexLastChange, receivingBodyData);
-            }
-        }
-
-        /**
-         * Rewind 1 position in given buffer (if possible) and reset state.
-         * 
-         * @param buffer the buffer to rewind
-         */
-        private void reset(ByteBuffer buffer)
-        {
-        	preState = 0;
-            int position = buffer.position();
-            if (position != 0)
-            	buffer.position(position - 1);
-        }
-    }									// class PreParser
-
     private boolean receivingTransaction = false;
 
     private Transaction incomingTransaction = null;
 
-    private String remainderReceive = new String();
+    String getCurrentIncomingTid() {
+    	if (incomingTransaction != null)
+    		return incomingTransaction.getTID();
+    	return null;
+    }
 
     /* Find the MSRP start of the transaction stamp
-
      * the TID has to be at least 64bits long = 8chars
      * given as a reasonable limit of 20 for the transaction id
      * although non normative. Also the method name will have the same 20 limit
      *  and has to be a Upper case word like SEND
      */
-    private static Pattern startRequest = Pattern.compile(
+    private static Pattern req_start = Pattern.compile(
                     "(^MSRP) ([\\p{Alnum}]{8,20}) ([\\p{Upper}]{1,20})\r\n(.*)",
                     Pattern.DOTALL);
-    private static Pattern startResponse = Pattern.compile(
+    private static Pattern resp_start = Pattern.compile(
                     "(^MSRP) ([\\p{Alnum}]{8,20}) ((\\d{3})([^\r\n]*)\r\n)(.*)",
                     Pattern.DOTALL);
 
@@ -785,24 +527,19 @@ class Connection extends Observable implements Runnable
      *            consider for processing
      * @param length the number of bytes to process starting from the offset
      *            position
-     * @param receivingBodyData true if it is receiving data regarding the body
+     * @param inContentStuff true if it is receiving data regarding the body
      *            of a transaction, false otherwise
      * @throws ConnectionParserException Generic parsing exception
      */
-    private void parser(byte[] incomingBytes, int offset, int length,
-        boolean receivingBodyData) throws ConnectionParserException
+    void parser(byte[] incomingBytes, int offset, int length,
+        boolean inContentStuff) throws ConnectionParserException
     {
-        /*
-         * TODO/Cleanup With the introduction of the preparser this method could
-         * probably be cleaned up because there are actions that make no sense
-         * anymore
-         */
-        if (receivingBodyData)
+        if (inContentStuff)
         {
             try
             {
                 incomingTransaction.parse(incomingBytes, offset, length,
-                    receivingBodyData);
+                    inContentStuff);
             }
             catch (Exception e)
             {
@@ -810,61 +547,34 @@ class Connection extends Observable implements Runnable
             }
         }
         else
-        {
-            /*
-             * here it means that we are receiving text (headers) and will have
-             * the same behavior as before we made the distinction between
-             * body and header data
-             */
+        {								// We are receiving headers.
             String incomingString =
                 new String(incomingBytes, offset, length, TextUtils.utf8);
-            String toParse;
+            String toParse = incomingString;
             String tID;
-            boolean complete = false;
             /*
-             * this checks if we have any data reaming to parse from the
-             * previous calls to this function, if so it appends it to the start
-             * of the incoming data
-             */
-            if (remainderReceive.length() > 0)
-            {
-                toParse = remainderReceive.concat(incomingString);
-                remainderReceive = new String();
-            }
-            else
-            {
-                toParse = incomingString;
-            }
-
-            /*
-             * Variable used in case a call to this method is done with
-             * more than one transaction in the incomingString
+             * For calls containing multiple transactions in incomingString
              */
             ArrayList<String> txRest = new ArrayList<String>();
-            while (!complete
-                && (toParse.length() >= 10 || txRest.size() != 0))
+
+            do
             {
                 /*
-                 * Transaction trim mechanism: (used to deal with the receipt of
-                 * more than one transaction on the incomingString) we join
-                 * every transaction back to the toParse string for it to be
-                 * dealt with
+                 * Deal with reception of multiple transactions.
                  */
                 if (txRest.size() > 0)
                 {
-                    toParse = toParse.concat(txRest.get(0));
-                    txRest.remove(0);
+                    toParse = txRest.remove(0);
                 }
-                if (txRest.size() > 1)
+                if (txRest.size() > 0)
                     throw new RuntimeException(
                     		"restTransactions were never meant "
                             + "to have more than one element!");
-                /* end Transaction trim mechanism. */
 
                 if (!receivingTransaction)
                 {
-                    Matcher matchRequest = startRequest.matcher(toParse);
-                    Matcher matchResponse = startResponse.matcher(toParse);
+                    Matcher matchRequest = req_start.matcher(toParse);
+                    Matcher matchResponse = resp_start.matcher(toParse);
 
                     if (matchRequest.matches())
                     {					// Retrieve TID and create new transaction
@@ -872,39 +582,38 @@ class Connection extends Observable implements Runnable
                         tID = matchRequest.group(2);
                         toParse = matchRequest.group(4);
                         String type = matchRequest.group(3).toUpperCase();
-                        TransactionType newType;
+                        TransactionType tType;
                         try
                         {
-                            newType = TransactionType.valueOf(type);
-                            logger.debug("Tx-" + newType + "[" + tID + "]");
+                            tType = TransactionType.valueOf(type);
+                            logger.debug("Tx-" + tType + "[" + tID + "]");
                         }
                         catch (IllegalArgumentException iae)
                         {
-                            newType = TransactionType.UNSUPPORTED;
+                            tType = TransactionType.UNSUPPORTED;
                             logger.warn("Unsupported transaction type: Tx-"
                         			+ type + "[" + tID + "]");
                         }
                         try
                         {
-                            incomingTransaction = new Transaction(tID, newType,
+                            incomingTransaction = new Transaction(tID, tType,
                             				transactionManager, Transaction.IN);
                         }
                         catch (IllegalUseException e)
                         {
                             logger.error("Cannot create an incoming transaction", e);
                         }
-                        if (newType == TransactionType.UNSUPPORTED)
+                        if (tType == TransactionType.UNSUPPORTED)
                         {
                             incomingTransaction.signalizeEnd('$');
-                            logger
-                                .warn("Found an unsupported transaction type for["
+                            logger.warn(
+                            		"Found an unsupported transaction type for["
                                     + tID
                                     + "] signalised end and called update");
                             setChanged();
-                            notifyObservers(newType);
+                            notifyObservers(tType);
+                            // XXX:? receivingTransaction = false;
                         }
-                        complete = false;
-
                     }
                     else if (matchResponse.matches())
                     {
@@ -920,10 +629,8 @@ class Connection extends Observable implements Runnable
                         if (incomingTransaction == null)
                         {
                             logger.error("Received response for unknown transaction");
+                            // TODO: cannot continue without a known transaction, proper abort here
                         }
-                        // Has to encounter the end of the transaction as well
-                        // (not sure this is true)
-
                         logger.debug("Found response to transaction: " + tID);
                         try
                         {
@@ -940,8 +647,8 @@ class Connection extends Observable implements Runnable
                     }
                     else
                     {
-                        logger.error("Start of transaction not found while parsing: "
-                                + toParse.substring(0, toParse.length() > 80 ? 80 : toParse.length()));
+                        logger.error("Start of transaction not found while parsing:\n"
+                                + incomingString);
                         throw new ConnectionParserException(
                             "Error, start of the transaction not found on thread: "
                             + Thread.currentThread().getName());
@@ -950,47 +657,30 @@ class Connection extends Observable implements Runnable
                 if (receivingTransaction)
                 {
                     /*
-                     * variable used to store the start of data position in
-                     * order to optmize the data to save mechanism below
+                     * Split multiple transactions.
                      */
-                    int startOfDataMark = 0;
-                    /*
-                     * Transaction trim mechanism: Search for the end of the
-                     * transaction and trim the toParse string to contain only
-                     * one transaction and add the rest to the restTransactions
-                     */
-                    Pattern endTransaction;
                     tID = incomingTransaction.getTID();
-                    endTransaction = Pattern.compile(
+                    Pattern endTransaction = Pattern.compile(
                         		"(.*)(-------" + tID + ")([$+#])(\r\n)(.*)?",
                         		Pattern.DOTALL);
                     Matcher matcher = endTransaction.matcher(toParse);
                     if (matcher.matches())
                     {
-                        logger.trace("found end of transaction: " + tID);
+                        logger.trace("found end of Tx: " + tID);
                         toParse = matcher.group(1) + matcher.group(2)
                                 + matcher.group(3) + matcher.group(4);
                         /*
                          * add any remaining data to restTransactions
                          */
-                        if (matcher.group(5) != null &&
-                    		!matcher.group(5).equalsIgnoreCase( ""))
+                        if ((matcher.group(5) != null) &&
+                    		(matcher.group(5).length() > 0)) {
                             txRest.add(matcher.group(5));
+                        }
                     }
                     /*
-                     * End of transaction trim mechanism
+                     * identify if transaction has content-stuff or not:
+                     * 'Content-Type 2CRLF' from formal syntax.
                      */
-
-                    // Identify the end of the transaction (however it might not
-                    // exist yet or it may not be complete):
-                    /*
-                     * identify if this transaction has content-stuff or not by
-                     * the 'Content-Type 2CRLF' on the formal syntax
-                     */
-                    // TODO still the Content-type pattern isn't entirely
-                    // correct, still have to account for the fact that the
-                    // subtype * (might not exist!) eventually pass this to the
-                    // RegexMSRPFactory
                     String tokenRegex = RegexMSRPFactory.token.pattern();
                     Pattern contentStuff = Pattern.compile(
                     		"(.*)(Content-Type:) (" + tokenRegex
@@ -999,181 +689,59 @@ class Connection extends Observable implements Runnable
                     matcher = contentStuff.matcher(toParse);
                     if (matcher.matches())
                     {
-                        logger.trace("transaction [" + tID
-                        			+ "] was found to have contentstuff");
+                        logger.trace("Tx[" + tID
+                        			+ "] was found to have content-stuff");
                         incomingTransaction.hasContentStuff = true;
-                        startOfDataMark = matcher.end(4);
                     }
-                    // note if this is a response the hasContentStuff is set to
-                    // false on the gotResponse method, so no need to set it
-                    // here although it should be here for legibility reasons
-                    if (incomingTransaction.hasContentStuff)
+                    if (incomingTransaction.hasContentStuff) {
+                    	// strip 1 CRLF from string to parse...
                         endTransaction = Pattern.compile(
-                        		"(.*)(\r\n)(-------" + tID
-                                + ")([$+#])(\r\n)(.*)?", Pattern.DOTALL);
-                    else
-                        endTransaction = Pattern.compile(
-                        		"(.*)(-------" + tID
-                                + ")([$+#])(\r\n)(.*)?", Pattern.DOTALL);
+                    		"(.*)(\r\n)(-------" + tID + ")([$+#])(\r\n)(.*)?",
+                            Pattern.DOTALL);
+                    }
                     matcher = endTransaction.matcher(toParse);
-                    // DEBUG -start here- REMOVE
-                    if (matcher.matches())
-                    {
-                        /*
-                         * log all of the parts of the regex match:
-                         */
-                        String endTransactionLogDetails =
-                            "Found the end of transaction tID:" + tID
-                                + " details: ";
-                        endTransactionLogDetails =
-                            endTransactionLogDetails
-                                .concat("pre-end-line body: "
-                                    + matcher.group(1)
-                                    + " end of line withouth C.F.:");
-                        int aux = 2;
-                        if (incomingTransaction.hasContentStuff)
-                            aux = 3;
-                        endTransactionLogDetails =
-                            endTransactionLogDetails.concat(matcher
-                                .group(aux++)
-                                + " C.F.: "
-                                + matcher.group(aux++)
-                                + " rest of the message: "
-                                + matcher.group(aux++));
-                        logger.trace(endTransactionLogDetails);
-                    }
-                    // DEBUG -end here- REMOVE
 
-                    int i = 0;
-                    // if we have a complete end of transaction:
                     if (matcher.matches())
-                    {
-                        String restData;
+                    {					// we have a complete end of transaction
                         try
                         {
                             incomingTransaction.parse(
                         		matcher.group(1).getBytes(TextUtils.utf8), 0,
                                 matcher.group(1).length(),
-                                receivingBodyData);
+                                inContentStuff);
                         }
                         catch (Exception e)
                         {
                             e.printStackTrace();
                         }
                         if (incomingTransaction.hasContentStuff)
-                        {
                             incomingTransaction
                                 .signalizeEnd(matcher.group(4).charAt(0));
-                            restData = matcher.group(6);
-                        }
                         else
-                        {
                             incomingTransaction
                                 .signalizeEnd(matcher.group(3).charAt(0));
-                            restData = matcher.group(5);
-                        }
+
                         setChanged();
                         notifyObservers(incomingTransaction);
                         receivingTransaction = false;
-                        // parse the rest of the received data extracting the
-                        // already parsed parts
-                        if (restData != null && !restData.equalsIgnoreCase(""))
-                        {
-                            toParse = restData;
-                            complete = false;
-                        }
-                        else
-                        {
-                            if (restData != null)
-                                toParse = restData;
-                            if (txRest.size() == 0)
-                                complete = true;
-                        }
                     }
                     else
                     {
-                        // we trim the toParse so that we don't abruptly cut an
-                        // end of transaction we save the characters that
-                    	// we trimmed to be analyzed next
-                        int j;
-                        char[] toSave;
-                        // we get the possible beginning of the trim characters
-                        i = toParse.lastIndexOf('\r');
-
-                        /*
-                         * Performance optimizer: if we have a marker that has
-                         * the position of the data start and the last position
-                         * of '\r' identified is in the headers then don't save
-                         * anything
-                         */
-                        if (startOfDataMark != 0 && startOfDataMark != -1)
-                            if (i < startOfDataMark)
-                                i = -1;
-
-                        for (j = 0, toSave = new char[toParse.length() - i];
-                        		i < toParse.length(); i++, j++)
-                        {
-                            if (i == -1 || i == toParse.length())
-                                break;
-
-                            toSave[j] = toParse.charAt(i);
-                        }
-
-                        // buildup of the regex pattern of the possible end of
-                        // transaction characters
-                        String patternStringEndT =
-                            new String(
-                                "((\r\n)|(\r\n-)|(\r\n--)|(\r\n---)|(\r\n----)|(\r\n-----)|(\r\n------)|"
-                                    + "(\r\n-------)");
-                        CharBuffer tidBuffer = CharBuffer.wrap(tID);
-                        for (i = 0; i < tID.length(); i++)
-                        {
-                            patternStringEndT =
-                                patternStringEndT.concat("|(\r\n-------"
-                                    + tidBuffer.subSequence(0, i) + ")");
-                        }
-                        patternStringEndT = patternStringEndT.concat(")?$");
-
-                        Pattern endTransactionTrim =
-                            Pattern.compile(patternStringEndT, Pattern.DOTALL);
-                        String toSaveString = new String(toSave);
-
-                        // toSaveString = "\n--r";
-                        matcher = endTransactionTrim.matcher(toSaveString);
-
-                        if (matcher.matches())
-                        {
-                            // if we indeed have end of transaction characters
-                            // in the end of the data we add them to the
-                        	// string that will be analyzed next
-                            remainderReceive =
-                                remainderReceive.concat(toSaveString);
-
-                            logger.trace("trimming end of transaction, before: "
-                                    	+ toParse);
-                            // trimming of the data to parse
-                            toParse =
-                                toParse.substring(0, toParse.lastIndexOf('\r'));
-                            logger.trace("trimming end of transaction, after: "
-                            			+ toParse);
-                        }
                         try
                         {
                             incomingTransaction.parse(
                                 toParse.getBytes(TextUtils.utf8), 0, toParse.length(),
-                                receivingBodyData);
+                                inContentStuff);
                         }
                         catch (Exception e)
                         {
                             logger.error(
-	                            "Got an exception while parsing data to a transaction",
-	                            e);
+	                            "Exception parsing data to a transaction:", e);
                         }
-                        if (txRest.size() == 0)
-                            complete = true;
                     }
                 }
             }
+            while (txRest.size() > 0);
         }
     }
 

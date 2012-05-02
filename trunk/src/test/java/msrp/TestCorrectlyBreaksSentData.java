@@ -110,7 +110,9 @@ public class TestCorrectlyBreaksSentData
         // TODO needs: tear down of the sessions
         // TODO needs: (?!) timer to mantain connection active even though
         // sessions are over (?!)
-        receivingSessionListener.getReceiveMessage().discard();
+    	Message in = receivingSessionListener.getReceiveMessage();
+    	if (in != null)
+    		in.discard();
 
         tempFile.delete();
         /* To remove: */
@@ -149,13 +151,8 @@ public class TestCorrectlyBreaksSentData
              * now let's generate the end-line and put it in the middle of the
              * data of the message
              */
-            byte[] phonyEndLine = new byte[16];
+            byte[] phonyEndLine = ("-------" + tidString + "$").getBytes();
             int i, j;
-            for (i = 0; i < 7; i++)
-                phonyEndLine[i] = '-';
-            for (j = 0; i < 15; j++, i++)
-                phonyEndLine[i] = tid[j];
-            phonyEndLine[15] = '$';
 
             for (i = 0, j = 300; i < phonyEndLine.length; i++, j++)
                 smallData[j] = phonyEndLine[i];
@@ -186,7 +183,7 @@ public class TestCorrectlyBreaksSentData
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
                 receivingSessionListener.wait();
-                receivingSessionListener.wait(3000);
+                receivingSessionListener.wait(500);
             }
 
             if (receivingSessionListener.getAcceptHookMessage() == null
