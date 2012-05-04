@@ -78,11 +78,17 @@ public class Transaction
     protected Message message = null;
 
     /**
-     * Array that contains the offset of various pieces of the transaction: the
-     * header; the content-stuff to keep track of the CRLF after the end of the
-     * data; the end of line; These are indexed by the *INDEX constants
+     * Array containing the index of various pieces of the transaction that have
+     * been read already: header, content-stuff end (=CRLF) and end-line.
      */
-    protected long[] offsetRead = new long[3];
+    protected long[] readIndex = new long[3];
+
+    /**
+     * Constants used to index the transaction pieces
+     */
+    protected static final int HEADER = 0;
+    protected static final int ENDLINE = 1;
+    protected static final int DATA = 2;
 
     /**
      * the identifier of this transaction
@@ -94,7 +100,7 @@ public class Transaction
      * @uml.associationEnd multiplicity="(1 1)"
      *                     inverse="_transactions:msrp.TransactionManager"
      */
-    protected msrp.TransactionManager transactionManager = null;
+    protected TransactionManager transactionManager = null;
 
     protected byte[] headerBytes = new byte[MAXHEADERBYTES];
 
@@ -109,41 +115,14 @@ public class Transaction
      * one of: $+#
      * 
      */
-    protected byte continuationFlagByte;
+    protected byte continuation_flag;
 
     /**
-     * Constant used to index the header in the offsetRead
+     * Byte value of the $', '+' and '#' char (in utf8) continuation_flag
      */
-    protected static final int HEADERINDEX = 0;
-
-    /**
-     * Constant used to index the end line in the offsetRead
-     */
-    protected static final int ENDLINEINDEX = 1;
-
-    /**
-     * servers the purpose of keeping track of the CRLF after the end of the
-     * data Constant used to index the data on the offsetRead
-     */
-    protected static final int DATAINDEX = 2;
-
-    /**
-     * Value that represents the $ char in usascii used to flag the end of a
-     * message in a transaction
-     */
-    protected static final byte ENDMESSAGE = 36;
-
-    /**
-     * Value that represents the + char in usascii used to flag the interruption
-     * of a message in a transaction
-     */
-    protected static final byte INTERRUPT = 43;
-
-    /**
-     * Value that represents the # char in usascii used to flag the abort of a
-     * message in a transaction
-     */
-    protected static final byte ABORTMESSAGE = 35;
+    protected static final byte FLAG_END = 36;
+    protected static final byte FLAG_IRQ = 43;
+    protected static final byte FLAG_ABORT = 35;
 
     /**
      * Value used to represent incoming transactions
@@ -169,21 +148,8 @@ public class Transaction
      * 
      * @see #byteRange
      */
-    private static final int CHUNKENDBYTEINDX = 1;
-
-    /**
-     * The constant used to access the byteRange second field that has the
-     * number of the last byte of the chunk bound to this transaction
-     * 
-     * @see #byteRange
-     */
     private static final int CHUNKENDBYTEINDEX = 1;
 
-    /**
-     * Maximum number of bytes allowed for the header data strings (so that we
-     * don't have a DoS by memory exaustion)
-     * 
-     */
     /**
      * The logger associated with this class
      */
@@ -197,9 +163,8 @@ public class Transaction
     private static final int NOTFOUND = -1;
 
     /**
-     * Maximum number of bytes allowed for the header data strings (so that we
-     * don't have a DoS by memory exaustion)
-     * 
+     * Maximum number of bytes allowed for the header data strings
+     * (to prevent a DoS by memory exhaustion)
      */
     private static final int MAXHEADERBYTES = 3024;
 
@@ -208,7 +173,7 @@ public class Transaction
     /**
      * if this is a complete transaction Note: A transaction could be created
      * and being in the filling process and is only considered complete when
-     * signaled by the connection class
+     * signaled by the Connection class
      */
     private boolean completeTransaction = false;
 
@@ -229,7 +194,7 @@ public class Transaction
     private long[] byteRange = new long[2];
 
     /**
-     * value associated with the Byte-Range parsed to the transaction refering
+     * value associated with the Byte-Range parsed to the transaction referring
      * to the number of bytes of the body.
      * 
      * The values -2 and -1 are reserved as unknown and uninitialized
@@ -253,8 +218,8 @@ public class Transaction
     private String failureReport = "yes";
 
     /**
-     * Field that represents the value of the success report by default and if
-     * is omitted is considered false
+     * The value of the success report.
+     * Default and if omitted: false
      */
     private boolean successReport = false;
 
@@ -325,8 +290,8 @@ public class Transaction
 
         this.direction = direction;
         transactionManager = manager;
-        offsetRead[HEADERINDEX] =
-            offsetRead[ENDLINEINDEX] = offsetRead[DATAINDEX] = 0;
+        readIndex[HEADER] =
+            readIndex[ENDLINE] = readIndex[DATA] = 0;
         byteRange[0] = byteRange[1] = totalMessageBytes = UNINTIALIZED;
         transactionType = method;
         setTID(tid);
@@ -337,88 +302,70 @@ public class Transaction
      * Constructor used to send new simple short transactions used for one
      * transaction messages
      * 
-     * 
-     * @param send
-     * @param messageBeingSent
+     * @param messageToSend
      * @param manager
      */
-    /**
-     * @param send
-     * @param messageBeingSent
-     * @param manager
-     */
-    /**
-     * @param send
-     * @param messageBeingSent
-     * @param manager
-     */
-    /**
-     * @param send
-     * @param messageBeingSent
-     * @param manager
-     */
-    public Transaction(TransactionType send, OutgoingMessage messageBeingSent,
-        TransactionManager manager)
+    public Transaction(OutgoingMessage messageToSend, TransactionManager manager)
     {
-        transactionType = send;
+        transactionType = TransactionType.SEND;
         this.transactionManager = manager;
         tID = manager.generateNewTID();
-        message = messageBeingSent;
-        if (transactionType == TransactionType.SEND)
-        {
-            if (messageBeingSent.size > 0 && messageBeingSent.isComplete())
-                throw new IllegalArgumentException("The constructor of "
-                    + "this transaction was called with a completely"
-                    + "sent message");
-            Session session = messageBeingSent.getSession();
-            ArrayList<URI> uris = session.getToPath();
-            URI toPathUri = uris.get(0);
-            URI fromPathUri = session.getURI();
-            String messageID = messageBeingSent.getMessageID();
+        message = messageToSend;
 
-            String headerString =
-                new String("MSRP " + tID + " SEND\r\n" + "To-Path: "
-                    + toPathUri.toASCIIString() + "\r\n" + "From-Path: "
-                    + fromPathUri.toASCIIString() + "\r\n" + "Message-ID: "
-                    + messageID + "\r\n");
-            if (messageBeingSent.getSuccessReport())
-                headerString = headerString.concat("Success-Report: yes\r\n");
+        if (messageToSend.size > 0 && messageToSend.isComplete())
+            throw new IllegalArgumentException(
+        		"Transaction constructor called with an already sent message");
+        Session session = messageToSend.getSession();
+        ArrayList<URI> uris = session.getToPath();
+        URI toPathUri = uris.get(0);
+        URI fromPathUri = session.getURI();
+        String messageID = messageToSend.getMessageID();
 
-            if (!messageBeingSent.getFailureReport().equalsIgnoreCase("yes"))
-                /* note: if omitted the failure report is assumed to be yes */
-                headerString =
-                    headerString.concat("Failure-Report: "
-                        + messageBeingSent.getFailureReport() + "\r\n");
+        StringBuilder header = new StringBuilder(256);
+        header	.append("MSRP ").append(tID).append(" SEND\r\nTo-Path: ")
+        		.append(toPathUri.toASCIIString()).append("\r\nFrom-Path: ")
+        		.append(fromPathUri.toASCIIString()).append("\r\nMessage-ID: ")
+        		.append(messageID).append("\r\n");
 
-            /*
-             * first value of the Byte-Range header field is the
-             * currentReadOffset + 1, or the current number of already sent
-             * bytes + 1 because the first field is the number of the first byte
-             * being sent:
-             */
-            long numberFirstByteChunk = messageBeingSent.getSentBytes() + 1;
-            // now all of the transactions are interruptible, solving Issue #25
-            // if ((message.getSize() - ((OutgoingMessage)message).getSize()) >
-            // MSRPStack.MAXIMUMUNINTERRUPTIBLE)
-            // {
-            interruptible = true;
-            headerString =
-                headerString.concat("Byte-Range: " + numberFirstByteChunk
-                    + "-*" + "/" + messageBeingSent.getStringTotalSize()
-                    + "\r\n");
-            String ct = messageBeingSent.getContentType();
-            if (ct != null && ct.length() > 0)
-            	headerString = headerString.concat("Content-Type: " + ct);
-            headerString = headerString.concat("\r\n\r\n");
+        if (messageToSend.getSuccessReport())
+            header.append("Success-Report: yes\r\n");
 
-            headerBytes = headerString.getBytes(TextUtils.utf8);
+        if (!messageToSend.getFailureReport().equalsIgnoreCase("yes"))
+            /* note: if omitted, failure report is assumed to be yes */
+        	header	.append("Failure-Report: ")
+        			.append(messageToSend.getFailureReport()).append("\r\n");
 
-            /* by default have the continuation flag to be the end of message */
-            continuationFlagByte = ENDMESSAGE;
-            initializeDataStructures();
-        }
-        logger.info("Transaction created Tx-" + send + "[" + tID
-        			+ "], associated message: " + messageBeingSent);
+        /*
+         * first value of the Byte-Range header field is the
+         * currentReadOffset + 1, or the current number of already sent
+         * bytes + 1 because the first field is the number of the first byte
+         * being sent:
+         */
+        long firstByteChunk = messageToSend.getSentBytes() + 1;
+        /*
+         * Currently all transactions are interruptible, solving Issue #25
+         * if ((message.getSize() - ((OutgoingMessage)message).getSize()) >
+         * 								MSRPStack.MAXIMUMUNINTERRUPTIBLE) {
+         */
+        interruptible = true;
+        header	.append("Byte-Range: ").append(firstByteChunk).append("-*/")
+        		.append(messageToSend.getStringTotalSize()).append("\r\n");
+        header.append("Content-Type: ");
+        String ct = messageToSend.getContentType();
+        if ((ct == null) || (ct.length() == 0))
+        	header.append("text/plain");
+        else
+        	header.append(ct);
+        header.append("\r\n\r\n");
+
+        headerBytes = header.toString().getBytes(TextUtils.utf8);
+
+        /* by default have the continuation flag to be the end of message */
+        continuation_flag = FLAG_END;
+        initializeDataStructures();
+
+        logger.info("Created Tx-SEND[" + tID + "], associated Message-ID: " + 
+        			messageToSend);
     }
 
     /**
@@ -426,7 +373,7 @@ public class Transaction
      */
     protected Transaction()
     {
-        logger.info("transaction created by the empty constructor");
+        logger.info("transaction created by empty constructor");
     }
 
     /**
@@ -451,7 +398,7 @@ public class Transaction
 
     /**
      * @return true if the success report value of the header of this
-     *         transaction is yes or false otherwise or if it's ommited
+     *         transaction is yes or false otherwise or if it's omitted
      */
     public boolean getSuccessReport()
     {
@@ -503,10 +450,9 @@ public class Transaction
     }
 
     /**
-     * Used to parse the raw data between the connection and the transaction it
-     * identifies the header and fills the body if existing Also it should find
-     * eventual errors on the data received and generate an 400 response throw
-     * an (exception or other methods ?!) This method is also responsible for
+     * Parse the data, identify the header and fill the body.
+     * Also it should find errors on received data and generate a 400 response
+     * (throw an exception or other methods?!) Also responsible for
      * accounting for the data received calling the appropriate functions in the
      * ReportMechanism
      * 
@@ -514,8 +460,8 @@ public class Transaction
      * @param offset the starting point to be parsed on the given toParse array
      * @param length the number of bytes to be considered starting at the offset
      *            position
-     * @param receivingBinaryData tells the parse method if the data in the
-     *            incData is binary or usascii text
+     * @param inContentStuff tells the parse method if the data in the
+     *            incData is body data (content-stuff).
      * @throws InvalidHeaderException if an error was found with the parsing of
      *             the header
      * @throws ImplementationException this is here for debug purposes mainly
@@ -523,21 +469,11 @@ public class Transaction
      *      int)
      */
     public void parse(byte[] incData, int offset, int length,
-        boolean receivingBinaryData)
-        throws InvalidHeaderException,
-        ImplementationException
+        boolean inContentStuff)
+        throws InvalidHeaderException, ImplementationException
     {
-        /*
-         * TODO/CLEANUP: remove the extra code when it's not receiving binary
-         * data because there are probably some lines that are unreachable
-         * because now the data part of the message is always treated as binary
-         */
-        if (!receivingBinaryData)
+        if (!inContentStuff)
         {
-            /* Trims and assembles received data via the toParse string
-             * so that we get a buffer with all headers before trying to
-             * analyze it
-             */
             String toParse = new String(incData, offset, length, TextUtils.utf8);
             /*
              * if the transaction is marked as complete or invalid, calls to
@@ -546,10 +482,6 @@ public class Transaction
             if (!validTransaction)
                 return;
             if (completeTransaction)
-                /*
-                 * it's rather odd that we have a complete transaction and we
-                 * are still parsing data to it, so throw an exception
-                 */
                 throw new ImplementationException(
                     "Error: trying to parse data to a complete transaction!");
 
@@ -592,221 +524,103 @@ public class Transaction
                 if (headerComplete)
                 {
                     if (!isValid())
-                    { 		// no valid transaction at this point? -> return
-                        logger.warn("parsing invalid Tx[" + tID
-                        		+ "] returning without parsing");
-                        return;
-                    }
-                    try
+                        logger.warn("parsed invalid Tx[" + tID + "].");
+                    int moreData = toParse.length() - i;
+                    if (moreData > 0)
+                    	logger.warn("parsed header but more data to come, is preparser ok?");
+                    break;
+                }
+            } // while
+
+        } // if (!inContentStuff)
+        else
+        {
+            ByteBuffer incBuffer = ByteBuffer.wrap(incData, offset, length);
+
+            if (!headerComplete)
+            {
+            	logger.warn("parsing content-stuff without headers? - quit.");
+            	return;
+            }
+            if (!isValid())			// no valid transaction? -> return
+            {
+                logger.warn("parsing invalid Tx[" + tID + "]? - quit.");
+                return;
+            }
+            try
+            {
+                byte[] byteData;
+                if (!isIncomingResponse() && message != null &&
+                    transactionType == TransactionType.SEND)
+                {
+                    /*
+                     * TODO validate byteRange values for non negatives etc
+                     */
+                    long startIndex =
+                        (byteRange[CHUNKSTARTBYTEINDEX] - 1) + realChunkSize;
+                    logger.trace("parsingbody of " + "Tx-SEND[" + tID +
+                            "] start at " + startIndex +
+                            ", size " + incBuffer.remaining());
+                    while (incBuffer.hasRemaining())
                     {
-                        /*
-                         * the local variable used to convert the string to
-                         * byte[] FIXME (?!) should we be receiving byte [] at
-                         * this point?
-                         */
-                        byte[] byteData;
-                        if (!isIncomingResponse() && message != null
-                            && transactionType == TransactionType.SEND)
+                        if (message.getReportMechanism().getTriggerGranularity()
+                        		>= incBuffer.limit() - incBuffer.position())
                         {
                             /*
-                             * TODO the byteRange header fields should be
-                             * validated to make sure they have no negative
-                             * values etc
+                             * put all of the remaining data on the data
+                             * container and update realChunkSize,
+                             * account the reported bytes (that
+                             * automatically calls the trigger)
                              */
-                            long startIndex =
-                                (byteRange[CHUNKSTARTBYTEINDEX] - 1)
-                                    + realChunkSize;
-                            logger.trace("parsing the non binary body of "
-                                + "Tx-SEND[" + tID
-                                + "] start at " + startIndex
-                                + ", size " + (toParse.length() - i));
-
-                            while (toParse.length() - i != 0)
-                            {
-                                if (message.getReportMechanism().getTriggerGranularity()
-                                					>= toParse.length() - i)
-                                {
-                                    /*
-                                     * Put all of the remaining data on the data
-                                     * container and update the realchunksize.
-                                     * Account the reported bytes (that
-                                     * automatically calls the trigger TODO)
-                                     */
-                                    byteData =
-                                        toParse.substring(i).getBytes(TextUtils.utf8);
-                                    message.getDataContainer()
-                                    			.put(startIndex, byteData);
-                                    realChunkSize += byteData.length;
-                                    message.getReportMechanism()
-                                        .countReceivedBodyBlock(message, this,
-                                            startIndex, byteData.length);
-                                    i += byteData.length;
-                                }
-                                else
-                                {
-                                    byteData =
-                                        toParse.substring(
-                                            i, i + (message.getReportMechanism()
-                                                .getTriggerGranularity()))
-                                                	.getBytes(TextUtils.utf8);
-                                    message.getDataContainer()
-                                    			.put(startIndex, byteData);
-                                    realChunkSize += byteData.length;
-                                    message.getReportMechanism()
-                                        .countReceivedBodyBlock(message, this,
-                                            startIndex, byteData.length);
-                                    i += byteData.length;
-                                    startIndex += byteData.length;
-                                }
-                            }
+                            byteData = new byte[incBuffer.remaining()];
+                            incBuffer.get(byteData);
                         }
                         else
                         {
-                            byteData = toParse.substring(i).getBytes(TextUtils.utf8);
-                            logger.trace("parsing the body of  non-send or non"
-                                + " message from Tx-<?>["
-                                + tID + "], nr of bytes=" + byteData.length);
-                            if (byteData.length > 0)
-                            {
-                            	if (bodyByteBuffer == null)
-                                    bodyByteBuffer = ByteBuffer.wrap(byteData);
-                            	else
-                            	{
-		                            bodyByteBuffer.put(byteData);
-		                            realChunkSize += byteData.length;
-		                            i += byteData.length;
-                            	}
-                            }
+                            byteData =
+                                new byte[message.getReportMechanism()
+                                         	.getTriggerGranularity()];
+                            incBuffer.get(byteData, 0, message
+                                .getReportMechanism().getTriggerGranularity());
                         }
-                    }
-                    catch (Exception e)
-                    {
-                        logger.error("caught an exception while parsing Tx["
-                        		+ tID + "], generating 400 response", e);
-                        try
-                        {
-                            transactionManager.generateResponse(this, 400,
-                            		"Parsing exception: " + e.getMessage());
-                        }
-                        catch (IllegalUseException e2)
-                        {				// This should never happen!
-                            throw new ImplementationException(e2);
-                        }
+                        message.getDataContainer().put(startIndex, byteData);
+                        realChunkSize += byteData.length;
+                        message.getReportMechanism().countReceivedBodyBlock(
+                        		message, this, startIndex, byteData.length);
+                        startIndex += byteData.length;
                     }
                 }
-                if (completeTransaction)
+                else
                 {
-                    logger.trace("Tx[" + tID + "] is complete");
-                    break;
+                    logger.trace(
+                    		"parsing body of non-send message from Tx-<?>[" +
+            				tID + "], nr of bytes=" + incBuffer.remaining());
+                    byteData = new byte[incBuffer.remaining()];
+                    incBuffer.get(byteData);
+                    if (byteData.length > 0)
+                    {
+                    	if (bodyByteBuffer == null)
+                            bodyByteBuffer = ByteBuffer.wrap(byteData);
+                    	else
+                    	{
+                            bodyByteBuffer.put(byteData);
+                            realChunkSize += byteData.length;
+                    	}
+                    }
                 }
             }
-
-        } // if (!receivingBinaryData)
-        else
-        {
-            ByteBuffer incByteBuffer = ByteBuffer.wrap(incData, offset, length);
-
-            if (headerComplete)
+            catch (Exception e)
             {
-                if (!isValid())			// no valid transaction? -> return
-                {
-                    logger.warn("parsing invalid Tx[" + tID
-                    		+ "] returning without parsing");
-                    return;
-                }
+                logger.error("caught an exception while parsing Tx["
+                		+ tID + "], generating 400 response", e);
                 try
                 {
-                    /*
-                     * the local variable used to convert the string to byte[]
-                     * FIXME (?!) should we be receiving byte [] at this point?
-                     */
-                    byte[] byteData;
-                    if (!isIncomingResponse() && message != null
-                        && transactionType == TransactionType.SEND)
-                    {
-                        /*
-                         * if this isn't an incoming response, has a message
-                         * associated with it and it's actually a SEND method
-                         * TODO validate the byteRange values for non negatives
-                         * etc
-                         */
-                        long startIndex =
-                            (byteRange[CHUNKSTARTBYTEINDEX] - 1)
-                                + realChunkSize;
-                        logger.trace("parsing the non binary body of "
-                                + "Tx-SEND[" + tID
-                                + "] start at " + startIndex
-                                + ", size " + incByteBuffer.remaining());
-                        while (incByteBuffer.hasRemaining())
-                        {
-                            if (message.getReportMechanism().getTriggerGranularity()
-                            		>= incByteBuffer.limit() - incByteBuffer.position())
-                            {
-                                /*
-                                 * put all of the remaining data on the data
-                                 * container and update the realchunksize,
-                                 * account the reported bytes (that
-                                 * automatically calls the trigger TODO)
-                                 */
-                                byteData = new byte[incByteBuffer.remaining()];
-                                incByteBuffer.get(byteData);
-                                message.getDataContainer()
-                                				.put(startIndex, byteData);
-                                realChunkSize += byteData.length;
-                                message.getReportMechanism()
-                                    .countReceivedBodyBlock(message, this,
-                                    			startIndex, byteData.length);
-                                startIndex += byteData.length;
-                            }
-                            else
-                            {
-                                byteData =
-                                    new byte[message.getReportMechanism()
-                                             	.getTriggerGranularity()];
-                                incByteBuffer.get(byteData, 0, message
-                                    .getReportMechanism().getTriggerGranularity());
-                                message.getDataContainer()
-                                				.put(startIndex, byteData);
-                                realChunkSize += byteData.length;
-                                message.getReportMechanism()
-                                    .countReceivedBodyBlock(message, this,
-                                    			startIndex, byteData.length);
-                                startIndex += byteData.length;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        logger.trace("parsing the body of  non-send or non"
-                                + " message from Tx-<?>[" + tID
-                                + "], nr of bytes=" + incByteBuffer.remaining());
-                        byteData = new byte[incByteBuffer.remaining()];
-                        incByteBuffer.get(byteData);
-                        if (byteData.length > 0)
-                        {
-                        	if (bodyByteBuffer == null)
-                                bodyByteBuffer = ByteBuffer.wrap(byteData);
-                        	else
-                        	{
-	                            bodyByteBuffer.put(byteData);
-	                            realChunkSize += byteData.length;
-                        	}
-                        }
-                    }
+                    transactionManager.generateResponse(this, 400,
+                			"Parsing exception: " + e.getMessage());
                 }
-                catch (Exception e)
+                catch (IllegalUseException e2)
                 {
-                    logger.error("caught an exception while parsing Tx["
-                    		+ tID + "], generating 400 response", e);
-                    try
-                    {
-                        transactionManager.generateResponse(this, 400,
-                    			"Parsing exception: " + e.getMessage());
-                    }
-                    catch (IllegalUseException e2)
-                    {
-                        throw new ImplementationException(e2);
-                    }
+                    throw new ImplementationException(e2);
                 }
             }
         }
@@ -814,7 +628,7 @@ public class Transaction
 
     /**
      * TODO do what is needed if it receives an # char (that being: mark the
-     * message as aborted and "send" it to the transactionmanager thread to deal
+     * message as aborted and "send" it to the TransactionManager thread to deal
      * with so that this thread can focus on reading from the socket)
      * 
      * Responsible for marking the needed elements so that further processing
@@ -827,12 +641,12 @@ public class Transaction
      * @throws ConnectionParserException if this method was called in an
      *             outgoing transaction
      */
-    public void signalizeEnd(char continuationFlag)
+    public void signalizeEnd(char flag)
         throws ConnectionParserException
     {
         if (direction == OUT)
             throw new ConnectionParserException("Wrong use of signalizeEnd");
-        this.continuationFlagByte = (byte) continuationFlag;
+        this.continuation_flag = (byte) flag;
 
         if (!headerComplete)
         {
@@ -869,7 +683,7 @@ public class Transaction
              */
             if (transactionType == TransactionType.SEND
                 && !isIncomingResponse() && message != null
-                && continuationFlag == ENDMESSAGE)
+                && flag == FLAG_END)
             {
                 (message.getReportMechanism()).getCounter(message)
                     .receivedEndOfMessage();
@@ -877,7 +691,7 @@ public class Transaction
 
             if (transactionType == TransactionType.SEND
                 && !isIncomingResponse()
-                && continuationFlagByte == ABORTMESSAGE)
+                && continuation_flag == FLAG_ABORT)
             {
                 /*
                  * if we received a send request with a continuation flag of
@@ -950,7 +764,6 @@ public class Transaction
      * The last Byte-Range field that should represent the total number of bytes
      * of the Message reported on this transaction.
      * 
-     * 
      * @return the totalMessageBytes or -1 if this value is uninitialized or -2
      *         if the total message bytes is unknown
      */
@@ -977,47 +790,42 @@ public class Transaction
 
     /**
      * 
-     * @return true if this transaction has no more data and still has to
-     *         transmit all of the end-line content. false otherwise NOTE: This
-     *         method returns false for transaction responses because they have
-     *         their own end-line inside their content
+     * @return true = all data has been read, except the end-line.
+     * @note Returns false for responses because they have
+     *       their own end-line inside their content.
      */
     public boolean hasEndLine()
     {
         if (hasData())
             return false;
-        if (offsetRead[ENDLINEINDEX] > (7 + tID.length() + 2))
+        if (readIndex[ENDLINE] > (7 + tID.length() + 2))
             return false;
         return true;
 
     }
 
     /**
-     * TODO: put it to take into account the dynamic creation of the end of
-     * transaction
+     * TODO: take dynamic creation of an end of transaction into account
      * 
-     * @deprecated ?? FIXME if only used by the dataToSend of TM then yes put it
-     *             private then
-     * @return true/false if this transaction still has data (or headers) to be
-     *         sent (excluding the end-line) or not
+     * @return true = transaction still has data (or headers) to be read.
      */
     public boolean hasData()
     {
         if (interrupted)
             return false;
-        if (offsetRead[HEADERINDEX] >= headerBytes.length && !message.hasData())
+        if (readIndex[HEADER] >= headerBytes.length && !message.hasData())
             return false;
         return true;
     }
 
     /**
-     * Method that fills the given array with DATA (header and content excluding
-     * end of line) bytes starting from offset and stopping at the array limit
-     * or end of data and returns the number of bytes filled
+     * Fills the given array with DATA (header and content excluding
+     * end-line) bytes starting from offset and stopping at the array limit
+     * or end of data. Returns the number of bytes filled
      * 
      * @param outData the byte array to fill
-     * @param offset the offset index to start filling the outData
-     * @return the number of bytes filled
+     * @param offset where to start filling the byte array
+     * @return the number of bytes gotten
      * @throws ImplementationException if this function was called when there
      *             was no more data or if it was interrupted
      * @throws IndexOutOfBoundsException if the offset is bigger than the length
@@ -1027,49 +835,38 @@ public class Transaction
      */
     public int getData(byte[] outData, int offset)
         throws ImplementationException,
-        IndexOutOfBoundsException,
-        InternalErrorException
+		        IndexOutOfBoundsException,
+		        InternalErrorException
     {
-        // sanity checks:
-        if (interrupted && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
+        if (interrupted || readIndex[ENDLINE] > 0)
         {
-            // old line: FIXME to remove these lines if no problems are
-            // encountered running the tests return getEndLineByte();
-            throw new ImplementationException("The Transaction.get() "
-                + "when it should have been the "
-                + "Transaction.getEndLineByte");
-
+            throw new ImplementationException("The Transaction.get() " +
+            		"when it should have been the Transaction.getEndLineByte");
         }
-        if (interrupted)
-        {
-            throw new ImplementationException("The Transaction.get() "
-                + "when it should have been the "
-                + "Transaction.getEndLineByte");
 
-        }
-        // end of sanity checks
         int bytesCopied = 0;
         boolean stopCopying = false;
-        int spaceRemainingOnBuffer = outData.length - offset;
-        while ((bytesCopied < spaceRemainingOnBuffer) && !stopCopying)
+        int spaceRemaining = outData.length - offset;
+        while ((bytesCopied < spaceRemaining) && !stopCopying)
         {
             if (offset > (outData.length - 1))
                 throw new IndexOutOfBoundsException();
 
-            if (offsetRead[HEADERINDEX] < headerBytes.length)
-            { // if we are processing the header
+            if (readIndex[HEADER] < headerBytes.length)
+            {							// we are processing the header
                 int bytesToCopy = 0;
-                if ((outData.length - offset) < (headerBytes.length - offsetRead[HEADERINDEX]))
-                    // if the remaining bytes on the outdata is smaller than the
-                    // remaining bytes on the header then fill the outdata with
-                    // that length
+                if ((outData.length - offset) < (headerBytes.length - readIndex[HEADER]))
+                    /*
+                     * Remaining bytes on outData smaller than remaining on
+                     * header. Fill outData with that length.
+                     */
                     bytesToCopy = (outData.length - offset);
                 else
-                    bytesToCopy =
-                        (int) (headerBytes.length - offsetRead[HEADERINDEX]);
-                System.arraycopy(headerBytes, (int) offsetRead[HEADERINDEX],
-                    outData, offset, bytesToCopy);
-                offsetRead[HEADERINDEX] += bytesToCopy;
+                    bytesToCopy = (int) (headerBytes.length - readIndex[HEADER]);
+
+                System.arraycopy(headerBytes, (int) readIndex[HEADER],
+                				outData, offset, bytesToCopy);
+                readIndex[HEADER] += bytesToCopy;
                 bytesCopied += bytesToCopy;
                 offset += bytesCopied;
                 continue;
@@ -1083,15 +880,65 @@ public class Transaction
                 continue;
 
             }
-            if (!interrupted && !message.hasData()
-                && (offsetRead[HEADERINDEX] >= headerBytes.length))
-                stopCopying = true;
+            if (!interrupted && !message.hasData() &&
+                (readIndex[HEADER] >= headerBytes.length))
+                stopCopying = true;		// header done, no data to send.
         }
         return bytesCopied;
     }
 
     /**
-     * Method that asserts if a transaction is interruptible or not.
+     * Gets a byte for the end of transaction line
+     * 
+     * @return a byte of the end of transaction line
+     * @throws InternalErrorException if this was called with all of the end of
+     *             line bytes already returned
+     */
+    byte getEndLineByte() throws InternalErrorException
+    {
+        if (hasContentStuff && readIndex[DATA] < 2)
+        {
+            /*
+             * Add the extra CRLF separating data and end-line
+             */
+            if (readIndex[DATA]++ == 0)
+                return 13;
+            else
+                return 10;
+        }
+        if (readIndex[ENDLINE] >= 0 && readIndex[ENDLINE] <= 6)
+        {
+            readIndex[ENDLINE]++;
+            return (byte) '-';
+        }
+        int endlen = tID.length() + 7;
+        if (readIndex[ENDLINE] > 6
+            && (readIndex[ENDLINE] < endlen))
+        {
+//            byte[] byteTID = tID.getBytes(TextUtils.utf8);
+            return (byte) tID.charAt((int) (readIndex[ENDLINE]++ - 7));
+//            return byteTID[(int) (readIndex[ENDLINE]++ - 7)];
+        }
+        // TODO If we are in the last character, get the
+        // interruption end of line flag and use it here
+        if (readIndex[ENDLINE] > (endlen)
+            && readIndex[ENDLINE] <= (endlen + 2))
+        {
+            if (readIndex[ENDLINE]++ == endlen + 2)
+                return 10;
+            return 13;
+        }
+        if (readIndex[ENDLINE] > endlen + 2)
+        {
+            throw new InternalErrorException(
+                "Error the .get() of the transaction was called without available bytes to get");
+        }
+        readIndex[ENDLINE]++;
+        return continuation_flag;
+    }
+
+    /**
+     * Asserts if a transaction is interruptible or not.
      * 
      * according to the RFC:
      * "Any chunk that is larger than 2048 octets MUST be interruptible"
@@ -1118,10 +965,7 @@ public class Transaction
      */
     public boolean hasResponse()
     {
-        if (response == null)
-            return false;
-        else
-            return true;
+        return (response != null);
     }
 
     /**
@@ -1131,17 +975,15 @@ public class Transaction
      */
     protected boolean isRequest()
     {
-        if (transactionType == TransactionType.REPORT
-            || transactionType == TransactionType.SEND)
-            return true;
-        return false;
+        return (transactionType == TransactionType.REPORT ||
+        		transactionType == TransactionType.SEND);
     }
 
     /**
-     * Interrupts this transaction by setting the internal flag and appropriate
+     * Interrupt transaction by setting the flag and appropriate
      * continuation flag (+)
      * 
-     * @throws IllegalUseException if this method was unapropriately called
+     * @throws IllegalUseException if this method was inapropriately called
      *             (meaning the transaction can't be interrupted either because
      *             it's not an OutgoingMessage or is not interruptible)
      * 
@@ -1149,17 +991,16 @@ public class Transaction
     public void interrupt() throws IllegalUseException
     {
         if (!isInterruptible() || message.getDirection() != Message.OUT)
-        {
             throw new IllegalUseException("interrupt method of transaction: "
                 + tID + " was called on a non interruptible transaction");
-        }
+
         if (((OutgoingMessage) this.message).getSentBytes() != message
             .getSize())
         {
             // FIXME (?!) TODO check to see if there can be the case where the
             // message when gets interrupted has no remaining bytes left to be
             // sent due to possible concurrency here
-            continuationFlagByte = INTERRUPT;
+            continuation_flag = FLAG_IRQ;
             logger.trace("Called the interrupt of transaction " + tID);
             interrupted = true;
         }
@@ -1172,7 +1013,7 @@ public class Transaction
     public void abort()
     {
         logger.info("Aborting transaction: " + this);
-        continuationFlagByte = ABORTMESSAGE;
+        continuation_flag = FLAG_ABORT;
         interrupted = true;
         // let's wake up the write thread
         transactionManager.getConnection().notifyWriteThread();
@@ -1189,8 +1030,7 @@ public class Transaction
     protected Session getSession() throws ImplementationException
     {
         if (session == null)
-            throw new ImplementationException("Transaction had no session"
-                + " associated!");
+            throw new ImplementationException("No associated session!");
         return session;
     }
 
@@ -1205,9 +1045,7 @@ public class Transaction
     }
 
     /**
-     * 
-     * @return the actual number of body bytes that this transaction currently
-     *         holds
+     * @return Actual number of body bytes this transaction currently holds
      */
     protected int getNrBodyBytes()
     {
@@ -1234,15 +1072,13 @@ public class Transaction
         {
             return response.get();
         }
-        if (offsetRead[HEADERINDEX] < headerBytes.length)
-            return headerBytes[(int) offsetRead[HEADERINDEX]++];
+        if (readIndex[HEADER] < headerBytes.length)
+            return headerBytes[(int) readIndex[HEADER]++];
         else
         {
             if (interrupted
-                && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
+                && readIndex[ENDLINE] <= (7 + tID.length() + 2))
             {
-                // old line: FIXME to remove these lines if no problems are
-                // encountered running the tests return getEndLineByte();
                 throw new ImplementationException("The Transaction.get() "
                     + "when it should have been the "
                     + "Transaction.getEndLineByte");
@@ -1254,10 +1090,8 @@ public class Transaction
                 return message.get();
             }
             if (!interrupted
-                && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
+                && readIndex[ENDLINE] <= (7 + tID.length() + 2))
             {
-                // old line: FIXME to remove these lines if no problems are
-                // encountered running the tests return getEndLineByte();
                 throw new ImplementationException("The Transaction.get() "
                     + "when it should have been the "
                     + "Transaction.getEndLineByte");
@@ -1301,25 +1135,21 @@ public class Transaction
     protected void rewind(int numberPositionsToRewind)
         throws IllegalUseException
     {
-        /* sanity checks: */
-
         /* make sure we aren't trying to rewind a response */
         if (hasResponse())
             throw new IllegalUseException("Trying to rewind a response");
 
         /* make sure we aren't trying to rewind on the header: */
-        if (offsetRead[HEADERINDEX] < headerBytes.length)
+        if (readIndex[HEADER] < headerBytes.length)
             throw new IllegalUseException("Trying to rewind the header");
 
         /*
-         * if the message doesn't has any data, there's really no sense in
-         * rewinding:
+         * No sense in rewinding if it doesn't have any data
          */
         if (!hasContentStuff)
-            throw new IllegalUseException("Trying to rewind an empty "
-                + "transaction");
+            throw new IllegalUseException("Trying to rewind empty transaction");
         /*
-         * rewinds the given nr of positions the data container
+         * rewinds the given nr of positions in the data container
          */
         DataContainer dataContainer = message.getDataContainer();
         dataContainer.rewindRead(numberPositionsToRewind);
@@ -1342,14 +1172,13 @@ public class Transaction
     }
 
     /**
-     * 
      * Retrieves the data associated with the body of this transaction
      * 
      * @param size the number of bytes or zero for the whole data
      * @return an array of bytes with the transaction's body or null if it
      *         doesn't exist
      * @throws InternalErrorException if there was some kind of exception this
-     *             exception is thrown with the triggering exception within
+     *             is thrown with the wrapped exception
      */
     protected byte[] getBody(int size) throws InternalErrorException
     {
@@ -1370,10 +1199,8 @@ public class Transaction
                     dst[i] = bodyByteBuffer.get();
             }
             return dst;
-
         }
-        else if (transactionType == TransactionType.SEND)
-
+        else
         {
             DataContainer dc = message.getDataContainer();
             ByteBuffer auxByteBuffer;
@@ -1381,23 +1208,20 @@ public class Transaction
             {
                 if (byteRange[0] == UNINTIALIZED || byteRange[0] == UNKNOWN)
                     throw new InternalErrorException("the limits of this "
-                        + "this transaction are unknown/unintialized "
-                        + "can't satisfy request");
-                long startingOffset = byteRange[0] - 1;
+                        + "transaction are unknown/unintialized, "
+                        + "can't satisfy request.");
+                long start = byteRange[0] - 1;
                 if (size == ALLBYTES)
-                    auxByteBuffer =
-                        dc.get(startingOffset, byteRange[1] - (startingOffset));
+                    auxByteBuffer = dc.get(start, byteRange[1] - (start));
                 else
-                    auxByteBuffer = dc.get(startingOffset, size);
+                    auxByteBuffer = dc.get(start, size);
             }
             catch (Exception e)
             {
-                // TODO log it
                 throw new InternalErrorException(e);
             }
             return auxByteBuffer.array();
         }
-        return null;
     }
 
     /**
@@ -1406,7 +1230,7 @@ public class Transaction
      * @return Returns the manager.
      * @uml.property name="_transactionManager"
      */
-    public msrp.TransactionManager getTransactionManager()
+    public TransactionManager getTransactionManager()
     {
         return transactionManager;
     }
@@ -1417,14 +1241,13 @@ public class Transaction
      * @param _transactionManager The manager to set.
      * @uml.property name="_transactionManager"
      */
-    protected void setTransactionManager(msrp.TransactionManager manager)
+    protected void setTransactionManager(TransactionManager manager)
     {
-        this.transactionManager = manager;
+        transactionManager = manager;
     }
 
     /**
-     * Method called by the constructors to initialize data structures as
-     * needed.
+     * Constructor-method to initialize data structures as needed.
      * 
      * Currently uses this transaction's TransactionType to assert if there is
      * need to reserve space for this transaction body
@@ -1445,12 +1268,12 @@ public class Transaction
 
     /**
      * Adds the given data to the buffer checking if it already doesn't exceed
-     * the maximum limit of bytes without an \r\n in that case an Exception is
+     * the maximum limit of bytes. In that case an Exception is
      * thrown
      * 
      * @param toAdd the string to add to the buffer used for storage of
      *            complete lines for analyzing posteriorly
-     * @throws InvalidHeaderException if MAXHEADERBYTES would be passed with the
+     * @throws InvalidHeaderException if too many bytes would be passed with the
      *             addition of toAdd
      */
     private void addHeaderBuffer(String toAdd) throws InvalidHeaderException
@@ -1471,7 +1294,7 @@ public class Transaction
     private static Pattern endOfHeaderWithContent =
             Pattern.compile(".*(\r\n){2}.*", Pattern.DOTALL);
 
-    /** Has headerbuffer all of the header data?
+    /** Has headerBuffer all of the header data?
      * @return true if headerBuffer has all of header-data
      */
     private boolean isHeaderBufferComplete()
@@ -1487,9 +1310,7 @@ public class Transaction
 	        /* In case of a transaction with 'content-stuff' */
 	        isHeaderComplete = endOfHeaderWithContent.matcher(headerBuffer);
 
-        if (isHeaderComplete.matches())
-            return true;
-        return false;
+        return isHeaderComplete.matches();
     }
 
     /**
@@ -1497,47 +1318,41 @@ public class Transaction
      * transaction and other checks in order to assert if this is a valid
      * transaction or not.
      * 
-     * TODO complete this method so that it catches any incoherences with the
+     * TODO
+     * complete this method so that it catches any incoherences with the
      * protocol syntax. All of the syntax problems should be found at this point
      * 
-     * TODO Semantic validation: validate that the mandatory headers, regarding,
+     * Semantic validation: validate that the mandatory headers, regarding,
      * the method are present.
      * 
-     * TODO check to see if there is any garbage on the transaction (bytes
+     * check to see if there is any garbage on the transaction (bytes
      * remaining in the headerBuffer that aren't assigned to any valid field ?!)
-     * 
-     * 
-     * @return
      */
     private void validate()
     {
-        // TODO Auto-generated method stub
         return;
     }
 
     /**
-     * This method's main purpose is to assign a session and a message to the
-     * transaction as soon as the headers are complete
+     * Assign a session and message to the transaction when headers are complete
      * 
-     * method called whenever the transaction's headers are complete it's used
-     * to validate the headers and to generate the needed responses ASAP. (It
+     * called whenever the transaction's headers are complete and used
+     * to validate the headers, to generate the needed responses ASAP. (It
      * also permits one to start receiving the body already knowing which
-     * session it belongs, besides also generating the responses alot sooner)
+     * session it belongs, besides also generating the responses a lot sooner)
      */
     private void proccessHeader()
     {
         /*
-         * if this is a test (the connection of the TransactionManager is null)
-         * then skip this step! (THIS IS ONLY HERE FOR DEBUG PURPOSES)
-         * FIXME: Ideally we would have a mock connection!!
+         * if this is a test (connection of the TransactionManager is null)
+         * then skip this step! (ONLY HERE FOR DEBUG PURPOSES)
          */
         if (transactionManager.getConnection() == null)
         {
-            logger.debug("DEBUG MODE this line should only"
-                + " appear if the transaction is a dummy one!");
+            logger.debug("DEBUG MODE: should only" +
+            			" appear if transaction is a dummy one!");
             return;
         }
-
         /*
          * If the transaction is an incoming response, atm do nothing. TODO(?!)
          */
@@ -1555,30 +1370,31 @@ public class Transaction
         }
         validate();
 
-        /* make sure that a message is valid (originates 400 responses) */
+        /* make sure the transaction is valid (originates 400 responses) */
         if (!isValid())
         {
             try
             {
                 transactionManager.generateResponse(this, 400,
-                    "Transaction found invalid");
+                							"Transaction found invalid");
             }
             catch (IllegalUseException e)
             {
                 e.printStackTrace();
             }
         }
-        if (transactionManager.associatedSession((getToPath())[0]) == null)
+        Session relatedSession =
+        		transactionManager.associatedSession((getToPath())[0]);
+        if (relatedSession == null)
         {
-            // It doesn't have this session associated
-            // go see if there is one in the list of the yet to be validated in
-            // connections
+            // No session associated, go see if there is one in the list of
+        	// yet to be validated Connections
             Connections connectionsInstance =
                 MSRPStack.getConnectionsInstance(transactionManager
-                    .getConnection().getLocalAddress());
-            Session newSession =
+                					.getConnection().getLocalAddress());
+            relatedSession =
                 connectionsInstance.sessionToIdentify((getToPath())[0]);
-            if (newSession == null)
+            if (relatedSession == null)
             {
                 /*
                  * if there are no sessions associated with this transaction
@@ -1603,10 +1419,7 @@ public class Transaction
                 }
             }
             else
-            {
-                /*
-                 * if it was found a session in the toIdentify list
-                 */
+            {							/* session found */
                 if (stack.isActive((getToPath())[0]))
                 {
                     /*
@@ -1622,30 +1435,26 @@ public class Transaction
                         logger.error("Generating 506 response", e);
 
                     }
-                    logger.error("Error! received a request"
-                        + " that is yet to identify and is associated with"
-                        + " another session!");
+                    logger.error("Error! received a request that is yet to " +
+            			"be identified but associated with another session!");
                     return;
                 }
                 /*
-                 * associate this session with this transaction manager and
-                 * remove it from the list of sessions yet to be identified
+                 * associate session with this transaction manager and
+                 * remove from the list of sessions yet to be identified
                  */
-                connectionsInstance.identifiedSession(newSession);
-                this.session = newSession;
-                transactionManager.addSession(newSession);
+                connectionsInstance.identifiedSession(relatedSession);
+                this.session = relatedSession;
+                transactionManager.addSession(relatedSession);
                 associateMessage();
             }
         }
         else
         {
             /*
-             * this is one of the sessions for which this transaction manager is
-             * responsible
+             * one of the sessions for which this transaction manager is responsible
              */
-            Session sessionToAssociate =
-                transactionManager.associatedSession((getToPath())[0]);
-            this.session = sessionToAssociate;
+            this.session = relatedSession;
             associateMessage();
         }
     }
@@ -1678,7 +1487,6 @@ public class Transaction
              * RFC
              */
             {
-                /* TODO: log it */
                 session.delMessageToReceive((IncomingMessage) message);
                 message = null;
             }
@@ -1687,10 +1495,10 @@ public class Transaction
         {
             if (this.transactionType == TransactionType.SEND)
             {
-                message =
+            	IncomingMessage incomingMessage =
                     new IncomingMessage(session, messageID, this.contentType,
-                        totalMessageBytes);
-                IncomingMessage incomingMessage = (IncomingMessage) message;
+                    					totalMessageBytes);
+                message = incomingMessage;
                 message.setSuccessReport(successReport);
                 try
                 {
@@ -1698,7 +1506,6 @@ public class Transaction
                 }
                 catch (IllegalUseException e1)
                 {
-                    // TODO log it
                     // TODO invalidate this transaction and
                     // trigger the appropriate response
                     e1.printStackTrace();
@@ -1761,7 +1568,7 @@ public class Transaction
                     }
                 }
             }
-            if (this.transactionType == TransactionType.REPORT)
+            if (transactionType == TransactionType.REPORT)
             {
                 validTransaction = false;
                 /*
@@ -1775,8 +1582,8 @@ public class Transaction
         }
         // lets update the reference in the Message to this transaction if this
         // is a SEND transaction and an associated message has been found
-        if (message != null
-            && this.transactionType == TransactionType.SEND)
+        if (message != null &&
+            transactionType == TransactionType.SEND)
         {
             message.setLastSendTransaction(this);
         }
@@ -1961,55 +1768,5 @@ public class Transaction
     private void setFromPath(URI[] fromPath)
     {
         this.fromPath = fromPath;
-    }
-
-    /**
-     * Gets a byte for the end of transaction line
-     * 
-     * @return a byte of the end of transaction line
-     * @throws InternalErrorException if this was called with all of the end of
-     *             line bytes already returned
-     */
-    byte getEndLineByte() throws InternalErrorException
-    {
-        if (hasContentStuff && offsetRead[DATAINDEX] < 2)
-        {
-            /*
-             * Add the extra CRLF separating the data and the end-line
-             */
-            if (offsetRead[DATAINDEX]++ == 0)
-                return 13;
-            else
-                return 10;
-        }
-        if (offsetRead[ENDLINEINDEX] >= 0 && offsetRead[ENDLINEINDEX] <= 6)
-        {
-            offsetRead[ENDLINEINDEX]++;
-            return (byte) '-';
-        }
-        if (offsetRead[ENDLINEINDEX] > 6
-            && (offsetRead[ENDLINEINDEX] < tID.length() + 7))
-        {
-            byte[] byteTID = tID.getBytes(TextUtils.utf8);
-            return byteTID[(int) (offsetRead[ENDLINEINDEX]++ - 7)];
-        }
-
-        // TODO If we are in the last character, get the
-        // interruption end of line flag and use it here
-        if (offsetRead[ENDLINEINDEX] > (7 + tID.length())
-            && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
-        {
-            if (offsetRead[ENDLINEINDEX]++ == 7 + tID.length() + 2)
-                return 10;
-            return 13;
-
-        }
-        if (offsetRead[ENDLINEINDEX] > (7 + tID.length()) + 2)
-        {
-            throw new InternalErrorException(
-                "Error the .get() of the transaction was called without available bytes to get");
-        }
-        offsetRead[ENDLINEINDEX]++;
-        return continuationFlagByte;
     }
 }

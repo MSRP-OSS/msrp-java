@@ -546,8 +546,7 @@ public class TransactionManager
             return;
 
         Transaction newTransaction =
-            new Transaction(TransactionType.SEND,
-                (OutgoingMessage) messageToSend, this);
+            new Transaction((OutgoingMessage) messageToSend, this);
 
         // Add the transaction to the known list of existing transactions
         // this is used to generate unique TIDs in the connection and to
