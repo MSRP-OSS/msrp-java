@@ -60,13 +60,13 @@ public class ReportTransaction
         		+ "of bytes of this message was unintialized");
 
         direction = OUT;
-        offsetRead[HEADERINDEX] = offsetRead[ENDLINEINDEX] = 0;
+        readIndex[HEADER] = readIndex[ENDLINE] = 0;
         transactionType = TransactionType.REPORT;
 
         this.message = message;
         transactionManager = session.getTransactionManager();
         tID = transactionManager.generateNewTID();
-        continuationFlagByte = ENDMESSAGE;
+        continuation_flag = FLAG_END;
 	}
 
 	/** Utility routine to make an outgoing report.
@@ -112,9 +112,9 @@ public class ReportTransaction
 	@Override
     protected byte get() throws ImplementationException
     {
-        if (offsetRead[HEADERINDEX] < headerBytes.length)
-            return headerBytes[(int) offsetRead[HEADERINDEX]++];
-        else if (offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
+        if (readIndex[HEADER] < headerBytes.length)
+            return headerBytes[(int) readIndex[HEADER]++];
+        else if (readIndex[ENDLINE] <= (7 + tID.length() + 2))
             try
             {
                 return getEndLineByte();
@@ -149,7 +149,7 @@ public class ReportTransaction
         		InternalErrorException
     {
         // sanity checks:
-        if (interrupted && offsetRead[ENDLINEINDEX] <= (7 + tID.length() + 2))
+        if (interrupted && readIndex[ENDLINE] <= (7 + tID.length() + 2))
         {
             // old line: FIXME to remove these lines if no problems are
             // encountered running the tests return getEndLineByte();
@@ -174,24 +174,24 @@ public class ReportTransaction
             if (offset > (outData.length - 1))
                 throw new IndexOutOfBoundsException();
 
-            if (offsetRead[HEADERINDEX] < headerBytes.length)
+            if (readIndex[HEADER] < headerBytes.length)
             { // if we are processing the header
                 int bytesToCopy = 0;
-                if ((outData.length - offset) < (headerBytes.length - offsetRead[HEADERINDEX]))
+                if ((outData.length - offset) < (headerBytes.length - readIndex[HEADER]))
                     // if the remaining bytes on the outdata is smaller than the
                     // remaining bytes on the header then fill the outdata with
                     // that length
                     bytesToCopy = (outData.length - offset);
                 else
                     bytesToCopy =
-                        (int) (headerBytes.length - offsetRead[HEADERINDEX]);
-                System.arraycopy(headerBytes, (int) offsetRead[HEADERINDEX],
+                        (int) (headerBytes.length - readIndex[HEADER]);
+                System.arraycopy(headerBytes, (int) readIndex[HEADER],
                     outData, offset, bytesToCopy);
-                offsetRead[HEADERINDEX] += bytesToCopy;
+                readIndex[HEADER] += bytesToCopy;
                 bytesCopied += bytesToCopy;
                 offset += bytesCopied;
             }
-            if (!interrupted && (offsetRead[HEADERINDEX] >= headerBytes.length))
+            if (!interrupted && (readIndex[HEADER] >= headerBytes.length))
                 stopCopying = true;
         }
         return bytesCopied;
@@ -203,7 +203,7 @@ public class ReportTransaction
      */
     public boolean hasData()
     {
-        if (offsetRead[HEADERINDEX] >= headerBytes.length)
+        if (readIndex[HEADER] >= headerBytes.length)
             return false;
         if (interrupted)
             return false;
