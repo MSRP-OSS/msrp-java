@@ -48,6 +48,8 @@ public class TestTransaction
 
     private static String emptyCompleteSendTransaction;
 
+    private static String completeSendTransaction1;
+    private static String completeSendTransaction2;
     private static String completeSendTransaction;
 
     static private ArrayList<String> emptyCSTslicedRandomly =
@@ -97,12 +99,13 @@ public class TestTransaction
         // parsing should be done to be present on the message type]
         randomData = new byte[30];
         TextUtils.generateRandom(randomData);
-        completeSendTransaction =
+        completeSendTransaction1 =
             ("To-Path: msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
                 + "From-Path: msrp://192.168.2.3:1324/123asd;tcp\r\n"
                 + "Message-ID: 12346\r\n" + "Byte-Range: 1-30/30\r\n"
-                + "Content-Type: somethingTODO/notimportantATM\r\n" + "\r\n" + new String(
-                randomData, TextUtils.utf8));
+                + "Content-Type: somethingTODO/notimportantATM\r\n" + "\r\n");
+        completeSendTransaction2 = new String(randomData, TextUtils.utf8);
+        completeSendTransaction = completeSendTransaction1 + completeSendTransaction2;
         dummyTransactionManager = new TransactionManager();
 
     }
@@ -116,14 +119,42 @@ public class TestTransaction
         Transaction newTransaction =
             new Transaction(tID, TransactionType.REPORT,
                 dummyTransactionManager, Transaction.IN);
-        newTransaction.parse(completeSendTransaction.getBytes(TextUtils.utf8), 0,
-            completeSendTransaction.length(), false);
+        newTransaction.parse(completeSendTransaction1.getBytes(TextUtils.utf8), 0,
+            completeSendTransaction1.length(), false);
+        newTransaction.parse(completeSendTransaction2.getBytes(TextUtils.utf8), 0,
+                completeSendTransaction2.length(), true);
         newTransaction.signalizeEnd('$');
 
         try
         {
             assertArrayEquals("Error there was a problem parsing the data",
                 randomData, newTransaction.getBody(0));
+        }
+        catch (InternalErrorException e)
+        {
+            fail("Error ocurred while retrieving the body of the transaction");
+        }
+
+    }
+
+    @Test
+    public void testParsingUnPreparsedCompleteBody()
+        throws InvalidHeaderException,
+        ImplementationException, IllegalUseException, ConnectionParserException
+    {
+
+        Transaction newTransaction =
+            new Transaction(tID, TransactionType.REPORT,
+                dummyTransactionManager, Transaction.IN);
+        newTransaction.parse(completeSendTransaction.getBytes(TextUtils.utf8), 0,
+            completeSendTransaction.length(), false);
+        newTransaction.signalizeEnd('$');
+
+        try
+        {
+            byte[] tst = newTransaction.getBody(0);
+            assertEquals("Error there was a problem parsing the data",
+                0, newTransaction.getBody(0).length);
         }
         catch (InternalErrorException e)
         {
