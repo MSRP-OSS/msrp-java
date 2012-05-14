@@ -38,92 +38,10 @@ import org.slf4j.*;
  * @author João André Pereira Antunes 2008
  * 
  */
-public class TestReportMechanism
+public class TestReportMechanism extends TestFrame
 {
     private static final Logger logger =
         LoggerFactory.getLogger(TestReportMechanism.class);
-
-    Random binaryRandom = new Random();
-
-    String tempFileDir;
-    File tempFile;
-
-    Message outMessage = null;
-
-    InetAddress address;
-
-    Session sendingSession;
-
-    Session receivingSession;
-
-    MockMSRPSessionListener receivingSessionListener;
-
-    MockMSRPSessionListener sendingSessionListener;
-
-    @Before
-    public void setUpConnection()
-    {
-        sendingSessionListener =
-            new MockMSRPSessionListener("sendingSessionListener");
-        receivingSessionListener =
-            new MockMSRPSessionListener("receivingSessionListener");
-        /* fetch the address to which this sessions are going to be bound: */
-        Properties testProperties = new Properties();
-        try
-        {
-            testProperties.load(TestReportMechanism.class
-                .getResourceAsStream("/test.properties"));
-            String addressString = testProperties.getProperty("address");
-            address = InetAddress.getByName(addressString);
-            /*
-             * checks if we want the temp files on a specific directory. if the
-             * propriety doesn't exist the default dir used by the JVM is used
-             */
-            tempFileDir = testProperties.getProperty("tempdirectory");
-
-            if (tempFileDir != null)
-            {
-                System.out.println("Using temporary file directory: "
-                    + tempFileDir);
-                tempFile =
-                    File.createTempFile(Long.toString(System
-                        .currentTimeMillis()), null, new File(tempFileDir));
-            }
-            else
-                tempFile =
-                    File.createTempFile(Long.toString(System
-                        .currentTimeMillis()), null, null);
-
-            /* sets up the MSRP sessions */
-            sendingSession = new Session(false, false, address);
-            receivingSession =
-                new Session(false, false, sendingSession.getURI(), address);
-
-            receivingSession.addListener(receivingSessionListener);
-            sendingSession.addListener(sendingSessionListener);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    @After
-    public void tearDownConnection()
-    {
-        // TODO needs: (?!) timer to mantain connection active even though
-        // sessions are over (?!)
-        receivingSessionListener.getReceiveMessage().discard();
-    	if (outMessage != null)
-    		outMessage.discard();
-    	sendingSession.tearDown();
-    	receivingSession.tearDown();
-
-        tempFile.delete();
-        /* To remove: */
-        System.gc();
-    }
-
     /**
      * This method tests sending a small (499 KBytes) message and at the end
      * makes sure the success report was called one time
@@ -135,37 +53,10 @@ public class TestReportMechanism
         try
         {
             /* transfer the 499 kbytes message: */
-            byte[] smallData = new byte[messageSize];
-            TextUtils.generateRandom(smallData);
+            byte[] data = new byte[messageSize];
+            fillText(data);
 
-            outMessage =
-                new OutgoingMessage(sendingSession, "plain/text", smallData);
-            outMessage.setSuccessReport(true);
-
-            /* connect the two sessions: */
-            ArrayList<URI> toPathSendSession = new ArrayList<URI>();
-            toPathSendSession.add(receivingSession.getURI());
-            sendingSession.addToPath(toPathSendSession);
-
-            /*
-             * message should be transferred or in the process of being
-             * completely transferred
-             */
-
-            /* make the mocklistener accept the message */
-            synchronized (receivingSessionListener)
-            {
-                DataContainer dc = new MemoryDataContainer(messageSize);
-                receivingSessionListener.setDataContainer(dc);
-                receivingSessionListener.setAcceptHookResult(new Boolean(true));
-                receivingSessionListener.notify();
-                receivingSessionListener.wait();
-                receivingSessionListener.wait(1000);
-            }
-
-            if (receivingSessionListener.getAcceptHookMessage() == null
-                || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't work, message not accepted");
+            memory2Memory(data, true);
 
             synchronized (sendingSessionListener.successReportCounter)
             {
@@ -255,49 +146,10 @@ public class TestReportMechanism
     {
         try
         {
-            Long startTime = System.currentTimeMillis();
-            /* transfer the 5MB bytes message: */
-            byte[] bigData = new byte[5 * 1024 * 1024];
-            binaryRandom.nextBytes(bigData);
-            FileOutputStream fileStream = new FileOutputStream(tempFile);
-            fileStream.write(bigData);
-            fileStream.close();
-            System.out.println("Stopped generating and writing 5MB data took: "
-                + ((System.currentTimeMillis() - startTime) / 1000) + "s");
+            byte[] data = new byte[5 * 1024 * 1024];
+            fillTempFile(data, true);
 
-            outMessage =
-                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
-            outMessage.setSuccessReport(true);
-
-            /* connect the two sessions: */
-            ArrayList<URI> toPathSendSession = new ArrayList<URI>();
-            toPathSendSession.add(receivingSession.getURI());
-            sendingSession.addToPath(toPathSendSession);
-
-            /*
-             * message should be transfered or in the process of being
-             * completely transfered
-             */
-
-            /* make the mocklistener accept the message */
-            synchronized (receivingSessionListener)
-            {
-                DataContainer dc = new MemoryDataContainer(5 * 1024 * 1024);
-                receivingSessionListener.setDataContainer(dc);
-                receivingSessionListener.setAcceptHookResult(new Boolean(true));
-                receivingSessionListener.notify();
-                receivingSessionListener.wait();
-                receivingSessionListener.wait(1000);
-            }
-
-            if (receivingSessionListener.getAcceptHookMessage() == null
-                || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't work, message not accepted");
-
-            synchronized (sendingSessionListener)
-            {
-                sendingSessionListener.wait(100);
-            }
+            file2Memory(true);
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter
                 + " times and not 1",
@@ -373,43 +225,11 @@ public class TestReportMechanism
             sendingSession.setReportMechanism(CustomExampleReportMechanism
                 .getInstance());
             /* transfer the 499 bytes message: */
-            byte[] smallData = new byte[499 * 1024];
-            TextUtils.generateRandom(smallData);
+            byte[] data = new byte[499 * 1024];
+            fillText(data);
 
-            outMessage =
-                new OutgoingMessage(sendingSession, "plain/text", smallData);
-            outMessage.setSuccessReport(true);
+            memory2Memory(data, true);
 
-            /* connect the two sessions: */
-            ArrayList<URI> toPathSendSession = new ArrayList<URI>();
-            toPathSendSession.add(receivingSession.getURI());
-
-            sendingSession.addToPath(toPathSendSession);
-
-            /*
-             * message should be transfered or in the process of being
-             * completely transfered
-             */
-
-            /* make the mocklistener accept the message */
-            synchronized (receivingSessionListener)
-            {
-                DataContainer dc = new MemoryDataContainer(499 * 1024);
-                receivingSessionListener.setDataContainer(dc);
-                receivingSessionListener.setAcceptHookResult(new Boolean(true));
-                receivingSessionListener.notify();
-                receivingSessionListener.wait();
-                receivingSessionListener.wait(1000);
-            }
-
-            if (receivingSessionListener.getAcceptHookMessage() == null
-                || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't work, message not accepted");
-
-            synchronized (sendingSessionListener)
-            {
-                sendingSessionListener.wait(100);
-            }
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter.size()
                 + " times and not 2",
@@ -499,49 +319,10 @@ public class TestReportMechanism
                 .getInstance());
             sendingSession.setReportMechanism(CustomExampleReportMechanism
                 .getInstance());
-            Long startTime = System.currentTimeMillis();
-            /* transfer the 5MB bytes message: */
             byte[] bigData = new byte[5 * 1024 * 1024];
-            binaryRandom.nextBytes(bigData);
-            FileOutputStream fileStream = new FileOutputStream(tempFile);
-            fileStream.write(bigData);
-            fileStream.close();
-            System.out.println("Stopped generating 5MB data took: "
-                + ((System.currentTimeMillis() - startTime) / 1000) + "s");
+            fillTempFile(bigData, true);
 
-            outMessage =
-                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
-            outMessage.setSuccessReport(true);
-
-            /* connect the two sessions: */
-            ArrayList<URI> toPathSendSession = new ArrayList<URI>();
-            toPathSendSession.add(receivingSession.getURI());
-            sendingSession.addToPath(toPathSendSession);
-
-            /*
-             * message should be transfered or in the process of being
-             * completely transfered
-             */
-
-            /* make the mocklistener accept the message */
-            synchronized (receivingSessionListener)
-            {
-                       DataContainer dc = new MemoryDataContainer(5 * 1024 * 1024);
-         receivingSessionListener.setDataContainer(dc);
-                receivingSessionListener.setAcceptHookResult(new Boolean(true));
-                receivingSessionListener.notify();
-                receivingSessionListener.wait();
-                receivingSessionListener.wait(1000);
-            }
-
-            if (receivingSessionListener.getAcceptHookMessage() == null
-                || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't work, message not accepted");
-
-            synchronized (sendingSessionListener)
-            {
-                sendingSessionListener.wait(100);
-            }
+            file2Memory(true);
             /*
              * 11 Times might be one time too many times, because the sender
              * receives two reports of the message being completely received.
