@@ -17,7 +17,6 @@
 package msrp;
 
 import msrp.messages.*;
-import msrp.testutils.*;
 import msrp.events.*;
 
 import java.net.*;
@@ -40,117 +39,32 @@ import org.junit.*;
  * @author João André Pereira Antunes
  * 
  */
-public class TestAbortMechanism
+public class TestAbortMechanism extends TestFrame
 {
-    Random binaryRandom = new Random();
-
-    File tempFile;
-
-    String tempFileDir;
-
-    InetAddress address;
-
-    Session sendingSession;
-
-    Session receivingSession;
-
-    MockMSRPSessionListener receivingSessionListener;
-
-    MockMSRPSessionListener sendingSessionListener;
-
-    @Before
-    public void setUpConnection()
-    {
-        sendingSessionListener =
-            new MockMSRPSessionListener("sendingSessionListener");
-        receivingSessionListener =
-            new MockMSRPSessionListener("receivingSessionListener");
-        /* fetch the address to which this sessions are going to be bound: */
-        Properties testProperties = new Properties();
-        try
-        {
-            testProperties.load(TestAbortMechanism.class
-                .getResourceAsStream("/test.properties"));
-            String addressString = testProperties.getProperty("address");
-            address = InetAddress.getByName(addressString);
-            /*
-             * checks if we want the temp files on a specific directory. if the
-             * propriety doesn't exist the default dir used by the JVM is used
-             */
-            tempFileDir = testProperties.getProperty("tempdirectory");
-
-            if (tempFileDir != null)
-            {
-                System.out.println("Using temporary file directory: "
-                    + tempFileDir);
-                tempFile =
-                    File.createTempFile(Long.toString(System
-                        .currentTimeMillis()), null, new File(tempFileDir));
-            }
-            else
-                tempFile = File.createTempFile(Long.toString(System
-                					.currentTimeMillis()), null, null);
-
-            /* sets up the MSRP sessions */
-            sendingSession = new Session(false, false, address);
-            receivingSession =
-                new Session(false, false, sendingSession.getURI(), address);
-
-            receivingSession.addListener(receivingSessionListener);
-            sendingSession.addListener(sendingSessionListener);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-    }
-
-    @After
-    public void tearDownConnection()
-    {
-        // TODO needs: tear down of the sessions
-        // TODO needs: (?!) timer to mantain connection active even though
-        // sessions are over (?!)
-        tempFile.delete();
-        /* To remove: */
-        System.gc();
-    }
-
-    @Ignore
-    @Test
-    /*
-     * This method tests the functionality of aborting an unsent message,
-     * currently this test depends on resolution of Issue #11 FIXME TODO
-     */
-    public void testAbortionUnsentMessage()
-    {
-        /* TODO after fixing Issue #11 */
-    }
-
     /**
      * This test is used to test that the abortion of a currently sending
      * message is working well
      */
     @Test
-    public void testAbortionMessage()
+    public void testAbortMessage()
     {
         try
         {
             Long startTime = System.currentTimeMillis();
             /* transfer the 5MB bytes message: */
-            byte[] bigData = new byte[5 * 1024 * 1024];
-            binaryRandom.nextBytes(bigData);
+            byte[] data = new byte[5 * 1024 * 1024];
+            fillBinary(data);
             FileOutputStream fileStream = new FileOutputStream(tempFile);
-            fileStream.write(bigData);
+            fileStream.write(data);
             fileStream.flush();
             fileStream.close();
             System.out.println(
             		"Stopped generating and writing 5MB of random data. Took: "
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
-            Message fiveMegaByteMessage =
+            outMessage =
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
-            fiveMegaByteMessage.setSuccessReport(false);
+            outMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
@@ -169,11 +83,11 @@ public class TestAbortMechanism
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
 
-            if (receivingSessionListener.getAcceptHookMessage() == null
-                || receivingSessionListener.getAcceptHookSession() == null)
+            if (receivingSessionListener.getAcceptHookMessage() == null ||
+                receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
             synchronized (sendingSessionListener.updateSendStatusCounter)
             {
@@ -184,7 +98,7 @@ public class TestAbortMechanism
                 sendingSessionListener.updateSendStatusCounter.wait();
             }
             /* abort the message */
-            fiveMegaByteMessage.abort(MessageAbortedEvent.CONTINUATIONFLAG,
+            outMessage.abort(MessageAbortedEvent.CONTINUATIONFLAG,
                 null);
 
             /*
@@ -193,13 +107,12 @@ public class TestAbortMechanism
              */
             synchronized (receivingSessionListener.abortMessageCounter)
             {
-                receivingSessionListener.abortMessageCounter.wait(6000);
+                receivingSessionListener.abortMessageCounter.wait(1200);
             }
 
             /* confirm that we have an aborted message */
-            assertEquals("We didn't get a call from the library to the "
-                + "abortMessage", 1,
-                receivingSessionListener.abortMessageCounter.size());
+            assertEquals("Didn't get a call from the library to abortMessage",
+            			1, receivingSessionListener.abortMessageCounter.size());
 
             /*
              * confirm that the aborted message size received before it was
@@ -214,7 +127,7 @@ public class TestAbortMechanism
             // quickfix of issue #28:
             expectedMaximumPValue += 2;
             int obtainedPValue =
-                (int) ((int) (((IncomingMessage) receivingSessionListener
+                (int) ((((IncomingMessage) receivingSessionListener
                     .getAbortedMessage()).getReceivedBytes() * 100) / receivedMessageSize);
             assertTrue(
                 "Aborted message's expected size is wrong, "
@@ -248,30 +161,28 @@ public class TestAbortMechanism
         {
             Long startTime = System.currentTimeMillis();
             /* transfer the 5MB bytes message: */
-            byte[] bigData = new byte[5 * 1024 * 1024];
-            binaryRandom.nextBytes(bigData);
+            byte[] data = new byte[5 * 1024 * 1024];
+            fillBinary(data);
             FileOutputStream fileStream = new FileOutputStream(tempFile);
-            fileStream.write(bigData);
+            fileStream.write(data);
             fileStream.flush();
             fileStream.close();
             System.out.println(
             		"Stopped generating and writing 5MB of random data. Took: "
     				+ ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
-            Message fiveMegaByteMessage =
+            outMessage =
                 new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
-            fiveMegaByteMessage.setSuccessReport(false);
+            outMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
-
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
 
             sendingSession.addToPath(toPathSendSession);
 
             /*
-             * message should be transfered or in the process of being
-             * completely transfered
+             * message should be transfered or in the process of...
              */
 
             /* make the mocklistener accept the message */
@@ -281,11 +192,10 @@ public class TestAbortMechanism
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
-                receivingSessionListener.wait(6000);
+                receivingSessionListener.wait();
             }
-
-            if (receivingSessionListener.getAcceptHookMessage() == null
-                || receivingSessionListener.getAcceptHookSession() == null)
+            if (receivingSessionListener.getAcceptHookMessage() == null ||
+                receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't worked and the message didn't got "
                     + "accepted");
             synchronized (sendingSessionListener.updateSendStatusCounter)
@@ -305,7 +215,7 @@ public class TestAbortMechanism
              */
             synchronized (sendingSessionListener.abortMessageCounter)
             {
-                sendingSessionListener.abortMessageCounter.wait(6000);
+                sendingSessionListener.abortMessageCounter.wait(1200);
             }
 
             /* confirm that we have an aborted message */
@@ -318,14 +228,14 @@ public class TestAbortMechanism
              */
             synchronized (receivingSessionListener.abortMessageCounter)
             {
-                receivingSessionListener.abortMessageCounter.wait(6000);
+                receivingSessionListener.abortMessageCounter.wait(1200);
             }
             /* confirm that we have an aborted message */
-            assertEquals("We didn't get a call from the library to the "
-                + "abortMessage", 1, receivingSessionListener.abortMessageCounter
-                .size());
-            MessageAbortedEvent receivingAbortEvent = receivingSessionListener.messageAbortEvents.get(0);
-            // let's wait for the event on the receive end to get the #
+            assertEquals("Didn't get a call from the library to abortMessage",
+            			1, receivingSessionListener.abortMessageCounter.size());
+            MessageAbortedEvent receivingAbortEvent =
+            			receivingSessionListener.messageAbortEvents.get(0);
+            // let's wait for the event on the receiving end to get the #
             // continuation flag
             assertTrue("Error, reason code different from #, got: "
                 + receivingAbortEvent.getReason(),
@@ -344,7 +254,7 @@ public class TestAbortMechanism
             // quickfix of issue #28, let's be happy with values under 20
             expectedMaximumPValue = 19;
             int obtainedPValue =
-                (int) ((int) (((OutgoingMessage) sendingSessionListener
+                (int) ((((OutgoingMessage) sendingSessionListener
                     .getAbortedMessage()).getSentBytes() * 100) / sendingMessageSize);
             assertTrue(
                 "Aborted message's expected size is wrong, "
@@ -370,5 +280,16 @@ public class TestAbortMechanism
             e.printStackTrace();
             fail("Caught an exception that shouldn't occur:" + e.getMessage());
         }
+    }
+
+    @Ignore
+    @Test
+    /*
+     * This method tests the functionality of aborting an unsent message,
+     * currently this test depends on resolution of Issue #11 FIXME TODO
+     */
+    public void testAbortUnsentMessage()
+    {
+        /* TODO after fixing Issue #11 */
     }
 }

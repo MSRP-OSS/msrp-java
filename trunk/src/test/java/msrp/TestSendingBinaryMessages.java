@@ -32,26 +32,10 @@ import org.junit.*;
 public class TestSendingBinaryMessages extends TestFrame
 {
     /**
-     * Tests sending a 300KB Message with a MemoryDataContainer
-     */
-    @Test
-    public void test300KBMessageMemoryToMemory()
-    {
-        byte[] data = new byte[300 * 1024];
-        fillBinary(data);
-
-        byte[] receivedData = memory2Memory(data, false);
-        /*
-         * assert that received data matches data sent
-         */
-        assertArrayEquals(data, receivedData);
-    }
-
-    /**
      * Tests sending a 1MB Message with a MemoryDataContainer
      */
     @Test
-    public void test1MbMessageMemoryToMemory()
+    public void test1MbBinMsgMem2Mem()
     {
         byte[] data = new byte[1024 * 1024];
         fillBinary(data);
@@ -62,68 +46,25 @@ public class TestSendingBinaryMessages extends TestFrame
     }
 
     /**
-     * Tests sending a 5MB Message with a MemoryDataContainer
+     * Tests sending a 1MB Message with a MemoryDataContainer
      */
     @Test
-    public void test5MbMessageMemoryToMemory()
+    public void test1MbBinMsgMem2MemSuccessReport()
     {
-        byte[] data = new byte[5024 * 1024];
+        byte[] data = new byte[1024 * 1024];
         fillBinary(data);
 
-        byte[] receivedData = memory2Memory(data, false);
+        byte[] receivedData = memory2Memory(data, true);
 
         assertArrayEquals(data, receivedData);
-    }
-
-    /**
-     * Tests sending a 300KB Message with a FileDataContainer
-     */
-    @Test
-    public void test300KBMessageFileToMemory()
-    {
-        byte[] data = new byte[300 * 1024];
-        fillTempFile(data, true);
-
-        byte[] receivedData = file2Memory(false);
-
-        assertArrayEquals(data, receivedData);
-    }
-
-    /**
-     * Tests sending a 5MB Message with a FileDataContainer
-     */
-    @Test
-    public void test5MBMessageFileToMemory()
-    {
-        byte[] data = new byte[5024 * 1024];
-        fillTempFile(data, true);
-
-        byte[] receivedData = file2Memory(false);
-
-        assertArrayEquals(data, receivedData);
-    }
-
-    /**
-     * Tests sending a 300KB Message with a FileDataContainer to a
-     * FileDataContainer
-     */
-    @Test
-    public void test300KBMessageFileToFile()
-    {
-        byte[] smallData = new byte[300 * 1024];
-        fillTempFile(smallData, true);
-        smallData = null;
-        file2File(false);
-        assertFilesEqual();
     }
 
     /**
      * Tests sending a 20MB Message with a FileDataContainer to a
      * FileDataContainer
-     * 
      */
     @Test
-    public void test20MBMessageFileToFile()
+    public void test20MbBinMsgFile2File()
     {
         try
         {
@@ -165,57 +106,101 @@ public class TestSendingBinaryMessages extends TestFrame
     }
 
     /**
-     * Tests sending a 300KB Message with a MemoryDataContainer
+     * Tests sending a 300KB Message with a FileDataContainer to a
+     * FileDataContainer
      */
     @Test
-    public void test300KBMessageMemoryToMemorySuccessReport()
+    public void test300KbBinMsgFile2File()
     {
-        byte[] data = new byte[300 * 1024];
-        fillBinary(data);
-
-        byte[] receivedData = memory2Memory(data, true);
-
-        assertArrayEquals(data, receivedData);
+        byte[] smallData = new byte[300 * 1024];
+        fillTempFile(smallData, true);
+        smallData = null;
+        file2File(false);
+        assertFilesEqual();
     }
 
     /**
-     * Tests sending a 1MB Message with a MemoryDataContainer
-     */
-    @Test
-    public void test1MbMessageMemoryToMemorySuccessReport()
-    {
-        byte[] data = new byte[1024 * 1024];
-        fillBinary(data);
+      * Tests sending a 300KB Message with a FileDataContainer to a
+      * FileDataContainer
+      */
+     @Test
+     public void test300KbBinMsgFile2FileSuccessReport()
+     {
+         byte[] smallData = new byte[300 * 1024];
+         fillTempFile(smallData, true);
+         smallData = null;
+         file2File(true);
+         assertFilesEqual();
+     }
 
-        byte[] receivedData = memory2Memory(data, true);
+     /**
+      * Tests sending a 300KB Message with a FileDataContainer
+      */
+     @Test
+     public void test300KbBinMsgFile2Mem()
+     {
+         byte[] data = new byte[300 * 1024];
+         fillTempFile(data, true);
 
-        assertArrayEquals(data, receivedData);
-    }
+         byte[] receivedData = file2Memory(false);
+
+         assertArrayEquals(data, receivedData);
+     }
+
+     /**
+      * Tests sending a 300KB Message with a FileDataContainer
+      */
+     @Test
+     public void test300KbBinMsgFile2MemSuccessReport()
+     {
+         byte[] data = new byte[300 * 1024];
+         fillTempFile(data, true);
+
+         byte[] receivedData = file2Memory(true);
+
+         assertArrayEquals(data, receivedData);
+     }
+
+     /**
+      * Tests sending a 300KB Message with a MemoryDataContainer
+      */
+     @Test
+     public void test300KbBinMsgMem2Mem()
+     {
+         byte[] data = new byte[300 * 1024];
+         fillBinary(data);
+
+         byte[] receivedData = memory2Memory(data, false);
+         /*
+          * assert that received data matches data sent
+          */
+         assertArrayEquals(data, receivedData);
+     }
+
+     /**
+      * Tests sending a 300KB Message with a MemoryDataContainer
+      */
+     @Test
+     public void test300KbBinMsgMem2MemSuccessReport()
+     {
+         byte[] data = new byte[300 * 1024];
+         fillBinary(data);
+
+         byte[] receivedData = memory2Memory(data, true);
+
+         assertArrayEquals(data, receivedData);
+     }
 
     /**
-     * Tests sending a 5MB Message with a MemoryDataContainer
+     * Tests sending a 5MB Message with a FileDataContainer
      */
     @Test
-    public void test5MbMessageMemoryToMemorySuccessReport()
+    public void test5MbBinMsgFile2Mem()
     {
         byte[] data = new byte[5024 * 1024];
-        fillBinary(data);
-
-        byte[] receivedData = memory2Memory(data, true);
-
-        assertArrayEquals(data, receivedData);
-    }
-
-    /**
-     * Tests sending a 300KB Message with a FileDataContainer
-     */
-    @Test
-    public void test300KBMessageFileToMemorySuccessReport()
-    {
-        byte[] data = new byte[300 * 1024];
         fillTempFile(data, true);
 
-        byte[] receivedData = file2Memory(true);
+        byte[] receivedData = file2Memory(false);
 
         assertArrayEquals(data, receivedData);
     }
@@ -224,7 +209,7 @@ public class TestSendingBinaryMessages extends TestFrame
      * Tests sending a 5MB Message with a FileDataContainer
      */
     @Test
-    public void test5MBMessageFileToMemorySuccessReport()
+    public void test5MbBinMsgFile2MemSuccessReport()
     {
         byte[] data = new byte[5024 * 1024];
         fillTempFile(data, true);
@@ -235,16 +220,30 @@ public class TestSendingBinaryMessages extends TestFrame
     }
 
     /**
-     * Tests sending a 300KB Message with a FileDataContainer to a
-     * FileDataContainer
+     * Tests sending a 5MB Message with a MemoryDataContainer
      */
     @Test
-    public void test300KBMessageFileToFileSuccessReport()
+    public void test5MbBinMsgMem2Mem()
     {
-        byte[] smallData = new byte[300 * 1024];
-        fillTempFile(smallData, true);
-        smallData = null;
-        file2File(true);
-        assertFilesEqual();
+        byte[] data = new byte[5024 * 1024];
+        fillBinary(data);
+
+        byte[] receivedData = memory2Memory(data, false);
+
+        assertArrayEquals(data, receivedData);
+    }
+
+    /**
+     * Tests sending a 5MB Message with a MemoryDataContainer
+     */
+    @Test
+    public void test5MbBinMsgMem2MemSuccessReport()
+    {
+        byte[] data = new byte[5024 * 1024];
+        fillBinary(data);
+
+        byte[] receivedData = memory2Memory(data, true);
+
+        assertArrayEquals(data, receivedData);
     }
 }
