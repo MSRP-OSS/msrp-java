@@ -110,26 +110,28 @@ public class OutgoingMessage
          * abort it, remove eventually other transactions that serve the purpose
          * of sending this message
          */
-        Vector<Transaction> transactionsToSend =
-            transactionManager.getTransactionsToSend();
-        boolean firstTransactionFound = false;
-        for (Transaction transaction : transactionsToSend)
-        {
-            if (transaction.transactionType == TransactionType.SEND
-                && transaction.getMessage().equals(this))
-            {
-                logger.debug("Found transaction: " + transaction
-                			+ " associated with message[" + this + "]");
-                if (!firstTransactionFound)
-                {
-                    transaction.abort();
-                    firstTransactionFound = true;
-                }
-                else
-                {
-                    transactionsToSend.remove(transaction);
-                }
-            }
+        synchronized (transactionManager) {
+	        Vector<Transaction> toSend =
+	            transactionManager.getTransactionsToSend();
+	        boolean firstTransactionFound = false;
+	        for (Transaction t : toSend)
+	        {
+	            if (t.transactionType == TransactionType.SEND
+	                && t.getMessage().equals(this))
+	            {
+	                logger.debug("Found transaction: " + t
+	                			+ " associated with message[" + this + "]");
+	                if (!firstTransactionFound)
+	                {
+	                    t.abort();
+	                    firstTransactionFound = true;
+	                }
+	                else
+	                {
+	                	transactionManager.removeTransactionToSend(t);
+	                }
+	            }
+	        }
         }
     }
 

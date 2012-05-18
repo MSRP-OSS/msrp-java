@@ -22,6 +22,7 @@ import java.nio.*;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Observable;
 import java.util.Random;
@@ -485,15 +486,31 @@ class Connection extends Observable implements Runnable
                 readThread = null;
             }
         } catch (ConnectionLostException cle) {
-        	for (Session s : MSRPStack.getInstance().getActiveSessions()) {
-        		if (this.equals(s.getConnection()))
-        			s.triggerConnectionLost(cle.getCause());
-        	}
+        	notifyConnectionLoss(cle);
         } catch (Exception e) {
         	logger.error(e.getLocalizedMessage());
         }
         return;
     }
+
+	/**
+	 * Notify sessions related to this connection that this connection is lost. 
+	 * @param t	the reason it was lost.
+	 */
+	void notifyConnectionLoss(Throwable t) {
+		Collection<Session> attachedSessions = new ArrayList<Session>();
+		for (Session s : MSRPStack.getInstance().getActiveSessions()) {
+			if (this.equals(s.getConnection()))
+				attachedSessions.add(s);
+		}
+		/* 
+		 * No concurrent modifications: have active sessions remove
+		 * themselves from the stack
+		 */
+		for (Session s : attachedSessions) {
+			s.triggerConnectionLost(t.getCause());
+		}
+	}
 
     private boolean receivingTransaction = false;
 
@@ -586,7 +603,8 @@ class Connection extends Observable implements Runnable
                         try
                         {
                             tType = TransactionType.valueOf(type);
-                            logger.debug("Tx-" + tType + "[" + tID + "]");
+                            logger.debug(String.format(
+                            		"Parsing incoming request Tx-%s[%s]", tType, tID));
                         }
                         catch (IllegalArgumentException iae)
                         {
