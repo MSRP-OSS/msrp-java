@@ -294,26 +294,24 @@ public abstract class Message
         /*
          * End of sanity checks.
          */
-
-        Vector<Transaction> transactionsToSend =
-            transactionManager.getTransactionsToSend();
-        for (Transaction transaction : transactionsToSend)
-        {
-            if (transaction.transactionType == TransactionType.SEND
-                && transaction.getMessage().equals(this)
-                && transaction.isInterruptible())
-                try
-                {
-                    transaction.interrupt();
-                }
-                catch (IllegalUseException e)
-                {
-                    throw new InternalErrorException(e);
-                }
+        synchronized (transactionManager) {
+	        Vector<Transaction> toSend =
+	            transactionManager.getTransactionsToSend();
+	        for (Transaction t : toSend)
+	        {
+	            if (t.transactionType == TransactionType.SEND
+	                && t.getMessage().equals(this) && t.isInterruptible())
+	                try
+	                {
+	                    t.interrupt();
+	                }
+	                catch (IllegalUseException e)
+	                {
+	                    throw new InternalErrorException(e);
+	                }
+	        }
         }
-
         session.addMessageOnTop(this);
-
     }
 
     /**

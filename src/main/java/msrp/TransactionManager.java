@@ -572,13 +572,21 @@ public class TransactionManager
      * @param positionIndex the position in which to add the transaction, if -1
      *            (UNIMPORTANT) just run an .add
      */
-    private void addTransactionToSend(Transaction transaction, int positionIndex)
+    protected void addTransactionToSend(Transaction transaction, int positionIndex)
     {
-        if (positionIndex != UNIMPORTANT)
-            transactionsToSend.add(positionIndex, transaction);
-        else
-            transactionsToSend.add(transaction);
+    	synchronized(this) {
+	        if (positionIndex != UNIMPORTANT)
+	            transactionsToSend.add(positionIndex, transaction);
+	        else
+	            transactionsToSend.add(transaction);
+    	}
         connection.notifyWriteThread();
+    }
+
+    public void removeTransactionToSend(Transaction t) {
+    	synchronized(this) {
+    		transactionsToSend.remove(t);
+    	}
     }
 
     /**
@@ -849,7 +857,7 @@ public class TransactionManager
                          * Removing the given transaction from the queue of
                          * transactions to send
                          */
-                        transactionsToSend.remove(t);
+                    	removeTransactionToSend(t);
                         /*
                          * we should also reset the outgoingDataValidator, so
                          * that future calls to the parser won't misjudge the
@@ -970,7 +978,7 @@ public class TransactionManager
                          * Removing the given transaction from the queue of
                          * transactions to send
                          */
-                        transactionsToSend.remove(t);
+                        removeTransactionToSend(t);
                         /*
                          * we should also reset the outgoingDataValidator, so
                          * that future calls to the parser won't misjudge the
