@@ -16,22 +16,13 @@
  */
 package msrp;
 
-import msrp.messages.Message;
 import msrp.messages.OutgoingFileMessage;
-import msrp.messages.OutgoingMessage;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.net.*;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Properties;
-
-import msrp.testutils.MockMSRPSessionListener;
-import msrp.utils.TextUtils;
 
 import org.junit.*;
 
@@ -42,136 +33,21 @@ import org.junit.*;
  * @author João André Pereira Antunes
  * 
  */
-public class SimpleProfileTest
+public class SimpleProfileTest extends TestFrame
 {
-    InetAddress address;
-
-    Session sendingSession;
-
-    Session receivingSession;
-
-    MockMSRPSessionListener receivingSessionListener =
-        new MockMSRPSessionListener("receivingSessionListener");
-
-    MockMSRPSessionListener sendingSessionListener =
-        new MockMSRPSessionListener("sendinSessionListener");
-
-    File tempFile;
-
-    String tempFileDir;
-
-    @Before
-    public void setUpConnection()
-    {
-        /* fetch the address to which this sessions are going to be bound: */
-        Properties testProperties = new Properties();
-        try
-        {
-            /* Set the limit to be of 30 MB of messages allowed in memory */
-            MSRPStack.setShortMessageBytes(30024 * 1024);
-
-            testProperties.load(TestReportMechanism.class
-                .getResourceAsStream("/test.properties"));
-            String addressString = testProperties.getProperty("address");
-            /*
-             * checks if we want the temp files on a specific directory. if the
-             * propriety doesn't exist the default dir used by the JVM is used
-             */
-            tempFileDir = testProperties.getProperty("tempdirectory");
-            address = InetAddress.getByName(addressString);
-            sendingSession = new Session(false, false, address);
-            receivingSession =
-                new Session(false, false, sendingSession.getURI(), address);
-
-            receivingSession.addListener(receivingSessionListener);
-            sendingSession.addListener(sendingSessionListener);
-            if (tempFileDir != null)
-            {
-                System.out.println("Using temporary file directory: "
-                    + tempFileDir);
-                tempFile =
-                    File.createTempFile(Long.toString(System
-                        .currentTimeMillis()), null, new File(tempFileDir));
-            }
-            else
-                tempFile =
-                    File.createTempFile(Long.toString(System
-                        .currentTimeMillis()), null, null);
-
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
-    }
-
-    @After
-    public void tearDownConnection()
-    {
-        // TODO needs: tear down of the sessions
-        // TODO needs: (?!) timer to mantain connection active even though
-        // sessions are over (?!)
-        tempFile.delete();
-    }
-
     /**
      * Tests sending a 300KB Message with a MemoryDataContainer to a
      * MemoryDataContainer
      */
     @Test
-    public void test300KBMessageMemoryToMemory()
+    public void testProfile300KbTxtMsgMem2Mem()
     {
-        try
-        {
-            byte[] smallData = new byte[300 * 1024];
-            TextUtils.generateRandom(smallData);
+        byte[] data = new byte[300 * 1024];
+        fillText(data);
 
-            Message threeHKbMessage =
-                new OutgoingMessage(sendingSession, "plain/text", smallData);
-            threeHKbMessage.setSuccessReport(false);
+        byte[] receivedData = memory2Memory(data, false);
 
-            /* connect the two sessions: */
-            ArrayList<URI> toPathSendSession = new ArrayList<URI>();
-            toPathSendSession.add(receivingSession.getURI());
-            sendingSession.addToPath(toPathSendSession);
-
-            /*
-             * message should be transfered or in the process of being
-             * completely transfered
-             */
-
-            /* make the mocklistener accept the message */
-            synchronized (receivingSessionListener)
-            {
-                DataContainer dc = new MemoryDataContainer(300 * 1024);
-                receivingSessionListener.setDataContainer(dc);
-                receivingSessionListener.setAcceptHookResult(new Boolean(true));
-                receivingSessionListener.notify();
-                receivingSessionListener.wait();
-                receivingSessionListener.wait(9000);
-            }
-
-            if (receivingSessionListener.getAcceptHookMessage() == null
-                || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
-
-            ByteBuffer receivedByteBuffer =
-                receivingSessionListener.getReceiveMessage().getDataContainer()
-                    .get(0, 0);
-            byte[] receivedData = receivedByteBuffer.array();
-            /*
-             * assert that the received data matches the sent data
-             */
-            assertArrayEquals(smallData, receivedData);
-
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+        assertArrayEquals(data, receivedData);
     }
 
     @Test
@@ -182,88 +58,31 @@ public class SimpleProfileTest
      * runtime just sending the file. So that the asserts don't influence the 
      * execution-time statistics 
      */
-    public void testSendingExistingFileToFile()
+    public void testProfileSendExistingFile2File()
     {
         /* set up the sending session to send the existing file: */
         File fileToSend = new File("resources/tests/fileToSend");
         assertTrue("Error, file: fileToSend doesn't exist, expected in: "
             + fileToSend.getAbsolutePath(), fileToSend.exists());
 
-        Message messageToBeSent = null;
         try
         {
-            messageToBeSent =
-                new OutgoingFileMessage(sendingSession,
-                    "prs.genericfile/prs.rawbyte", fileToSend);
+            outMessage = new OutgoingFileMessage(sendingSession,
+                					"prs.genericfile/prs.rawbyte", fileToSend);
+	        outMessage.setSuccessReport(true);
+	
+	        /*
+	         * set up the receiving session handler to receive the data to the
+	         * receivedFile
+	         */
+	        receivingTempFile = new File("receivedFile");
+	
+	        FileDataContainer fdc = new FileDataContainer(receivingTempFile);
+	        receivingSessionListener.setDataContainer(fdc);
+	
+	        send(fdc);
         }
         catch (Exception e)
-        {
-            fail(e.getMessage());
-        }
-        messageToBeSent.setSuccessReport(true);
-
-        /* add the listener */
-        sendingSession.addListener(sendingSessionListener);
-
-        /*
-         * set up the receiving session handler to receive the data to the
-         * receivedFile
-         */
-
-        File receivedFile = new File("receivedFile");
-
-        FileDataContainer receivedFileDC = null;
-        try
-        {
-            receivedFileDC = new FileDataContainer(receivedFile);
-        }
-        catch (Exception e)
-        {
-            fail(e.getMessage());
-        }
-        receivingSessionListener.setDataContainer(receivedFileDC);
-
-        receivingSession.addListener(receivingSessionListener);
-
-        /* start the transfer by adding the toPath to the sendingSession */
-        ArrayList<URI> toPathSendSession = new ArrayList<URI>();
-        toPathSendSession.add(receivingSession.getURI());
-        try
-        {
-            sendingSession.addToPath(toPathSendSession);
-        }
-        catch (Exception e)
-        {
-            fail(e.getMessage());
-        }
-
-        /*
-         * message should be transfered or in the process of being completely
-         * transfered
-         */
-        try
-        {
-            /* make the mocklistener accept the message */
-            synchronized (receivingSessionListener)
-            {
-                receivingSessionListener.setAcceptHookResult(new Boolean(true));
-                receivingSessionListener.notify();
-                receivingSessionListener.wait();
-                receivingSessionListener.wait(10000);
-            }
-
-            // confirm that the message got accepted on the
-            // receivingSessionListener
-            if (receivingSessionListener.getAcceptHookMessage() == null
-                || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock (?!) didn't worked and the message didn't got "
-                    + "accepted");
-
-            // stop further validations here as this is the test used for the
-            // profiler
-
-        }
-        catch (InterruptedException e)
         {
             fail(e.getMessage());
         }

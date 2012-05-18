@@ -16,15 +16,8 @@
  */
 package msrp;
 
-import java.net.*;
-import java.util.*;
-import java.io.*;
 
-import msrp.messages.Message;
-import msrp.messages.OutgoingFileMessage;
-import msrp.messages.OutgoingMessage;
 import msrp.testutils.*;
-import msrp.utils.*;
 
 import static org.junit.Assert.*;
 
@@ -331,8 +324,8 @@ public class TestReportMechanism extends TestFrame
              */
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter.size()
-                + " times and not 10",
-                sendingSessionListener.successReportCounter.size() == 10);
+                + " times and not 11",
+                sendingSessionListener.successReportCounter.size() == 11);
             /*
              * assert that the received report message id belongs to the sent
              * and therefore received message

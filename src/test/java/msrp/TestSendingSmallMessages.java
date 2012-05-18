@@ -38,11 +38,26 @@ import org.junit.Test;
 public class TestSendingSmallMessages extends TestFrame
 {
     /**
+     * Tests sending a 2KB Text Message with a MemoryDataContainer to a
+     * MemoryDataContainer
+     */
+    @Test
+    public void test2KbTxtMsgMem2Mem()
+    {
+        byte[] data = new byte[2 * 1024];
+        fillText(data);
+
+        byte[] receivedData = memory2Memory(data, false);
+
+        assertArrayEquals(data, receivedData);
+    }
+
+    /**
      * Tests sending a 3KB Binary Message with a MemoryDataContainer to a
      * MemoryDataContainer
      */
     @Test
-    public void test3KBBinaryMessageMemoryToMemory()
+    public void test3KbBinMsgMem2Mem()
     {
         byte[] data = new byte[3 * 1024];
         fillBinary(data);
@@ -51,21 +66,6 @@ public class TestSendingSmallMessages extends TestFrame
         /*
          * assert that the received data matches the data sent.
          */
-        assertArrayEquals(data, receivedData);
-    }
-
-    /**
-     * Tests sending a 2KB Text Message with a MemoryDataContainer to a
-     * MemoryDataContainer
-     */
-    @Test
-    public void test2KBTextMessageMemoryToMemory()
-    {
-        byte[] data = new byte[2 * 1024];
-        fillText(data);
-
-        byte[] receivedData = memory2Memory(data, false);
-
         assertArrayEquals(data, receivedData);
     }
 
