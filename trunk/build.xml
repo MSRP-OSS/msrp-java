@@ -51,7 +51,7 @@
 	<target name="run-test-example" description="test" depends="config,compile" >
 		<junit printsummary="yes" fork="yes" haltonfailure="no">
 			<formatter type="plain" />
-			<test name="msrp.tests.TestTransaction" />
+			<test name="javax.net.msrp.tests.TestTransaction" />
 		</junit>
 	</target>
 	-->
