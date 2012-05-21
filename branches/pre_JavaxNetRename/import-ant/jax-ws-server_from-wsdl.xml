@@ -1,0 +1,121 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the authors at: miguel.pardal@ist.utl.pt
+-->
+<project name="jax-ws-server_from-wsdl">
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="build.jax-ws-server.wsimport.rel-dir" value="${build.jax-ws-server.rel-dir}/wsimport" />
+
+    <property name="jax-ws-server.wsimport.verbose" value="false" />
+    <property name="jax-ws-server.wsimport.debug" value="${compile.debug}" />
+    <property name="jax-ws-server.wsimport.bindings.file-pattern" value="*binding*.xml" />
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="build-jax-ws-server-ties-from-wsdl"
+            depends="config,jax-init,-jax-ws-server-init-file-url,-jax-ws-server-replaces,-jax-ws-server-wsimport">
+    </target>
+
+    <target name="build-jax-ws-server-from-wsdl"
+            depends="build-jax-ws-server-ties-from-wsdl,compile,create-jax-ws-server-war">
+    </target>
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <target name="-jax-ws-server-init-file-url"
+            depends="-define-file-url-prefix">
+        <!-- create property for file location in URL format -->
+        <property name="jax-ws-server.wsdl.rel-file" value="${build.config.jax-ws-server.rel-dir}/${jax-ws-server.wsdl.file-name}" />
+        <property name="jax-ws-server.wsdl.file" location="${jax-ws-server.wsdl.rel-file}" />
+        <path id="jax-ws-server.wsdl.path">
+            <pathelement location="${jax-ws-server.wsdl.file}"/>
+        </path>
+        <pathconvert property="jax-ws-server.wsdl.file./" refid="jax-ws-server.wsdl.path" pathsep=";" dirsep="/" />
+        <property name="jax-ws-server.wsdl.url" value="${file-url-prefix}${jax-ws-server.wsdl.file./}" />
+    </target>
+
+    <target name="-jax-ws-server-wsimport"
+            depends="-jax-ws-server-wsimport-init,-jax-ws-server-wsimport-exec,-jax-ws-server-wsimport-exec-override,-jax-ws-server-wsimport-finish">
+    </target>
+
+    <target name="-jax-ws-server-wsimport-init"
+            depends="-jax-ws-server-init,-jax-ws-env.taskdef.init">
+        <!-- check required properties -->
+        <fail message="MUST DEFINE jax-ws-server.wsdl.file-name PROPERTY" unless="jax-ws-server.wsdl.file-name" />
+        <!-- create working directory -->
+        <mkdir dir="${build.jax-ws-server.wsimport.rel-dir}" />
+    </target>
+
+    <target name="-jax-ws-server-wsimport-exec"
+            unless="jax-ws-server.ties.package">
+        <echo message="Executing wsimport to generate server-side artifacts..." />
+        <echo message="WSDL: ${jax-ws-server.wsdl.rel-file}" />
+        <echo message="Generated code destination dir: ${build.jax-ws-server.wsimport.rel-dir}" />
+        <wsimport wsdl="${jax-ws-server.wsdl.url}"
+                  debug="${jax-ws-server.wsimport.debug}"
+                  verbose="${jax-ws-server.wsimport.verbose}"
+                  destdir="${build.jax-ws-server.wsimport.rel-dir}"
+                  sourcedestdir="${build.jax-ws-server.wsimport.rel-dir}" >
+            <binding dir="${build.config.jax-ws-server.rel-dir}" includes="${jax-ws-server.wsimport.bindings.file-pattern}"/>
+        </wsimport>
+    </target>
+
+    <target name="-jax-ws-server-wsimport-exec-override"
+            if="jax-ws-server.ties.package">
+        <echo message="Executing wsimport to generate server-side artifacts..." />
+        <echo message="WSDL: ${jax-ws-server.wsdl.rel-file}" />
+        <echo message="Generated code destination dir: ${build.jax-ws-server.wsimport.rel-dir}" />
+        <echo message="Overriding ties package to ${jax-ws-server.ties.package}" />
+        <wsimport wsdl="${jax-ws-server.wsdl.url}"
+                  package="${jax-ws-server.ties.package}"
+                  debug="${jax-ws-server.wsimport.debug}"
+                  verbose="${jax-ws-server.wsimport.verbose}"
+                  destdir="${build.jax-ws-server.wsimport.rel-dir}"
+                  sourcedestdir="${build.jax-ws-server.wsimport.rel-dir}" >
+            <binding dir="${build.config.jax-ws-server.rel-dir}" includes="${jax-ws-server.wsimport.bindings.file-pattern}"/>
+        </wsimport>
+    </target>
+
+    <target name="-jax-ws-server-wsimport-finish">
+        <echo level="verbose" message="Copying generated classes and descriptors to build classes dir..." />
+        <copy todir="${build.classes.rel-dir}" overwrite="true">
+            <fileset dir="${build.jax-ws-server.wsimport.rel-dir}">
+                <include name="**/*.class"/>
+                <include name="**/*.xml"/>
+            </fileset>
+        </copy>
+        <echo level="verbose" message="Copying handlers config..." />
+        <copy todir="${build.classes.rel-dir}" overwrite="true">
+            <fileset dir="${build.config.jax-ws-server.rel-dir}">
+                <include name="${jax-ws-server.handlers.config.file-pattern}"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+
+</project>
