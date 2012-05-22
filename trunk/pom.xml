@@ -9,7 +9,7 @@
     </parent>
 
 	<artifactId>msrp</artifactId>
-	<groupId>net.javax</groupId>
+	<groupId>javax.net</groupId>
 	<version>1.0.0.BETA</version>
 
 	<name>MSRP :: ${project.artifactId}</name>
