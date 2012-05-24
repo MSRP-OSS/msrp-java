@@ -1,0 +1,7 @@
+Create and work on these issues:
+
+Enhancement: Message.java: - style and code legibility
+TODO rewrite of the Message class to be an interface and rewrite the following specializations:
+     * IncomingMessage OutoingMessage
+
+Feature: MSRPStack.java - Also, he can choose to use its own custom report mechanism as the library’s default using a method in the MSRPStack class
