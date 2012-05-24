@@ -1,0 +1,211 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<project name="debug">
+
+    <target name="show-console-app-properties">
+        <pathconvert property="run.classpath.property" refid="run.classpath" />
+
+        <echo message="relevant console-app properties:" />
+        <echo message="  run.main-class = ${run.main-class}" />
+        <echo message="  run.args = ${run.args}" />
+        <echo message="  run.fork = ${run.fork}" />
+        <echo message=" " />
+        <echo message="relevant console-app path definitions:" />
+        <echo message="  run.classpath = ${run.classpath.property}" />
+        <echo message=" " />
+    </target>
+
+    <target name="show-core-properties">
+        <pathconvert property="project.classpath.property" refid="project.classpath" />
+        <pathconvert property="project.lib.property" refid="project.lib.path" />
+
+        <echo message="relevant core properties:" />
+        <echo message="  basedir = ${basedir}" />
+        <echo message="  java.home = ${java.home}" />
+        <echo message="  java.io.tmpdir = ${java.io.tmpdir}" />
+        <echo message="  user.home = ${user.home}" />
+        <echo message="  user.dir = ${user.dir}" />
+        <echo message=" " />
+        <echo message="  basedir./ = ${basedir./}" />
+        <echo message="  java.home./ = ${java.home./}" />
+        <echo message="  java.io.tmpdir./ = ${java.io.tmpdir./}" />
+        <echo message="  user.home./ = ${user.home./}" />
+        <echo message="  user.dir./ = ${user.dir./}" />
+        <echo message=" " />
+        <echo message="  src.rel-dir = ${src.rel-dir}" />
+        <echo message="  src.java.rel-dir = ${src.java.rel-dir}" />
+        <echo message="  config.rel-dir = ${config.rel-dir}" />
+        <echo message="  build.rel-dir = ${build.rel-dir}" />
+        <echo message="  build.classes.rel-dir = ${build.classes.rel-dir}" />
+        <echo message="  build.config.rel-dir = ${build.config.rel-dir}" />
+        <echo message="  build.lib.rel-dir = ${build.lib.rel-dir}" />
+        <echo message="  dist.rel-dir = ${dist.rel-dir}" />
+        <echo message="  etc.rel-dir = ${etc.rel-dir}" />
+        <echo message=" " />
+        <echo message="  project.lib.parent.rel-dir = ${project.lib.parent.rel-dir}" />
+        <echo message="  project.lib.rel-dir = ${project.lib.rel-dir}" />
+        <echo message=" " />
+        <echo message=" " />
+        <echo message="relevant core path definitions:" />
+        <echo message="  project.lib.path = ${project.lib.property}" />
+        <echo message=" " />
+        <echo message="  project.classpath = ${project.classpath.property}" />
+        <echo message=" " />
+    </target>
+
+    <target name="show-jax-b-properties">
+        <echo message="relevant jax-b properties:" />
+        <echo message="  config.jax-b.rel-dir = ${config.jax-b.rel-dir}" />
+        <echo message="  build.jax-b.rel-dir = ${build.jax-b.rel-dir}" />
+        <echo message=" " />
+        <echo message="  build.jax-b.xjc.rel-dir = ${build.jax-b.xjc.rel-dir}" />
+        <echo message="  build.jax-b.javac.rel-dir = ${build.jax-b.javac.rel-dir}" />
+        <echo message=" " />
+    </target>
+
+    <target name="show-jax-ws-client-properties">
+        <echo message="relevant jax-ws client properties:" />
+        <echo message="  config.jax-ws-client.rel-dir = ${config.jax-ws-client.rel-dir}" />
+        <echo message="  build.jax-ws-client.rel-dir = ${build.jax-ws-client.rel-dir}" />
+        <echo message="  build.jax-ws-client.wsimport.rel-dir = ${build.jax-ws-client.wsimport.rel-dir}" />
+        <echo message=" " />
+        <echo message="  jax-ws-client.wsdl = ${jax-ws-client.wsdl}" />
+        <echo message="  jax-ws-client.stubs.package = ${jax-ws-client.stubs.package}" />
+        <echo message=" " />
+        <echo message="  jax-ws-client.wsimport.verbose = ${jax-ws-client.wsimport.verbose}" />
+        <echo message="  jax-ws-client.wsimport.debug = ${jax-ws-client.wsimport.debug}" />
+        <echo message="  jax-ws-client.wsimport.bindings.file-pattern = ${jax-ws-client.wsimport.bindings.file-pattern}" />
+        <echo message=" " />
+        <echo message="  jax-ws-client.security.config.file-pattern = ${jax-ws-client.security.config.file-pattern}" />
+        <echo message=" " />
+    </target>
+
+    <target name="show-jax-ws-server-properties">
+        <echo message="relevant jax-ws server properties:" />
+        <echo message="  config.jax-ws-server.rel-dir = ${config.jax-ws-server.rel-dir}" />
+        <echo message="  build.jax-ws-server.rel-dir = ${build.jax-ws-server.rel-dir}" />
+        <echo message=" " />
+        <echo message="  build.jax-ws-server.lib.rel-dir = ${build.jax-ws-server.lib.rel-dir}" />
+        <echo message="  build.jax-ws-server.apt.rel-dir = ${build.jax-ws-server.apt.rel-dir}" />
+        <echo message="  build.jax-ws-server.wsimport.rel-dir = ${build.jax-ws-server.wsimport.rel-dir}" />
+        <echo message=" " />
+        <echo message="  jax-ws-server.context = ${jax-ws-server.context}" />
+        <echo message="  jax-ws-server.war.file-name = ${jax-ws-server.war.file-name}" />
+        <echo message="  jax-ws-server.war.rel-file = ${jax-ws-server.war.rel-file}" />
+        <echo message=" " />
+        <echo message="  jax-ws-server.wsdl = ${jax-ws-server.wsdl}" />
+        <echo message="  jax-ws-server.stubs.package = ${jax-ws-server.stubs.package}" />
+        <echo message=" " />
+        <echo message="  jax-ws-server.apt.fork = ${jax-ws-server.apt.fork}" />
+        <echo message="  jax-ws-server.apt.verbose = ${jax-ws-server.apt.verbose}" />
+        <echo message="  jax-ws-server.apt.debug = ${jax-ws-server.apt.debug}" />
+        <echo message="  jax-ws-server.apt.debuglevel = ${jax-ws-server.apt.debuglevel}" />
+        <echo message="  jax-ws-server.apt.encoding = ${jax-ws-server.apt.encoding}" />
+        <echo message="  jax-ws-server.apt.target = ${jax-ws-server.apt.target}" />
+        <echo message="  jax-ws-server.apt.deprecation = ${jax-ws-server.apt.deprecation}" />
+        <echo message=" " />
+        <echo message="  jax-ws-server.wsimport.verbose = ${jax-ws-server.wsimport.verbose}" />
+        <echo message="  jax-ws-server.wsimport.debug = ${jax-ws-server.wsimport.debug}" />
+        <echo message="  jax-ws-server.wsimport.bindings.file-pattern = ${jax-ws-server.wsimport.bindings.file-pattern}" />
+        <echo message=" " />
+        <echo message="  jax-ws-server.handlers.config.file-pattern = ${jax-ws-server.handlers.config.file-pattern}" />
+        <echo message=" " />
+    </target>
+
+    <target name="show-jwsdp-properties">
+    	<property name="jwsdp.jars.property" refid="jwsdp.jars.path" />
+
+        <echo message="relevant jwsdp properties:" />
+        <echo message="  jwsdp.name = ${jwsdp.name}" />
+        <echo message="  jwsdp.version = ${jwsdp.version}" />
+        <echo message=" " />
+        <echo message="  jwsdp.dir = ${jwsdp.dir}" />
+        <echo message="  jwsdp.version= ${jwsdp.version}" />
+        <echo message=" " />
+        <echo message="  jwsdp.jars.path = ${jwsdp.jars.property}" />
+        <echo message=" " />
+    </target>
+
+    <target name="show-library-properties">
+        <echo message="relevant library properties:" />
+        <echo message="  jar.file-name = ${jar.file-name}" />
+        <echo message=" " />
+    </target>
+
+    <target name="show-tomcat-properties">
+    	<property name="tomcat.jars.property" refid="tomcat.jars.path" />
+    	<property name="catalina-ant.jar.property" refid="catalina-ant.jar.path" />
+
+        <echo message="relevant tomcat properties:" />
+        <echo message="  tomcat.name = ${tomcat.name}" />
+        <echo message="  tomcat.version = ${tomcat.version}" />
+        <echo message=" " />
+        <echo message="  tomcat.dir = ${tomcat.dir}" />
+        <echo message=" " />
+        <echo message="  tomcat.username = ${tomcat.username}" />
+        <echo message="  tomcat.password = ${tomcat.password}" />
+        <echo message=" " />
+        <echo message="  tomcat.host = ${tomcat.host}" />
+        <echo message="  tomcat.port = ${tomcat.port}" />
+        <echo message=" " />
+        <echo message="  tomcat.webman.url = ${tomcat.webman.url}" />
+        <echo message=" " />
+        <echo message="  catalina-ant.jar.path = ${catalina-ant.jar.property}" />
+        <echo message=" " />
+        <echo message="  tomcat.jars.path = ${tomcat.jars.property}" />
+        <echo message=" " />
+    </target>
+
+    <target name="show-web-app-properties">
+        <echo message="relevant web-app properties:" />
+        <echo message="  src.web.rel-dir = ${src.web.rel-dir}" />
+        <echo message="  config.web-app.rel-dir = ${config.web-app.rel-dir}" />
+        <echo message="  build.config.web-app.rel-dir = ${build.config.web-app.rel-dir}"/>
+        <echo message=" " />
+        <echo message="  web-app-env.deploy.context = ${web-app-env.deploy.context}"/>
+        <echo message="  web-app-env.deploy.war.file-name = ${web-app-env.deploy.war.file-name}"/>
+        <echo message="  web-app-env.deploy.war.rel-file = ${web-app-env.deploy.war.rel-file}"/>
+        <echo message=" " />
+    </target>
+
+    <target name="show-ws-registry-properties">
+        <echo message="relevant ws-registry properties:" />
+        <echo message="  config.ws-registry.rel-dir = ${config.ws-registry.rel-dir}" />
+        <echo message="  build.config.ws-registry.rel-dir = ${build.config.ws-registry.rel-dir}" />
+        <echo message=" " />
+        <echo message="  ws-registry.url = ${ws-registry.url}" />
+        <echo message="  ws-registry.username = ${ws-registry.username}" />
+        <echo message="  ws-registry.password = ${ws-registry.password}" />
+        <echo message=" " />
+        <echo message="  ws-registry.main-class = ${ws-registry.main-class}" />
+        <echo message="  ws-registry.publish.args = ${ws-registry.publish.args}" />
+        <echo message="  ws-registry.delete.args = ${ws-registry.delete.args}" />
+        <echo message="  ws-registry.query.args = ${ws-registry.query.args}" />
+        <echo message=" " />
+        <echo message="  ws-registry.db.web-app.context.path = ${ws-registry.db.web-app.context.path}" />
+        <echo message="  ws-registry.db.web-app.war.file = ${ws-registry.db.web-app.war.file}" />
+        <echo message=" " />
+        <echo message="  ws-registry.web-app.context.path = ${ws-registry.web-app.context.path}" />
+        <echo message="  ws-registry.web-app.war.file = ${ws-registry.web-app.war.file}" />
+        <echo message=" " />
+    </target>
+
+</project>

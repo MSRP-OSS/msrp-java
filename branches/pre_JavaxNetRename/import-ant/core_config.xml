@@ -1,0 +1,169 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<project name="core_config">
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="config.copy.file-pattern" value="**/*" />
+
+    <property name="resources.dir-name" value="resources" />
+    <property name="config.resources.rel-dir" value="${config.rel-dir}/${resources.dir-name}" />
+    <property name="build.config.resources.rel-dir" value="${build.rel-dir}/${config.resources.rel-dir}" />
+
+    <property name="config.resources.copy.file-pattern" value="**/*" />
+
+    <!-- show config replaces summary option - true/false -->
+    <property name="config-replaces-summary.option" value="false" />
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+    <target name="config" depends="-config-init,-config-replaces,-config-finish"
+            description="Process configuration files including resources" >
+    </target>
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <target name="-config-init" depends="init">
+        <copy todir="${build.config.rel-dir}" overwrite="true">
+            <fileset dir="${config.rel-dir}" includes="${config.copy.file-pattern}" />
+        </copy>
+    </target>
+
+    <target name="-config-finish"
+            depends="-config-init,-test-resources-dir,-copy-resources-dir">
+    </target>
+
+    <target name="-test-resources-dir">
+        <available type="dir"
+                   file="${build.config.resources.rel-dir}"
+                   property="build.config.resources.rel-dir.exists"/>
+        <echo level="verbose" message="build.config.resources.rel-dir.exists = ${build.config.resources.rel-dir.exists}" />
+    </target>
+
+    <target name="-copy-resources-dir"
+            if="build.config.resources.rel-dir.exists">
+        <!-- copy resources to build classes -->
+        <copy todir="${build.classes.rel-dir}" overwrite="true">
+            <fileset dir="${build.config.resources.rel-dir}" includes="${config.resources.copy.file-pattern}" />
+        </copy>
+    </target>
+
+    <!-- USER NOTE: override '-config-replaces' to do more or different replaces in all configuration files -->
+    <target name="-config-replaces">
+        <echo message="Replacing tokens in configuration files..." />
+        <property name="custom-tokens.target-name" value="-replace-custom-tokens(dir)" />
+        <antcall target="${custom-tokens.target-name}">
+            <param name="dir" value="${build.config.rel-dir}" />
+        </antcall>
+        <antcall target="-replace-core-tokens(dir)">
+            <param name="dir" value="${build.config.rel-dir}" />
+        </antcall>
+    </target>
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <!-- USER NOTE: name convention for tokens is: property name between @ -->
+    <target name="-replace-core-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <!-- Ant built-in properties -->
+            <replacefilter token="@basedir@" value="${basedir}" />
+            <replacefilter token="@ant.file@" value="${ant.file}" />
+            <replacefilter token="@ant.project.name@" value="${ant.project.name}" />
+            <replacefilter token="@ant.java.version@" value="${ant.java.version}" />
+            <!-- Java system properties -->
+            <replacefilter token="@java.version@" value="${java.version}" />
+            <replacefilter token="@java.vendor@" value="${java.vendor}" />
+            <replacefilter token="@java.vendor.url@" value="${java.vendor.url}" />
+            <replacefilter token="@java.home@" value="${java.home}" />
+            <replacefilter token="@java.vm.specification.version@" value="${java.vm.specification.version}" />
+            <replacefilter token="@java.vm.specification.vendor@" value="${java.vm.specification.vendor}" />
+            <replacefilter token="@java.vm.specification.name@" value="${java.vm.specification.name}" />
+            <replacefilter token="@java.vm.version@" value="${java.vm.version}" />
+            <replacefilter token="@java.vm.vendor@" value="${java.vm.vendor}" />
+            <replacefilter token="@java.vm.name@" value="${java.vm.name}" />
+            <replacefilter token="@java.specification.version@" value="${java.specification.version}" />
+            <replacefilter token="@java.specification.vendor@" value="${java.specification.vendor}" />
+            <replacefilter token="@java.specification.name@" value="${java.specification.name}" />
+            <replacefilter token="@java.class.version@" value="${java.class.version}" />
+            <replacefilter token="@java.class.path@" value="${java.class.path}" />
+            <replacefilter token="@java.library.path@" value="${java.library.path}" />
+            <replacefilter token="@java.io.tmpdir@" value="${java.io.tmpdir}" />
+            <replacefilter token="@java.compiler@" value="${java.compiler}" />
+            <replacefilter token="@java.ext.dirs@" value="${java.ext.dirs}" />
+            <replacefilter token="@os.name@" value="${os.name}" />
+            <replacefilter token="@os.arch@" value="${os.arch}" />
+            <replacefilter token="@os.version@" value="${os.version}" />
+            <replacefilter token="@file.separator@" value="${file.separator}" />
+            <replacefilter token="@path.separator@" value="${path.separator}" />
+            <replacefilter token="@line.separator@" value="${line.separator}" />
+            <replacefilter token="@user.name@" value="${user.name}" />
+            <replacefilter token="@user.home@" value="${user.home}" />
+            <replacefilter token="@user.dir@" value="${user.dir}" />
+            <!-- import-ant core properties -->
+            <replacefilter token="@import-ant.name@" value="${import-ant.name}" />
+            <replacefilter token="@import-ant.version@" value="${import-ant.version}" />
+            <replacefilter token="@src.rel-dir@" value="${src.rel-dir}" />
+            <replacefilter token="@src.java.rel-dir@" value="${src.java.rel-dir}" />
+            <replacefilter token="@config.rel-dir@" value="${config.rel-dir}" />
+            <replacefilter token="@build.rel-dir@" value="${build.rel-dir}" />
+            <replacefilter token="@build.classes.rel-dir" value="${build.classes.rel-dir}" />
+            <replacefilter token="@build.config.rel-dir" value="${build.config.rel-dir}" />
+            <replacefilter token="@build.lib.rel-dir" value="${build.lib.rel-dir}" />
+            <replacefilter token="@dist.rel-dir@" value="${dist.rel-dir}" />
+            <replacefilter token="@etc.rel-dir@" value="${etc.rel-dir}" />
+            <replacefilter token="@project.lib.parent.rel-dir@" value="${project.lib.parent.rel-dir}" />
+            <replacefilter token="@project.lib.rel-dir@" value="${project.lib.rel-dir}" />
+            <replacefilter token="@compile.sourcepath@" value="${compile.sourcepath}" />
+            <replacefilter token="@compile.encoding@" value="${compile.encoding}" />
+            <replacefilter token="@compile.debug@" value="${compile.debug}" />
+            <replacefilter token="@compile.debuglevel@" value="${compile.debuglevel}" />
+            <replacefilter token="@compile.optimize@" value="${compile.optimize}" />
+            <replacefilter token="@compile.deprecation@" value="${compile.deprecation}" />
+            <replacefilter token="@compile.source.version@" value="${compile.source.version}" />
+            <replacefilter token="@compile.target.version@" value="${compile.target.version}" />
+            <replacefilter token="@compile.source.version@" value="${compile.source.version}" />
+            <replacefilter token="@compile.verbose@" value="${compile.verbose}" />
+            <replacefilter token="@compile.xlint.arg@" value="${compile.xlint.arg}" />
+            <replacefilter token="@basedir./@" value="${basedir./}" />
+            <replacefilter token="@java.home./@" value="${java.io.tmpdir./}" />
+            <replacefilter token="@java.io.tmpdir./@" value="${java.io.tmpdir./}" />
+            <replacefilter token="@user.home./@" value="${user.home./}" />
+            <replacefilter token="@user.dir./@" value="${user.dir./}" />
+        </replace>
+    </target>
+
+   <!-- USER NOTE: override '-replace-custom-tokens(dir)' to replace custom tokens -->
+   <target name="-replace-custom-tokens(dir)">
+        <!--
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@token@" value="value" />
+        </replace>
+        -->
+    </target>
+
+</project>

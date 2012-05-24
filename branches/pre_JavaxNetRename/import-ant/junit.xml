@@ -1,0 +1,191 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<!--
+    Module Maintainer: jorge.martins@ist.utl.pt
+-->
+<project name="junit">
+	<fail message="MUST INCLUDE core BEFORE junit" unless="import-ant.module.core" />
+
+	<!--            -->
+	<!-- PROPERTIES -->
+	<!--            -->
+	<property name="import-ant.module.junit" value="true" />
+
+	<property name="junit.dir-name" value="tests" />
+	<property name="config.junit.rel-dir" value="${config.rel-dir}/${junit.dir-name}" />
+	<property name="build.config.junit.rel-dir" value="${build.rel-dir}/${config.junit.rel-dir}" />
+
+	<property name="src.junit.rel-dir" value="src/${junit.dir-name}" />
+	<property name="src.junit.java.rel-dir" value="${src.junit.rel-dir}" />
+	<property name="src.junit.xml.rel-dir" value="${src.junit.rel-dir}/xml" />
+	<property name="build.junit.rel-dir" value="${build.rel-dir}/${junit.dir-name}" />
+
+	<property name="junit.jar.file-name" value="junit.jar" />
+	<property name="junit.jar.location" value="${ant.home}/lib" />
+	<property name="junit.jar" value="${junit.jar.location}/${junit.jar.file-name}" />
+
+	<!-- CHECK THAT ${junit.jar} is properly defined and fail otherwise! -->
+	<fail message="PLEASE PLACE ${junit.jar.file-name} IN ${junit.jar.location} OR SET PROPERTIES junit.jar.file-name AND junit.jar.location ACCORDINGLY">
+		<condition>
+			<not>
+				<available file="${junit.jar}" />
+			</not>
+		</condition>
+	</fail>
+
+	<property name="junit.printsummary" value="on" />
+	<property name="junit.fork" value="true" />
+	<property name="junit.maxmemory" value="1024"/>
+	<property name="junit.forkmode" value="perTest" />
+	<property name="junit.haltonerror" value="off" />
+	<property name="junit.errorproperty" value="" />
+	<property name="junit.haltonfailure" value="on" />
+	<property name="junit.failureproperty" value="" />
+	<property name="junit.filtertrace" value="on" />
+	<property name="junit.jvm" value="java" />
+	<property name="junit.dir" value="${build.classes.rel-dir}" />
+	<property name="junit.newenvironment" value="false" />
+	<property name="junit.includeantruntime" value="true" />
+	<property name="junit.showoutput" value="on" />
+	<property name="junit.tempdir" value="${java.io.tmpdir}" />
+	<property name="junit.reloading" value="true" />
+
+	<property name="junit.formatter.type" value="plain" />
+	<property name="junit.formatter.usefile" value="false" />
+
+	<property name="junit.batchtest.include" value="**/*.java" />
+	<property name="junit.batchtest.exclude" value="" />
+
+	<propertyset id="junit.sysproperties" />
+
+	<!--       -->
+	<!-- PATHS -->
+	<!--       -->
+	<path id="junit.path">
+		<pathelement path="${junit.jar}"/>
+	</path>
+
+	<!--          -->
+	<!-- TASKDEFS -->
+	<!--          -->
+	<!-- Define junit task -->
+	<taskdef name="junit" classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask" />
+
+	<!--         -->
+	<!-- TARGETS -->
+	<!--         -->
+
+	<!-- MAIN TARGETS (name, description) -->
+
+	<!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+	<target name="build-junit"
+            depends="compile,config,-junit-init,-junit-replaces">
+		<!-- copy junit to build classes -->
+		<copy todir="${build.junit.rel-dir}" overwrite="true">
+			<fileset dir="${build.config.junit.rel-dir}" includes="**/*" />
+			<!-- <fileset dir="${src.junit.xml.rel-dir}" includes="**/*" /> -->
+		</copy>
+
+		<antcall target="compile">
+			<reference refid="junit.compile.classpath" torefid="compile.classpath" />
+			<param name="src.java.rel-dir" value="${src.junit.java.rel-dir}" />
+			<param name="build.classes.rel-dir" value="${build.junit.rel-dir}" />
+		</antcall>
+	</target>
+
+	<!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+	<target name="-junit-init"
+            depends="init">
+		<!-- paths are defined inside target because they need to
+             reference compile.classpath and run.classpath -->
+		<path id="junit.compile.classpath">
+			<path refid="compile.classpath" />
+			<pathelement path="${build.classes.rel-dir}"/>
+			<path refid="junit.path"/>
+		</path>
+		<path id="junit.run.classpath">
+			<pathelement path="${build.junit.rel-dir}"/>
+			<path refid="run.classpath" />
+			<path refid="junit.path"/>
+		</path>
+		<!-- Junit properties paths -->
+		<pathconvert pathsep=";" dirsep="/" property="junit.compile.classpath./" refid="junit.compile.classpath" />
+		<pathconvert pathsep=";" dirsep="/" property="junit.run.classpath./" refid="junit.run.classpath" />
+	</target>
+
+	<target name="-run-tests" depends="build-junit">
+		<junit printsummary="${junit.printsummary}"
+               fork="${junit.fork}"
+               forkmode="${junit.forkmode}"
+               haltonerror="${junit.haltonerror}"
+               errorproperty="{junit.errorproperty}"
+               haltonfailure="${junit.haltonfailure}"
+               failureproperty="${junit.failureproperty}"
+               filtertrace="${junit.filtertrace}"
+               jvm="${junit.jvm}"
+               dir="${junit.dir}"
+               newenvironment="${junit.newenvironment}"
+               includeantruntime="${junit.includeantruntime}"
+               showoutput="${junit.showoutput}"
+               tempdir="${junit.tempdir}"
+               reloading="${junit.reloading}">
+			<formatter unless="junit.formatter.classname"
+                       type="${junit.formatter.type}" usefile="${junit.formatter.usefile}" />
+			<formatter if="junit.formatter.classname"
+                       classname="${junit.formatter.classname}" extension="${junit.formatter.extension}"
+                       usefile="${junit.formatter.usefile}" />
+			<batchtest>
+				<fileset dir="${src.junit.java.rel-dir}"
+                         includes="${junit.batchtest.include}"
+                         excludes="${junit.batchtest.exclude}" />
+			</batchtest>
+			<sysproperty key="java.util.logging.config.file" value="${lib-dir}/logging.properties"/>
+			<syspropertyset refid="junit.sysproperties" />
+			<classpath>
+				<path refid="junit.run.classpath" />
+			</classpath>
+		</junit>
+	</target>
+
+	<!-- USER NOTE: override '-junit-replaces' to do more or different replaces in configuration files -->
+	<!-- USER NOTE: custom tokens are replaced before regular tokens, allowing for custom substitution -->
+	<target name="-junit-replaces">
+		<echo message="Replacing tokens in resource files..." />
+		<property name="junit.custom-tokens.target-name" value="-replace-junit-custom-tokens(dir)" />
+		<antcall target="${junit.custom-tokens.target-name}">
+			<param name="dir" value="${build.config.junit.rel-dir}" />
+		</antcall>
+		<antcall target="-replace-junit-tokens(dir)">
+			<param name="dir" value="${build.config.junit.rel-dir}" />
+		</antcall>
+	</target>
+
+	<!-- FUNCTION TARGETS (-name(args), no description) -->
+	<target name="-replace-junit-tokens(dir)">
+		<fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+	</target>
+
+	<!-- USER NOTE: override '-replace-junit-custom-tokens(dir)' to replace custom tokens -->
+	<target name="-replace-junit-custom-tokens(dir)">
+		<fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+	</target>
+
+</project>

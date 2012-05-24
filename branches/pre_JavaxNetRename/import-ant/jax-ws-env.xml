@@ -1,0 +1,68 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the authors at: miguel.pardal@ist.utl.pt
+-->
+<!--
+ jax-ws-env - jax-ws environment
+
+ This is a module specification not an implementation.
+ Known implementation modules: jwsdp, glassfish
+
+ A jax-ws-env module is expected to:
+
+ 1 - define jax-ws application environment property:
+
+    <property name="import-ant.module.jax-ws-env" value="true" />
+
+
+ 2 - define web application environment properties
+
+    <property name="jax-ws-env.name" value="..." />
+    <property name="jax-ws-env.version" value="..." />
+
+
+ 3 - define jar collection for jax-ws applications
+
+    <path id="jax-ws.jars.path">
+        ...
+    </path>
+
+
+ 4 - define jax-ws-apt, wsgen and wsimport tasks
+
+    <target name="-jax-ws-env.taskdef.init">
+
+        <taskdef name="jax-ws-apt" classname="...">
+            ...
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+        <taskdef name="wsgen" classname="...">
+            ...
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+        <taskdef name="wsimport" classname="...">
+            ...
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+    </target>
+
+-->
