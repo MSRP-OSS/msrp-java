@@ -1,0 +1,71 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<project name="library">
+    <fail message="MUST INCLUDE core BEFORE library" unless="import-ant.module.core" />
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.library" value="true" />
+    <!-- USER NOTE: default value for 'jar.file-name' is the project name -->
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="init-library">
+    	<!-- set properties with default values -->
+        <property name="jar.file-name" value="${ant.project.name}.jar" />
+    	<property name="jar.rel-file" location="${dist.rel-dir}/${jar.file-name}" />
+
+        <property name="jar.includes" value="**/*" />
+    	<property name="jar.excludes" value="" />
+    </target>
+
+    <target name="build-library"
+            depends="init-library,create-jar" >
+       <!-- description="Create a JAR archive for the library" -->
+    </target>
+
+    <target name="create-jar"
+            depends="init-library,compile">
+        <!-- clear previous jar files -->
+        <delete file="${jar.rel-file}" />
+        <delete dir="${build.classes.rel-dir}/META-INF" />
+        <!-- create jar -->
+        <echo message="Creating ${jar.rel-file} archive..." />
+        <jar destfile="${jar.rel-file}"
+             basedir="${build.classes.rel-dir}"
+             includes="${jar.includes}"
+             excludes="${jar.excludes}" >
+        </jar>
+        <!-- clear meta inf directory because it only exists for jar creation -->
+        <delete dir="${build.classes.rel-dir}/META-INF" />
+    </target>
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+
+</project>

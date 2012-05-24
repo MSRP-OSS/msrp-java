@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project name="msrp" default="build" basedir=".">
+	<!-- PROPERTIES before imports (overrides) -->
+	<property name="junit.jar.file-name" value="junit.jar" />
+	<property name="junit.jar.location" value="./lib" />
+	<property name="lib-dir" value="${basedir}/lib" />
+	<!-- IMPORTS -->
+	<import file="import-ant/core.xml" />
+	<import file="import-ant/junit.xml" />
+	<import file="import-ant/library.xml" />
+
+	<!-- CLASSPATHS -->
+	<path id="compile.classpath">
+		<pathelement location="${build.lib.rel-dir}" />
+		<pathelement location="${lib-dir}" />
+		<fileset dir="${lib-dir}/dep">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<path id="run.classpath">
+		<pathelement location="${build.classes.rel-dir}" />
+		<pathelement location="${lib-dir}" />
+		<fileset dir="${lib-dir}/run">
+			<include name="*.jar" />
+		</fileset>
+	</path>
+
+	<!-- TARGETS -->
+	<target name="build" depends="compile,config,javadoc,build-library,copy-dependencies" description="Builds the project">
+	</target>
+
+
+	<!-- currently it doesn't work as the directory structure is altered and it has to copy more than the msrp.jar but also it's dependencies
+	<target name="deploy-lib-in-sc" depends="build" description="Build the project and puts it in the correct SC lib directory">
+		<copy file="${jar.rel-file}" todir="../lib" overwrite="true" />
+	</target>
+	-->
+
+	<target name="copy-dependencies" description="Copies the library dependencies to the dist directory, currently the two logger jars are copied">
+		<copy todir="${dist.rel-dir}"  overwrite="true">
+			<fileset dir="${lib-dir}/dep">
+				<include name="**/*.jar"/>
+			</fileset>
+		</copy>
+	</target>
+	<!--CRUISE CONTROL BUILD LOOP target-->
+	<target name="cc-buildloop" depends="clean,rebuild,run-tests" description="Comprehensive (paranoid) rebuild and test (used by Cruise Control)." />
+	<!--
+	<target name="run-test-example" description="test" depends="config,compile" >
+		<junit printsummary="yes" fork="yes" haltonfailure="no">
+			<formatter type="plain" />
+			<test name="javax.net.msrp.tests.TestTransaction" />
+		</junit>
+	</target>
+	-->
+	<target name="run-tests" depends="compile,config" description="Runs unit tests">
+		<!-- CHECK THAT test.properties is properly defined and fail otherwise! -->
+		<fail message="PLEASE PLACE test.properties IN ${config.junit.rel-dir} please see ${config.junit.rel-dir}/test.properties.example for more information ">
+			<condition>
+				<not>
+					<available file="${config.junit.rel-dir}/test.properties" />
+				</not>
+			</condition>
+		</fail>
+		<fail message="PLEASE PLACE fileToSend IN ${basedir}/${resources.dir-name}/tests/ to be used in TestSendingExistingFile ">
+			<condition>
+				<not>
+					<available file="${basedir}/${resources.dir-name}/tests/fileToSend" />
+				</not>
+			</condition>
+		</fail>
+		<copy file="${basedir}/${resources.dir-name}/tests/fileToSend" todir="${build.classes.rel-dir}/resources/tests" />
+
+		<antcall target="-run-tests">
+			<param name="junit.batchtest.include" value="${tests}" />
+		</antcall>
+	</target>
+</project>

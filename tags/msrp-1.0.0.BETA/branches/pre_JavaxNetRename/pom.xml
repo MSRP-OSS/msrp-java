@@ -1,0 +1,112 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<packaging>jar</packaging>
+
+	<!--parent>
+		<artifactId>jvnet-parent</artifactId>
+		<groupId>net.java</groupId>
+		<version>1</version>
+	</parent-->
+
+	<artifactId>msrp</artifactId>
+	<groupId>net.javax</groupId>
+	<version>1.0.0.BETA</version>
+
+	<name>MSRP :: ${project.artifactId}</name>
+	<description>A library, implementing the MSRP protocol.</description>
+	<url>http://java.net/projects/msrp</url>
+	<licenses>
+	   <license>
+	     <name>GNU LESSER GENERAL PUBLIC LICENSE</name>
+	     <url>http://fsf.org/</url>
+	     <distribution>repo</distribution>
+	   </license>
+	 </licenses>
+	 <scm>
+	   <connection>scm:svn:https://svn.java.net/svn/msrp~svn</connection>
+	   <developerConnection></developerConnection>
+       <url>http://java.net/projects/msrp/sources/svn/show</url>
+	 </scm>
+	 <developers>
+	   <developer>
+	     <id>dtroit</id>
+	     <name>João André Pereira Antunes</name>
+	     <email>joao.xii@gmail.com</email>
+	   </developer>
+       <developer>
+         <id>uijltje</id>
+         <name>Tom Uijldert</name>
+         <email>tom.uijldert@gmail.com</email>
+       </developer>
+	 </developers>
+
+	<properties>
+		<compile.source>1.5</compile.source>
+		<compile.debug>true</compile.debug>
+		<junit.version>4.8.2</junit.version>
+		<slf4j.version>1.6.4</slf4j.version>
+        <log4j.version>1.2.16</log4j.version>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<groupId>org.apache.maven.plugins</groupId>
+				<configuration>
+					<source>${compile.source}</source>
+					<target>${compile.source}</target>
+					<debug>${compile.debug}</debug>
+				</configuration>
+			</plugin>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                  <execution>
+                    <phase>generate-test-resources</phase>
+                    <configuration>
+                      <tasks>
+                        <fail message=
+"${basedir}/src/test/resources/test.properties not found, see ${basedir}/config/tests/test.properties.example for more information">
+					      <condition>
+					        <not>
+					          <available file="${basedir}/src/test/resources/test.properties" />
+					        </not>
+					      </condition>
+					    </fail>
+                      </tasks>
+                    </configuration>
+                    <goals><goal>run</goal></goals>
+                  </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+	<dependencies>
+		<dependency>
+            <artifactId>slf4j-api</artifactId>
+			<groupId>org.slf4j</groupId>
+			<version>${slf4j.version}</version>
+		</dependency>
+        <dependency>
+            <artifactId>slf4j-log4j12</artifactId>
+            <groupId>org.slf4j</groupId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <artifactId>log4j</artifactId>
+            <groupId>log4j</groupId>
+            <version>${log4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <artifactId>junit</artifactId>
+            <groupId>junit</groupId>
+			<version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+	</dependencies>
+
+</project>

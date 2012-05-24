@@ -1,0 +1,279 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the authors at: miguel.pardal@ist.utl.pt
+-->
+<project name="jwsdp">
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.jwsdp" value="true" />
+
+    <property name="jwsdp.name" location="jwsdp" />
+    <property name="jwsdp.version" location="2.0" />
+
+    <property name="jwsdp.dir" location="${env.JWSDP_HOME}" />
+
+
+    <!--       -->
+    <!-- PATHS -->
+    <!--       -->
+    <path id="jwsdp.fastinfoset.jars.path">
+        <fileset dir="${jwsdp.dir}/fastinfoset/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <path id="jwsdp.jaxb.jars.path">
+        <fileset dir="${jwsdp.dir}/jaxb/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <path id="jwsdp.jaxp.jars.path">
+        <fileset dir="${jwsdp.dir}/jaxp/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <path id="jwsdp.jaxr.jars.path">
+        <fileset dir="${jwsdp.dir}/jaxr/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <path id="jwsdp.jaxrpc.jars.path">
+        <fileset dir="${jwsdp.dir}/jaxrpc/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <path id="jwsdp.jaxws.jars.path">
+        <fileset dir="${jwsdp.dir}/jaxws/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <path id="jwsdp.saaj.jars.path">
+        <fileset dir="${jwsdp.dir}/saaj/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <path id="jwsdp.sjsxp.jars.path">
+        <fileset dir="${jwsdp.dir}/sjsxp/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <path id="jwsdp.xmldsig.jars.path">
+        <fileset dir="${jwsdp.dir}/xmldsig/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <path id="jwsdp.xws-security.jars.path">
+        <fileset dir="${jwsdp.dir}/xws-security/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+    <path id="jwsdp.shared.jars.path">
+        <fileset dir="${jwsdp.dir}/shared/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="${jwsdp.dir}/jwsdp-shared/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="jwsdp.jars.path">
+        <path refid="jwsdp.fastinfoset.jars.path" />
+        <path refid="jwsdp.jaxb.jars.path" />
+        <path refid="jwsdp.jaxp.jars.path" />
+        <path refid="jwsdp.jaxr.jars.path" />
+        <path refid="jwsdp.jaxrpc.jars.path" />
+        <path refid="jwsdp.jaxws.jars.path" />
+        <path refid="jwsdp.saaj.jars.path" />
+        <path refid="jwsdp.sjsxp.jars.path" />
+        <path refid="jwsdp.xmldsig.jars.path" />
+        <path refid="jwsdp.xws-security.jars.path" />
+        <path refid="jwsdp.shared.jars.path" />
+    </path>
+
+
+    <!--          -->
+    <!-- TASKDEFS -->
+    <!--          -->
+
+    <!-- legacy support for JAX-RPC tasks -->
+    <taskdef name="wscompile" classname="com.sun.xml.rpc.tools.ant.Wscompile">
+        <classpath refid="jwsdp.jaxrpc.jars.path"/>
+    </taskdef>
+
+    <taskdef name="wsdeploy" classname="com.sun.xml.rpc.tools.ant.Wsdeploy">
+        <classpath refid="jwsdp.jaxrpc.jars.path"/>
+    </taskdef>
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <target name="-replace-jwsdp-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${replace-tokens.build.rel-dir}" summary="yes">
+            <replacefilter token="@jwsdp.name@" value="${jwsdp.name}" />
+            <replacefilter token="@jwsdp.version@" value="${jwsdp.version}" />
+            <replacefilter token="@jwsdp.dir@" value="${jwsdp.dir}" />
+        </replace>
+    </target>
+
+
+
+<!--
+    ENVIRONMENT IMPLEMENTATIONS ================================================
+-->
+
+<!--
+    BEGIN ENVIRONMENT: jax-b-env - jax-b environment - - - - - - - - - - - - - -
+
+    1 - define jax-b application enviroment property:
+-->
+    <property name="import-ant.module.jax-b-env" value="true" />
+<!--
+    2 - define jax-b application environment properties
+-->
+    <property name="jax-b-env.name" value="${jwsdp.name}" />
+    <property name="jax-b-env.version" value="${jwsdp.version}" />
+<!--
+    3 - define jar collection for jax-b applications
+-->
+    <path id="jax-b.jars.path">
+        <path refid="jwsdp.jaxb.jars.path" />
+    </path>
+<!--
+    4 - define xjc task and adapter targets
+-->
+    <target name="-jax-b-env.taskdef.init">
+
+        <taskdef name="xjc" classname="com.sun.tools.xjc.XJCTask">
+            <classpath refid="jwsdp.shared.jars.path" />
+            <classpath refid="jwsdp.jaxb.jars.path"/>
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+    </target>
+
+    <!-- xjc adapters - required due to version differences in xjc ant task -->
+    <!-- package override version -->
+    <target name="-xjc-adapter-override()">
+        <!-- dir,extension,package,schema.dir,schema.file-pattern,binding.dir,binding.file-pattern -->
+        <xjc target="${dir}" extension="${extension}" package="${package}">
+            <schema dir="${schema.dir}" includes="${schema.file-pattern}"/>
+            <binding dir="${binding.dir}" includes="${binding.file-pattern}"/>
+        </xjc>
+    </target>
+    <!-- namespace-generated package version -->
+    <target name="-xjc-adapter()">
+        <!-- dir,extension,schema.dir,schema.file-pattern,binding.dir,binding.file-pattern -->
+        <xjc target="${dir}" extension="${extension}">
+            <schema dir="${schema.dir}" includes="${schema.file-pattern}"/>
+            <binding dir="${binding.dir}" includes="${binding.file-pattern}"/>
+        </xjc>
+    </target>
+<!--
+    END ENVIRONMENT: jax-b-env - jax-b environment - - - - - - - - - - - - - - -
+-->
+
+
+<!--
+    BEGIN ENVIRONMENT: jax-ws-env - jax-ws environment - - - - - - - - - - - - -
+
+    1 - define jax-ws application environment property:
+-->
+    <property name="import-ant.module.jax-ws-env" value="true" />
+<!--
+    2 - define web application environment properties
+-->
+    <property name="jax-ws-env.name" value="${jwsdp.name}" />
+    <property name="jax-ws-env.version" value="${jwsdp.version}" />
+<!--
+    3 - define jar collection for jax-ws applications
+-->
+    <path id="jax-ws.jars.path">
+        <path refid="jwsdp.jaxws.jars.path" />
+        <path refid="jwsdp.jaxb.jars.path" />
+        <path refid="jwsdp.saaj.jars.path" />
+        <path refid="jwsdp.sjsxp.jars.path" />
+        <path refid="jwsdp.shared.jars.path" />
+    </path>
+<!--
+    4 - define jax-ws-apt, wsgen and wsimport tasks
+-->
+    <target name="-jax-ws-env.taskdef.init">
+
+        <!-- Annotations processor -
+             task name must not be 'apt' to avoid conflict with Ant 1.7's task -->
+        <taskdef name="jax-ws-apt" classname="com.sun.tools.ws.ant.Apt">
+            <classpath>
+                <!--pathelement location="${java.home}/../lib/tools.jar" /-->
+                <path refid="jwsdp.jaxws.jars.path" />
+            </classpath>
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+        <taskdef name="wsgen" classname="com.sun.tools.ws.ant.WsGen">
+            <classpath refid="jwsdp.jaxws.jars.path"/>
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+        <taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
+            <classpath refid="jwsdp.shared.jars.path"/>
+            <classpath refid="jwsdp.sjsxp.jars.path"/>
+            <classpath refid="jwsdp.jaxb.jars.path"/>
+            <classpath refid="jwsdp.jaxws.jars.path"/>
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+    </target>
+<!--
+    END ENVIRONMENT: jax-ws-env - jax-ws environment - - - - - - - - - - - - - -
+-->
+
+<!--
+    BEGIN ENVIRONMENT: ws-registry-env - ws registry environment - - - - - - - -
+
+    1 - define ws registry application environment property:
+-->
+    <property name="import-ant.module.ws-registry-env" value="true" />
+<!--
+    2 - define ws registry environment properties
+-->
+    <property name="ws-registry-env.name" value="${jwsdp.name}" />
+    <property name="ws-registry-env.version" value="${jwsdp.version}" />
+<!--
+    3 - define jar collection for ws-registry applications
+-->
+    <path id="ws-registry.jars.path">
+        <path refid="jwsdp.jaxr.jars.path" />
+        <path refid="jwsdp.jaxb.jars.path" />
+        <path refid="jwsdp.saaj.jars.path" />
+    </path>
+<!--
+    END ENVIRONMENT: ws-registry-env - ws-registry environment - - - - - - - - -
+-->
+
+</project>

@@ -1,0 +1,150 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<project name="core">
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.name" value="ImportAnt" />
+    <property name="import-ant.version" value="5.5.3" />
+
+    <property name="import-ant.module.core" value="true" />
+
+    <!-- first, access environment variables as properties -->
+    <property environment="env"/>
+
+    <!-- next, read project's property file -->
+    <property file="build.properties"/>
+
+    <!-- nesting level used for build.properties files loading and library collections -->
+    <property name="import-ant.project.nesting-levels" value="2" />
+
+    <!-- read more property files, by default, those specified in imported file
+         Override following property in project's property file or in command line using -D switch
+         File location is relative to import-ant's location -->
+    <property name="import-ant.prop-files" value="core_prop-files_nest-${import-ant.project.nesting-levels}.xml" />
+    <import file="${import-ant.prop-files}" />
+
+    <!-- define library collections, by default, those specified in imported file
+         Override following property in project's property file or in command line using -D switch
+         File location is relative to import-ant's location -->
+    <property name="import-ant.libs" value="core_libs_nest-${import-ant.project.nesting-levels}.xml" />
+    <import file="${import-ant.libs}" />
+
+    <!-- Directory structure
+         '.rel-dir' means that the property is relative to the project directory,
+         unless a '.parent.rel-dir' exists, and then it's relative to its
+         specified parent -->
+    <property name="src.rel-dir" value="src" />
+    <property name="src.java.rel-dir" value="${src.rel-dir}/java" />
+    <property name="config.rel-dir" value="config" />
+    <property name="build.rel-dir" value="build" />
+    <property name="build.classes.rel-dir" value="${build.rel-dir}/classes" />
+    <property name="build.config.rel-dir" value="${build.rel-dir}/config" />
+    <property name="dist.rel-dir" value="dist" />
+    <property name="etc.rel-dir" value="etc" />
+
+
+    <!--       -->
+    <!-- PATHS -->
+    <!--       -->
+
+    <!-- empty path - can be used as a default value -->
+    <path id="empty.path" />
+
+    <!-- system properties paths -->
+    <path id="basedir.path"><pathelement path="${basedir}"/></path>
+    <path id="java.home.path"><pathelement path="${java.home}"/></path>
+    <path id="java.io.tmpdir.path"><pathelement path="${java.io.tmpdir}"/></path>
+    <path id="user.home.path"><pathelement path="${user.home}"/></path>
+    <path id="user.dir.path"><pathelement path="${user.dir}"/></path>
+
+    <!-- system properties paths formatted using forward slashes -->
+    <pathconvert pathsep=";" dirsep="/" property="basedir./" refid="basedir.path" />
+    <pathconvert pathsep=";" dirsep="/" property="java.home./" refid="java.home.path" />
+    <pathconvert pathsep=";" dirsep="/" property="java.io.tmpdir./" refid="java.io.tmpdir.path" />
+    <pathconvert pathsep=";" dirsep="/" property="user.home./" refid="user.home.path" />
+    <pathconvert pathsep=";" dirsep="/" property="user.dir./" refid="user.dir.path" />
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+    <target name="init"
+            description="Create build directories">
+        <echo level="verbose" message="Creating the build directories..." />
+
+        <mkdir dir="${build.rel-dir}" />
+        <mkdir dir="${build.classes.rel-dir}" />
+        <mkdir dir="${build.config.rel-dir}" />
+        <mkdir dir="${dist.rel-dir}" />
+    </target>
+
+    <target name="clean"
+            description="Delete build directories" >
+        <echo level="verbose" message="Deleting the build directories and its contents..." />
+        <delete dir="${build.rel-dir}" />
+        <delete dir="${dist.rel-dir}" />
+    </target>
+
+    <target name="rebuild"
+            depends="clean,build"
+            description="Rebuild the project">
+    </target>
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="import-ant-version">
+        <echo message="${import-ant.name} ${import-ant.version}" />
+    </target>
+
+    <!-- USER NOTE: 'build' will have to be overridden in project's build.xml -->
+    <target name="build">
+        <fail message="Please override 'build' target in the project's build.xml" />
+    </target>
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <target name="-define-file-url-prefix">
+        <!-- file url syntax is:  file://host/path  -->
+        <!-- assuming host is empty, the prefix is different for windows and unix systems -->
+        <condition property="file-url-prefix" value="file:///">
+            <os family="windows" />
+        </condition>
+        <condition property="file-url-prefix" value="file://">
+            <not><os family="windows" /></not> <!-- ~ unix -->
+        </condition>
+    </target>
+
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+
+    <!--         -->
+    <!-- IMPORTS -->
+    <!--         -->
+    <import file="core_libs.xml" />
+    <import file="core_compiler.xml" />
+    <import file="core_config.xml" />
+    <import file="optional/backup.xml" optional="true" />
+    <import file="optional/javadoc.xml" optional="true" />
+    <import file="optional/debug.xml" optional="true" />
+
+</project>
