@@ -10,7 +10,7 @@
 
 	<artifactId>msrp</artifactId>
 	<groupId>net.java.msrp</groupId>
-	<version>1.0.0.BETA-SNAPSHOT</version>
+	<version>1.0.0.BETA</version>
 
 	<name>MSRP :: ${project.artifactId}</name>
 	<description>A library, implementing the MSRP protocol.</description>
@@ -23,9 +23,9 @@
 	   </license>
 	 </licenses>
 	 <scm>
-	   <connection>scm:svn:http://svn.java.net/svn/msrp~svn</connection>
-	   <developerConnection>scm:svn:https://svn.java.net/svn/msrp~svn</developerConnection>
-       <url>http://java.net/projects/msrp/sources/svn/show</url>
+	   <connection>scm:svn:http://svn.java.net/svn/msrp~svn/tags/msrp-1.0.0.BETA</connection>
+	   <developerConnection>scm:svn:https://svn.java.net/svn/msrp~svn/tags/msrp-1.0.0.BETA</developerConnection>
+       <url>http://java.net/projects/msrp/sources/svn/show/tags/msrp-1.0.0.BETA</url>
 	 </scm>
 	 <developers>
 	   <developer>
@@ -67,8 +67,7 @@
                     <phase>generate-test-resources</phase>
                     <configuration>
                       <tasks>
-                        <fail message=
-"${basedir}/src/test/resources/test.properties not found, see ${basedir}/config/tests/test.properties.example for more information">
+                        <fail message="${basedir}/src/test/resources/test.properties not found, see ${basedir}/config/tests/test.properties.example for more information">
 					      <condition>
 					        <and>
 					          <not> <isset property="skipTests" /> </not>
