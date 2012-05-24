@@ -10,7 +10,7 @@
 
 	<artifactId>msrp</artifactId>
 	<groupId>net.java.msrp</groupId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0.BETA-SNAPSHOT</version>
 
 	<name>MSRP :: ${project.artifactId}</name>
 	<description>A library, implementing the MSRP protocol.</description>
