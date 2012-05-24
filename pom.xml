@@ -23,8 +23,8 @@
 	   </license>
 	 </licenses>
 	 <scm>
-	   <connection>scm:svn:http://svn.java.net/svn/msrp~svn</connection>
-	   <developerConnection>scm:svn:https://svn.java.net/svn/msrp~svn</developerConnection>
+	   <connection>scm:svn:http://svn.java.net/svn/msrp~svn/trunk</connection>
+	   <developerConnection>scm:svn:https://svn.java.net/svn/msrp~svn/trunk</developerConnection>
        <url>http://java.net/projects/msrp/sources/svn/show</url>
 	 </scm>
 	 <developers>
