@@ -206,16 +206,19 @@ class PreParser
                                     reset(data);
                             }
                         }
-                        else if (tidSize > (preState - 9) &&
-                        		data.get() == connection.getCurrentIncomingTid().charAt(preState - 9))
-                            preState++;
                         else
-                            reset(data);
+                        {
+                        	if ((tidSize > (preState - 9)) &&
+                        		(data.get() == connection.getCurrentIncomingTid().charAt(preState - 9)))
+                        		preState++;
+                        	else
+                        		reset(data);
+                        }
                     }				// end of default:
                     break;
                 }
             }
-        }							// while (bufferIncData.hasRemaining())
+        }							// while (data.hasRemaining())
         /*
          * We scanned everything, process remaining data.
          * Exclude any end-line state (when scanning for end-line after
@@ -224,7 +227,7 @@ class PreParser
         if (inContentStuff && preState != 0)
         {
             /* here we save the state and process the rest */
-            int endOfData = (data.position() - preState) - indexProcessed;
+            int endOfData = (data.position() - preState);
             try
             {
                 wrapBuffer.put(data.array(), endOfData, data.position() - endOfData);
