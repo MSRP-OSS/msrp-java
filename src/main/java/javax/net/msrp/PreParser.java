@@ -222,32 +222,28 @@ class PreParser
         /*
          * We scanned everything, process remaining data.
          * Exclude any end-line state (when scanning for end-line after
-         * content-stuff) that will be wrapped to the next scan.
+         * content-stuff) to be wrapped to next scan.
          */
+        int endOfData = data.position();
         if (inContentStuff && preState != 0)
         {
-            /* here we save the state and process the rest */
-            int endOfData = (data.position() - preState);
+            endOfData -= preState;		/* here we save the state */
             try
             {
-                wrapBuffer.put(data.array(), endOfData, data.position() - endOfData);
+                wrapBuffer.put(data.array(), endOfData, preState);
             }
             catch (BufferOverflowException e)
             {
             	logger.error(String.format(
         			"Error wrapping %d bytes (from[%d] to[%d])\nContent:[%s]",
-        			data.position() - endOfData, endOfData, data.position(),
+        			preState, endOfData, data.position(),
                     new String(data.array()).substring(endOfData, data.position())
     			));
                 throw e;
             }
-            connection.parser(data.array(), indexProcessed, endOfData, inContentStuff);
         }
-        else
-        {
-            connection.parser(data.array(), indexProcessed,
-                data.position() - indexProcessed, inContentStuff);
-        }
+        connection.parser(	data.array(), indexProcessed,
+        					endOfData - indexProcessed, inContentStuff);
     }
 
     /**
