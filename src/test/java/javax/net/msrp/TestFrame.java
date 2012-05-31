@@ -368,4 +368,8 @@ public abstract class TestFrame {
             fail(e.getMessage());
 		}
 	}
+
+	protected void delay(long millis) {
+	    try { Thread.sleep(millis); } catch (InterruptedException e) { ; }
+	}
 }
