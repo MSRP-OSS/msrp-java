@@ -56,6 +56,7 @@ public class TestReportMechanism extends TestFrame
             {
                 sendingSessionListener.successReportCounter.wait(100);
             }
+            try { Thread.sleep(200); } catch (InterruptedException e) { ; }
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter.size()
                 + " times and not 1",
@@ -144,6 +145,7 @@ public class TestReportMechanism extends TestFrame
             fillTempFile(data, true);
 
             file2Memory(true);
+            try { Thread.sleep(200); } catch (InterruptedException e) { ; }
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter
                 + " times and not 1",
@@ -223,7 +225,7 @@ public class TestReportMechanism extends TestFrame
             fillText(data);
 
             memory2Memory(data, true);
-
+            try { Thread.sleep(200); } catch (InterruptedException e) { ; }
             assertTrue("Error the success report was called: "
                 + sendingSessionListener.successReportCounter.size()
                 + " times and not 2",
@@ -317,8 +319,9 @@ public class TestReportMechanism extends TestFrame
             fillTempFile(bigData, true);
 
             file2Memory(true);
+            try { Thread.sleep(200); } catch (InterruptedException e) { ; }
             /*
-             * 11 Times might be one time too many times, because the sender
+             * 11 Times might be one time too many, because the sender
              * receives two reports of the message being completely received.
              * However this kind of behavior isn't incompatible with the one
              * present on the standards. For more info see Issue #10

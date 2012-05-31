@@ -5,13 +5,11 @@ import java.nio.ByteBuffer;
 import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.utils.TextUtils;
 
-
 /**
  * This class represents a response to a Transaction, which is considered a
  * transaction as well TODO use the parser to validate the response ?!
  * 
  * @author João André Pereira Antunes
- * 
  */
 public class TransactionResponse
     extends Transaction
@@ -42,9 +40,8 @@ public class TransactionResponse
         // original transaction must be a SEND transaction
         if (transaction.transactionType != TransactionType.SEND)
             throw new IllegalUseException(
-                "Constructing a SENDRESPONSE "
-                    + "with an original transaction that isn't a SEND, transaction: "
-                    + transaction);
+                "Constructing a SENDRESPONSE with an original transaction " +
+        		"that isn't a SEND: " + transaction);
 
         this.transactionType = TransactionType.SENDRESPONSE;
         this.direction = direction;
@@ -138,7 +135,7 @@ public class TransactionResponse
             lengthToTransfer = remainingBytes;
         else
             lengthToTransfer = (toFill.length - offset);
-        content.get(toFill, 0, lengthToTransfer);
+        content.get(toFill, offset, lengthToTransfer);
         return lengthToTransfer;
     }
 
@@ -157,8 +154,7 @@ public class TransactionResponse
     @Override
     public String toString()
     {
-        return "Transaction response of Tx[" + tID + "] response code["
-            + responseCode + "]";
+        return "Response to Tx[" + tID + "], code[" + responseCode + "]";
     }
 
     /**

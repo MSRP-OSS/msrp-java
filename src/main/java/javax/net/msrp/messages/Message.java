@@ -16,8 +16,6 @@
  */
 package javax.net.msrp.messages;
 
-import java.util.Vector;
-
 import javax.net.msrp.*;
 import javax.net.msrp.exceptions.*;
 import javax.net.msrp.utils.TextUtils;
@@ -168,7 +166,6 @@ public abstract class Message
             ReportMechanism reportMechanism)
         throws IllegalUseException
     {
-
         if (data.length > MSRPStack.getShortMessageBytes())
         {
             // TODO create new exception for this
@@ -261,7 +258,6 @@ public abstract class Message
         logger.trace("Called isComplete, sent bytes: " + sentBytes
             + " message size: " + size + " going to return: " + toReturn);
         return toReturn;
-
     }
 
     /**
@@ -277,40 +273,23 @@ public abstract class Message
      */
     public void pause() throws InternalErrorException
     {
-        /*
-         * Sanity checks:
-         */
-        if (this.isComplete())
-            throw new InternalErrorException("The pause method"
-                + " was called on a complete message!");
+        if (this.isComplete())			/* Sanity checks */
+            throw new InternalErrorException("pause()" +
+                " was called on a complete message!");
         if (session == null)
             throw new InternalErrorException(
-                "The session on this message is null"
-                    + " and the pause method was called upon it");
+				                "pause() called on message with no session.");
         TransactionManager transactionManager = session.getTransactionManager();
         if (transactionManager == null)
-            throw new InternalErrorException("The transaction manager "
-                + "associated with this message is null"
-                + " and the pause method was called upon it");
-        /*
-         * End of sanity checks.
-         */
-        synchronized (transactionManager) {
-	        Vector<Transaction> toSend =
-	            transactionManager.getTransactionsToSend();
-	        for (Transaction t : toSend)
-	        {
-	            if (t.transactionType == TransactionType.SEND
-	                && t.getMessage().equals(this) && t.isInterruptible())
-	                try
-	                {
-	                    t.interrupt();
-	                }
-	                catch (IllegalUseException e)
-	                {
-	                    throw new InternalErrorException(e);
-	                }
-	        }
+            throw new InternalErrorException(
+	                "pause() called on message with no transaction manager.");
+        try
+        {
+        	transactionManager.interruptMessage(this);
+        }
+        catch (IllegalUseException e)
+        {
+            throw new InternalErrorException(e);
         }
         session.addMessageOnTop(this);
     }
@@ -351,15 +330,13 @@ public abstract class Message
     public void setFailureReport(String failureReport)
         throws IllegalUseException
     {
-        if (failureReport.equalsIgnoreCase("yes")
-            || failureReport.equalsIgnoreCase("no")
-            || failureReport.equalsIgnoreCase("partial"))
-        {
+        if (failureReport.equalsIgnoreCase("yes") ||
+            failureReport.equalsIgnoreCase("no") ||
+            failureReport.equalsIgnoreCase("partial"))
             this.failureReport = failureReport;
-            return;
-        }
-        throw new IllegalUseException("The failure report must be one of: "
-            + "partial yes no");
+        else
+        	throw new IllegalUseException("Failure report must be one of: " +
+        									"'partial', 'yes' or 'no'");
     }
 
     /**
@@ -433,11 +410,9 @@ public abstract class Message
         }
         catch (Exception e)
         {
-            // TODO log it
             e.printStackTrace();
         }
         return -1;
-
     }
 
     /**
@@ -451,12 +426,6 @@ public abstract class Message
     }
 
     /**
-     * @uml.property name="_contentManager"
-     * @uml.associationEnd multiplicity="(1 1)"
-     *                     inverse="_message:javax.net.msrp.ContentManager"
-     */
-
-    /**
      * Getter of the property <tt>contentType</tt>
      * 
      * @return Returns the type.
@@ -468,20 +437,19 @@ public abstract class Message
     }
 
     public String getContent() {
-    	if (this.getDirection() == OUT || (this.getDirection() == IN && this.isComplete())) {
-    		if (wrappedMessage == null) {
+    	if (getDirection() == OUT || (getDirection() == IN && isComplete())) {
+    		if (wrappedMessage == null)
     			return getRawContent();
-    		} else {
+    		else
     			return wrappedMessage.getMessageContent();
-    		}
     	}
     	return null;
     }
 
     public String getRawContent() {
-    	if (this.getDirection() == OUT || (this.getDirection() == IN && this.isComplete())) {
+    	if (getDirection() == OUT || (getDirection() == IN && isComplete())) {
     		try {
-				return new String(this.getDataContainer().get(0, this.getSize()).array(), TextUtils.utf8);
+				return new String(getDataContainer().get(0, getSize()).array(), TextUtils.utf8);
 			} catch (Exception e) {
 				logger.info("No raw content to retrieve", e);
 			}
@@ -543,7 +511,6 @@ public abstract class Message
         if (size == UNKNOWN)
             return "*";
         return Long.toString(size);
-
     }
 
     /**
@@ -636,8 +603,7 @@ public abstract class Message
      * @throws IllegalUseException if any of the arguments is invalid
      */
     public abstract void abort(int reason, String reasonExtraInfo)
-        throws InternalErrorException,
-        IllegalUseException;
+        throws InternalErrorException, IllegalUseException;
 
     /**
      * Method called by the Transaction when it wants to notify a message that
@@ -659,7 +625,6 @@ public abstract class Message
         if (dataContainer != null)
         	dataContainer.dispose();
         session.triggerAbortedMessage(session, (IncomingMessage) this, transaction);
-
     }
 
     /**
@@ -697,6 +662,5 @@ public abstract class Message
     public void fireMessageAbortedEvent(int reason, String extraReasonInfo, Transaction transaction)
     {
         session.fireMessageAbortedEvent(this, reason, extraReasonInfo, transaction);
-
     }
 }

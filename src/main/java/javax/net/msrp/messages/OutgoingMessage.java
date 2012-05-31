@@ -16,13 +16,9 @@
  */
 package javax.net.msrp.messages;
 
-import java.util.Vector;
-
 import javax.net.msrp.MSRPSessionListener;
 import javax.net.msrp.Session;
-import javax.net.msrp.Transaction;
 import javax.net.msrp.TransactionManager;
-import javax.net.msrp.TransactionType;
 import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.exceptions.InternalErrorException;
 
@@ -38,7 +34,6 @@ import org.slf4j.LoggerFactory;
 public class OutgoingMessage
     extends Message
 {
-
     /**
      * The logger associated with this class
      */
@@ -79,61 +74,25 @@ public class OutgoingMessage
     public void abort(int reason, String extraReasonInfo)
         throws InternalErrorException
     {
-        logger.debug("Going to abort an OutgoingMessage, reason: " + reason
-            + " comment: " + extraReasonInfo);
-        /*
-         * Sanity checks:
-         */
-        if (this.isComplete())
-            throw new InternalErrorException("The pause method"
-                + " was called on a complete message!");
+        logger.debug("Going to abort an OutgoingMessage, reason: " + reason +
+        			" comment: " + extraReasonInfo);
+        if (this.isComplete())			/* Sanity checks */
+            throw new InternalErrorException(
+            		"pause() called on a complete message!");
         if (session == null)
             throw new InternalErrorException(
-                "The session on this message is null"
-                    + " and the pause method was called upon it");
+				                "pause() called on message with no session.");
         TransactionManager transactionManager = session.getTransactionManager();
         if (transactionManager == null)
-            throw new InternalErrorException("The transaction manager "
-                + "associated with this message is null"
-                + " and the pause method was called upon it");
-        /*
-         * End of sanity checks.
-         */
+            throw new InternalErrorException(
+	                "pause() called on message with no transaction manager.");
 
-        /* internally signal this message as aborted */
-        aborted = true;
+        aborted = true;			/* signal this message internally as aborted */
 
-        /* remove this message from the list of messages to send of the session */
+        /* remove from the list of messages to send in session */
         session.delMessageToSend(this);
 
-        /*
-         * find the first transaction belonging to a SEND of this message and
-         * abort it, remove eventually other transactions that serve the purpose
-         * of sending this message
-         */
-        synchronized (transactionManager) {
-	        Vector<Transaction> toSend =
-	            transactionManager.getTransactionsToSend();
-	        boolean firstTransactionFound = false;
-	        for (Transaction t : toSend)
-	        {
-	            if (t.transactionType == TransactionType.SEND
-	                && t.getMessage().equals(this))
-	            {
-	                logger.debug("Found transaction: " + t
-	                			+ " associated with message[" + this + "]");
-	                if (!firstTransactionFound)
-	                {
-	                    t.abort();
-	                    firstTransactionFound = true;
-	                }
-	                else
-	                {
-	                	transactionManager.removeTransactionToSend(t);
-	                }
-	            }
-	        }
-        }
+        transactionManager.abortMessage(this);
     }
 
     /**

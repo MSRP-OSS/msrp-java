@@ -16,7 +16,6 @@
  */
 package javax.net.msrp;
 
-
 import java.net.*;
 import java.util.Collection;
 import java.util.HashMap;
@@ -108,13 +107,11 @@ public class TransactionManager
         throws InternalErrorException,
         IllegalUseException
     {
-
         TransactionResponse trResponse =
             new TransactionResponse(originalTransaction, responseCode,
                 optionalComment, Transaction.OUT);
         originalTransaction.setResponse(trResponse);
         addPriorityTransaction(trResponse);
-
     }
 
     /**
@@ -162,9 +159,8 @@ public class TransactionManager
                 }
                 catch (InternalErrorException e)
                 {
-                    logger.error("Generating a " + responseCode
-                        + " response for transaction: "
-                        + transaction.toString(), e);
+                    logger.error("Generating a " + responseCode +
+                        " response for " + transaction, e);
                 }
             }
         }
@@ -216,17 +212,6 @@ public class TransactionManager
     }
 
     /**
-     * Getter of the property <tt>_transactions</tt>
-     * 
-     * @return Returns the _transactions.
-     * @uml.property name="_transactions"
-     */
-    public Vector<Transaction> getTransactionsToSend()
-    {
-        return transactionsToSend;
-    }
-
-    /**
      * this is when a received transaction will give a 200 response code this
      * function is called independently of the (Failure/Success)-Report field
      * 
@@ -238,9 +223,9 @@ public class TransactionManager
      */
     protected void r200ProcessRequest(Transaction transaction)
     {
-        logger.trace("called the r200 with transaction:" + transaction.getTID()
-            + " message-id:" + transaction.getMessageID()
-            + " Connection (localURI) associated: " + connection.getLocalURI());
+        logger.trace("called r200 with " + transaction +
+            ", message-id[" + transaction.getMessageID() +
+            "], associated connection (localURI): " + connection.getLocalURI());
 
         if (transaction.getTransactionType() == TransactionType.SEND)
         {
@@ -250,15 +235,13 @@ public class TransactionManager
             }
             catch (IllegalUseException e1)
             {
-                logger.error("Generating a success report for transaction: "
-                    + transaction);
+                logger.error("Generating success report for " + transaction);
             }
             Message message = transaction.getMessage();
             if (message != null && message.isComplete())
             {
-                logger.trace("transaction: tId" + transaction.getTID()
-                    + " has an associated message message-id:"
-                    + transaction.getMessageID() + " that is complete");
+                logger.trace(transaction + " has an associated message-id[" +
+	                    transaction.getMessageID() + "] that is complete.");
                 /*
                  * if we have a complete message
                  */
@@ -299,15 +282,15 @@ public class TransactionManager
                 transaction.getStatusHeader();
             String statusCodeString =
                 Integer.toString(transactionStatusHeader.getStatusCode());
-            logger.trace("transaction:" + transaction.getTID()
-                + " is a report! Status code: " + statusCodeString);
+            logger.trace(transaction + " is a report! Status code: " +
+            			statusCodeString);
 
             /*
              * at the moment just trigger the report, doesn't save it or send
              * it:
              */
             // if (transactionStatusHeader.getNamespace() == 0)
-            // REMOVE FIXME TODO the implementation exception should
+            // REMOVE FIXME the implementation exception should
             // be handled like this?!
             try
             {
@@ -325,7 +308,7 @@ public class TransactionManager
      */
     protected TransactionManager()
     {
-
+    	;
     }
 
     /**
@@ -353,26 +336,26 @@ public class TransactionManager
     {
         /* next two lines used for automatic testing purposes */
         if (testing && presetTID != null)
-        { /*
-           * we can only generate once a presetTID otherwise the transaction
-           * manager will be unable to generate new transactions
-           */
+        {
+        	/*
+        	 * we can only generate a presetTID once, otherwise the transaction
+        	 * manager will be unable to generate new transactions
+        	 */
             String tidToReturn = new String(presetTID);
             presetTID = null;
             return tidToReturn;
         }
         byte[] tid = new byte[8];
         String newTID;
-        TextUtils.generateRandom(tid);
-        for (newTID = new String(tid, TextUtils.usascii); existingTransactions
-            .containsKey(newTID); TextUtils.generateRandom(tid))
+        do {
+        	TextUtils.generateRandom(tid);
             newTID = new String(tid, TextUtils.usascii);
+        } while (existingTransactions.containsKey(newTID));
         return newTID;
     }
 
     public void update(Observable connectionObservable, Object transactionObject)
     {
-
         // TODO Check to see if the associated transaction belongs to this
         // session
         // Sanity check, check if this is the right type of object
@@ -383,8 +366,8 @@ public class TransactionManager
             return;
         }
         // Sanity check, check if this is the right type of Observable
-        if (transactionObject.getClass().getName() != "javax.net.msrp.Transaction"
-            && transactionObject.getClass().getName() != "javax.net.msrp.TransactionResponse")
+        if (transactionObject.getClass().getName() != "javax.net.msrp.Transaction" &&
+            transactionObject.getClass().getName() != "javax.net.msrp.TransactionResponse")
         {
             logger.error("Error! TransactionManager was notified with the wrong observable type");
             return;
@@ -393,9 +376,9 @@ public class TransactionManager
         Connection connection = (Connection) connectionObservable;
         Transaction transaction = (Transaction) transactionObject;
 
-        logger.trace("Called the UPDATE of the Transaction Manager. received"
-            + " a transaction, associated connection (localURI): "
-            + connection.getLocalURI() + " Transaction: " + transaction);
+        logger.trace("UPDATE of TransactionManager called. Received " +
+	            transaction + ", associated connection (localURI): " +
+	            connection.getLocalURI());
         /*
          * If the transaction is an incoming response, atm do nothing. TODO(?!)
          */
@@ -403,11 +386,10 @@ public class TransactionManager
         {
             TransactionResponse transactionResponse =
                 (TransactionResponse) transaction;
-            logger
-                .trace("Transaction tID: "
-                    + transaction.getTID()
-                    + " is an incoming response and has been processed by the transactionManager for connection localURI: "
-                    + this.connection.getLocalURI());
+            logger.trace(transaction +
+                    " is an incoming response and has been processed" +
+            		" by the transactionManager for connection (localURI): " +
+                    connection.getLocalURI());
             processResponse(transactionResponse);
             return;
         }
@@ -417,11 +399,9 @@ public class TransactionManager
              * "important" question: does this 501 response precedes the 506 or
              * not?! should the to-path also be checked before?!
              */
-            logger
-                .trace("Transaction tID: "
-                    + transaction.getTID()
-                    + " is not supported and has been processed by the transactionManager for connection localURI: "
-                    + this.connection.getLocalURI());
+            logger.trace(transaction + " is not supported and has been " +
+		             "processed by the transactionManager for connection (localURI): " +
+		            connection.getLocalURI());
             // TODO r501();
             return;
         }
@@ -549,18 +529,20 @@ public class TransactionManager
         Transaction newTransaction =
             new Transaction((OutgoingMessage) messageToSend, this);
 
-        // Add the transaction to the known list of existing transactions
-        // this is used to generate unique TIDs in the connection and to
-        // be used when a response to a transaction is received
-        existingTransactions.put(newTransaction.getTID(), newTransaction);
-        addTransactionToSend(newTransaction, UNIMPORTANT);
-        // possibly split the message into several transactions
+        synchronized(this)
+        {
+	        // TODO: possibly split the message into several transactions
+	        /* Add transaction to known list of existing transactions,
+	         * used to generate unique TIDs in the connection and to
+	         * be used when a response to a transaction is received.
+	         */
+	        existingTransactions.put(newTransaction.getTID(), newTransaction);
 
-        // change the reference to the lastSendTransaction of the message
-        messageToSend.setLastSendTransaction(newTransaction);
+	        // change the reference to the lastSendTransaction of the message
+	        messageToSend.setLastSendTransaction(newTransaction);
 
-        // alert writing thread that it has a job to do
-        connection.notifyWriteThread();
+	        addTransactionToSend(newTransaction, UNIMPORTANT);
+        }
     }
 
     private static final int UNIMPORTANT = -1;
@@ -573,21 +555,17 @@ public class TransactionManager
      * @param positionIndex the position in which to add the transaction, if -1
      *            (UNIMPORTANT) just run an .add
      */
-    protected void addTransactionToSend(Transaction transaction, int positionIndex)
+    private void addTransactionToSend(Transaction transaction, int positionIndex)
     {
-    	synchronized(this) {
-	        if (positionIndex != UNIMPORTANT)
-	            transactionsToSend.add(positionIndex, transaction);
-	        else
-	            transactionsToSend.add(transaction);
-    	}
+        if (positionIndex != UNIMPORTANT)
+            transactionsToSend.add(positionIndex, transaction);
+        else
+            transactionsToSend.add(transaction);
         connection.notifyWriteThread();
     }
 
-    public void removeTransactionToSend(Transaction t) {
-    	synchronized(this) {
-    		transactionsToSend.remove(t);
-    	}
+    private void removeTransactionToSend(Transaction t) {
+		transactionsToSend.remove(t);
     }
 
     /**
@@ -766,7 +744,6 @@ public class TransactionManager
                 }
             }
         }
-
         /**
          * Returns the number of positions we should rewind
          * on the buffer and on the transaction's read offset before we
@@ -798,121 +775,118 @@ public class TransactionManager
     protected int dataToSend2(byte[] outData) throws Exception
     {
         int byteCounter = 0;
-        /*
-         * Variable that accounts the number of bytes per transaction sent
-         */
-        int bytesToAccount = 0;
-        while (hasDataToSend() && byteCounter < outData.length)
-        {
-            outgoingDataValidator.reset();
-            Transaction t = transactionsToSend.get(0);
-            outgoingDataValidator.init(t.getTID());
+        int bytesToAccount = 0;		/* Number of bytes per transaction sent */
 
-            boolean stopTransmission = false;
-            while (byteCounter < outData.length && !stopTransmission)
-            {
-                if (t.hasData())
-                {// if we are still transmitting data
-                    int result = t.getData(outData, byteCounter);
-                    byteCounter += result;
-                    bytesToAccount += result;
+        synchronized (this) {
+	        while (hasDataToSend() && byteCounter < outData.length)
+	        {
+	            outgoingDataValidator.reset();
+	            Transaction t = transactionsToSend.get(0);
+	            outgoingDataValidator.init(t.getTID());
 
-                }
-                else
-                {
-                    // Let's check to see if we should transmit the end of line
-                    if (t.hasEndLine())
-                    {
-                        /*
-                         * the first time we get here we should check if the
-                         * end-line was found, and if it was we should rewind,
-                         * interrupt the transaction and set the bytesToAccount
-                         * back the appropriate positions and also the index i
-                         * we can also do the reset of the outgoingDataValidator
-                         * because we have for certain that the end-line won't
-                         * appear again on the content before the transaction
-                         * finishes
-                         */
-                        outgoingDataValidator.parse(outData, byteCounter);
-                        outgoingDataValidator.reset();
-                        if (outgoingDataValidator.dataHasEndLine())
-                        {
-                            int numberPositionsToRewind =
-                                outgoingDataValidator.numberPositionsToRewind();
-                            t.rewind(numberPositionsToRewind);
-                            t.interrupt();
-                            byteCounter -= numberPositionsToRewind;
-                            bytesToAccount -= numberPositionsToRewind;
-                            continue;
-                        }
-                        bytesToAccount++;
-                        // TODO ISSUE #PF probably could optimize better with a
-                        // bulk end line method, but seen that this is less than
-                        // 30 bytes..
-                        outData[byteCounter++] = t.getEndLineByte();
+	            boolean stopTransmission = false;
+	            while (byteCounter < outData.length && !stopTransmission)
+	            {
+	                if (t.hasData())
+	                {	// when we are still transmitting data
+	                    int result = t.getData(outData, byteCounter);
+	                    byteCounter += result;
+	                    bytesToAccount += result;
+	                }
+	                else
+	                {
+	                    // Let's check to see if we should transmit end of line
+	                    if (t.hasEndLine())
+	                    {
+	                        /*
+	                         * First time we get here we should check if the
+	                         * end-line was found, if it was we should rewind,
+	                         * interrupt transaction and set bytesToAccount
+	                         * back to appropriate positions including index i.
+	                         * We can also reset the outgoingDataValidator
+	                         * because we know the end-line won't
+	                         * appear again on content before the transaction
+	                         * finishes
+	                         */
+	                        outgoingDataValidator.parse(outData, byteCounter);
+	                        outgoingDataValidator.reset();
+	                        if (outgoingDataValidator.dataHasEndLine())
+	                        {
+	                            int numberPositionsToRewind =
+	                            		outgoingDataValidator.numberPositionsToRewind();
+	                            t.rewind(numberPositionsToRewind);
+	                            t.interrupt();
+	                            byteCounter -= numberPositionsToRewind;
+	                            bytesToAccount -= numberPositionsToRewind;
+	                            continue;
+	                        }
+	                        bytesToAccount++;
+	                        // TODO ISSUE #PF probably could optimize better with a
+	                        // bulk end line method, but seen that this is less than
+	                        // 30 bytes..
+	                        outData[byteCounter++] = t.getEndLineByte();
+	                    }
+	                    else
+	                    {
+	                        /*
+	                         * Removing the given transaction from the queue of
+	                         * transactions to send
+	                         */
+	                    	removeTransactionToSend(t);
+	                        /*
+	                         * we should also reset the outgoingDataValidator, so
+	                         * that future calls to the parser won't misjudge the
+	                         * correct end-line as an end-line on the body content.
+	                         */
+	                        outgoingDataValidator.reset();
+	                        // let's get the next transaction if any
+	                        stopTransmission = true; // jump out of second while
+	
+	                    }
+	                }
+	            }// end of transaction while
+	            stopTransmission = false;
 
-                    }
-                    else
-                    {
-                        /*
-                         * Removing the given transaction from the queue of
-                         * transactions to send
-                         */
-                    	removeTransactionToSend(t);
-                        /*
-                         * we should also reset the outgoingDataValidator, so
-                         * that future calls to the parser won't misjudge the
-                         * correct end-line as an end-line on the body content.
-                         */
-                        outgoingDataValidator.reset();
-                        // let's get the next transaction if any
-                        stopTransmission = true; // jump out of second while
+	            /*
+	             * the buffer is full and or the transaction has been removed from
+	             * the list of transactions to send and if that was the case the
+	             * outgoingValidator won't make a false positive because it has been
+	             * reset
+	             */
+	            outgoingDataValidator.parse(outData, byteCounter);
+	            if (outgoingDataValidator.dataHasEndLine())
+	            {
+	                int numberPositionsToRewind =
+	                    outgoingDataValidator.numberPositionsToRewind();
+	                t.rewind(numberPositionsToRewind);
+	                t.interrupt();
+	                byteCounter -= numberPositionsToRewind;
+	                bytesToAccount -= numberPositionsToRewind;
+	                outgoingDataValidator.reset();
+	            }
 
-                    }
-                }
-            }// end of transaction while
-            stopTransmission = false;
-            /*
-             * the buffer is full and or the transaction has been removed from
-             * the list of transactions to send and if that was the case the
-             * outgoingValidator won't make a false positive because it has been
-             * reset
-             */
-
-            outgoingDataValidator.parse(outData, byteCounter);
-            if (outgoingDataValidator.dataHasEndLine())
-            {
-                int numberPositionsToRewind =
-                    outgoingDataValidator.numberPositionsToRewind();
-                t.rewind(numberPositionsToRewind);
-                t.interrupt();
-                byteCounter -= numberPositionsToRewind;
-                bytesToAccount -= numberPositionsToRewind;
-                outgoingDataValidator.reset();
-            }
-
-            // account for the bytes sent from this transaction if they should
-            // be accounted for
-            if (!t.isIncomingResponse()
-                && t.transactionType == TransactionType.SEND
-                && !t.hasResponse())
-            {
-                /*
-                 * reporting the sent update status seen that this is an
-                 * outgoing send request
-                 */
-                OutgoingMessage transactionMessage =
-                    (OutgoingMessage) t.getMessage();
-                if (transactionMessage != null)
-                {
-                    transactionMessage.getReportMechanism().countSentBodyBytes(
-                        transactionMessage, bytesToAccount);
-                    bytesToAccount = 0;
-                }
-            }
-        }// end of main while, the one that goes across transactions
+	            // account for the bytes sent from this transaction if they should
+	            // be accounted for
+	            if (!t.isIncomingResponse()
+	                && t.transactionType == TransactionType.SEND
+	                && !t.hasResponse())
+	            {
+	                /*
+	                 * reporting the sent update status seen that this is an
+	                 * outgoing send request
+	                 */
+	                OutgoingMessage transactionMessage =
+	                    (OutgoingMessage) t.getMessage();
+	                if (transactionMessage != null)
+	                {
+	                    transactionMessage.getReportMechanism().countSentBodyBytes(
+	                        transactionMessage, bytesToAccount);
+	                    bytesToAccount = 0;
+	                }
+	            }
+	        }	// end of main while, the one that goes across transactions
+        }
         return byteCounter;
-
     }
 
     /**
@@ -932,105 +906,87 @@ public class TransactionManager
     protected int dataToSend(byte[] outData) throws Exception
     {
         int i = 0;
-        /*
-         * Variable that accounts the number of bytes per transaction to store
-         */
-        int bytesToAccount = 0;
-        for (i = 0; hasDataToSend() && i < outData.length;)
+        int bytesToAccount = 0;		/* Number of bytes per transaction to store */
+
+        synchronized (this)
         {
-            Transaction t = transactionsToSend.get(0);
-            outgoingDataValidator.init(t.getTID());
-
-            while (i < outData.length)
-            {
-                if (!t.hasData())
-                {
-                    if (t.hasEndLine())
-                    {
-                        /*
-                         * the first time we get here we should check if the
-                         * end-line was found, and if it was we should rewind,
-                         * interrupt the transaction and set the bytesToAccount
-                         * back the appropriate positions and also the index i
-                         * we can also do the reset of the outgoingDataValidator
-                         * because we have for certain that the end-line won't
-                         * appear again on the content before the transaction
-                         * finishes
-                         */
-                        outgoingDataValidator.parse(outData, i);
-                        outgoingDataValidator.reset();
-                        if (outgoingDataValidator.dataHasEndLine())
-                        {
-                            int numberPositionsToRewind =
-                                outgoingDataValidator.numberPositionsToRewind();
-                            t.rewind(numberPositionsToRewind);
-                            t.interrupt();
-                            i -= numberPositionsToRewind;
-                            bytesToAccount -= numberPositionsToRewind;
-                            continue;
-                        }
-                        bytesToAccount++;
-                        outData[i++] = t.getEndLineByte();
-
-                    }
-                    else
-                    {
-                        /*
-                         * Removing the given transaction from the queue of
-                         * transactions to send
-                         */
-                        removeTransactionToSend(t);
-                        /*
-                         * we should also reset the outgoingDataValidator, so
-                         * that future calls to the parser won't misjudge the
-                         * correct end-line as an end-line on the body content.
-                         */
-                        outgoingDataValidator.reset();
-                        break;
-                    }
-                }
-                else
-                {
-                    bytesToAccount++;
-                    outData[i++] = t.get();
-                }
-            } /*
-               * End of while, the buffer is full and or the transaction has
-               * been removed from the list of transactions to send and if that
-               * was the case the outgoingValidator won't make a false positive
-               * because it has been reseted
-               */
-
-            outgoingDataValidator.parse(outData, i);
-            if (outgoingDataValidator.dataHasEndLine())
-            {
-                int numberPositionsToRewind =
-                    outgoingDataValidator.numberPositionsToRewind();
-                t.rewind(numberPositionsToRewind);
-                t.interrupt();
-                i -= numberPositionsToRewind;
-                bytesToAccount -= numberPositionsToRewind;
-                outgoingDataValidator.reset();
-            }
-
-            if (!t.isIncomingResponse()
-                && t.transactionType == TransactionType.SEND
-                && !t.hasResponse())
-            {
-                /*
-                 * reporting the sent update status seen that this is an
-                 * outgoing send request
-                 */
-                OutgoingMessage transactionMessage =
-                    (OutgoingMessage) t.getMessage();
-                if (transactionMessage != null)
-                {
-                    transactionMessage.reportMechanism.countSentBodyBytes(
-                        transactionMessage, bytesToAccount);
-                    bytesToAccount = 0;
-
-                }
-            }
+	        for (i = 0; hasDataToSend() && i < outData.length;)
+	        {
+	            Transaction t = transactionsToSend.get(0);
+	            outgoingDataValidator.init(t.getTID());
+	
+	            while (i < outData.length)
+	            {
+	                if (!t.hasData())
+	                {
+	                    if (t.hasEndLine())
+	                    {
+	                        outgoingDataValidator.parse(outData, i);
+	                        outgoingDataValidator.reset();
+	                        if (outgoingDataValidator.dataHasEndLine())
+	                        {
+	                            int numberPositionsToRewind =
+	                                outgoingDataValidator.numberPositionsToRewind();
+	                            t.rewind(numberPositionsToRewind);
+	                            t.interrupt();
+	                            i -= numberPositionsToRewind;
+	                            bytesToAccount -= numberPositionsToRewind;
+	                            continue;
+	                        }
+	                        bytesToAccount++;
+	                        outData[i++] = t.getEndLineByte();
+	                    }
+	                    else
+	                    {
+	                        /*
+	                         * Removing given transaction from queue of
+	                         * transactions to send
+	                         */
+	                        removeTransactionToSend(t);
+	                        /*
+	                         * we should also reset outgoingDataValidator, so
+	                         * that future calls to the parser won't misjudge the
+	                         * correct end-line as an end-line on the body content.
+	                         */
+	                        outgoingDataValidator.reset();
+	                        break;
+	                    }
+	                }
+	                else
+	                {
+	                    bytesToAccount++;
+	                    outData[i++] = t.get();
+	                }
+	            }
+	            outgoingDataValidator.parse(outData, i);
+	            if (outgoingDataValidator.dataHasEndLine())
+	            {
+	                int numberPositionsToRewind =
+	                    outgoingDataValidator.numberPositionsToRewind();
+	                t.rewind(numberPositionsToRewind);
+	                t.interrupt();
+	                i -= numberPositionsToRewind;
+	                bytesToAccount -= numberPositionsToRewind;
+	                outgoingDataValidator.reset();
+	            }
+	            if (!t.isIncomingResponse()
+	                && t.transactionType == TransactionType.SEND
+	                && !t.hasResponse())
+	            {
+	                /*
+	                 * reporting the sent update status seen that this is an
+	                 * outgoing send request
+	                 */
+	                OutgoingMessage transactionMessage =
+	                    (OutgoingMessage) t.getMessage();
+	                if (transactionMessage != null)
+	                {
+	                    transactionMessage.reportMechanism.countSentBodyBytes(
+	                        transactionMessage, bytesToAccount);
+	                    bytesToAccount = 0;
+	                }
+	            }
+	        }
         }
         return i;
     }
@@ -1075,34 +1031,67 @@ public class TransactionManager
         throws IllegalUseException
     {
         // sanity check, shouldn't be needed:
-        if (transaction.getTransactionType() != TransactionType.SENDRESPONSE
-            && transaction.getTransactionType() != TransactionType.REPORT)
-            throw new IllegalUseException("the addPriorityTransaction was"
-                + " called with a transaction that isn't a response/REPORT");
+        if (transaction.getTransactionType() != TransactionType.SENDRESPONSE &&
+            transaction.getTransactionType() != TransactionType.REPORT)
+            throw new IllegalUseException("the addPriorityTransaction was" +
+            		" called with a transaction that isn't a response/REPORT");
         if (transaction.getDirection() != Transaction.OUT)
-            throw new IllegalUseException(" the addPriorityTransaction was"
-                + "called with an invalid direction transaction, "
-                + "direction: " + transaction.getDirection());
+            throw new IllegalUseException(" the addPriorityTransaction was" +
+	                " called with an invalid direction transaction, " +
+	                "direction: " + transaction.getDirection());
         /*
          * Make sure that this response doesn't put itself ahead of other
          * priority transactions:
          */
-        for (int i = 0; i < transactionsToSend.size(); i++)
+        synchronized(this)
         {
-            Transaction trans = transactionsToSend.get(i);
-            if (trans.isInterruptible())
-            {
-                if (i == 0)
-                    addTransactionToSend(transaction, 1);
-                else
-                    addTransactionToSend(transaction, i);
-                trans.interrupt();
-                connection.notifyWriteThread();
-                return;
-            }
+	        for (int i = 0; i < transactionsToSend.size(); i++)
+	        {
+	            Transaction t = transactionsToSend.get(i);
+	            if (t.isInterruptible())
+	            {
+	                if (i == 0)
+	                    addTransactionToSend(transaction, 1);
+	                else
+	                    addTransactionToSend(transaction, i);
+	                t.interrupt();
+	                return;
+	            }
+	        }
+	        // No interruptible transactions to send, just add the one given.
+	        addTransactionToSend(transaction, UNIMPORTANT);
         }
-        // No interruptible transactions to send, just add the one given.
-        addTransactionToSend(transaction, UNIMPORTANT);
-        connection.notifyWriteThread();
+    }
+
+    public void interruptMessage(Message message) throws IllegalUseException
+    {
+    	synchronized (this)
+    	{
+	        for (Transaction t : transactionsToSend)
+	            if (t.transactionType == TransactionType.SEND &&
+	                t.getMessage().equals(message) && t.isInterruptible())
+                    t.interrupt();
+    	}
+    }
+
+    public void abortMessage(Message message)
+    {
+    	synchronized(this)
+    	{
+    		boolean first = true;
+    		for (Transaction t : transactionsToSend)
+	            if (t.transactionType == TransactionType.SEND &&
+	                t.getMessage().equals(message))
+	            {
+	            	logger.debug(t + " aborted");
+	            	if (first)
+	            	{
+	            		t.abort();
+	            		first = false;
+	            	}
+	            	else
+	            		removeTransactionToSend(t);
+	            }
+    	}
     }
 }
