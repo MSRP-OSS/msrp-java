@@ -18,18 +18,17 @@ package javax.net.msrp;
 
 import java.net.URI;
 
+import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.exceptions.ImplementationException;
 import javax.net.msrp.exceptions.InternalErrorException;
 import javax.net.msrp.messages.Message;
 import javax.net.msrp.utils.TextUtils;
-
 
 /**
  * A class that inherits from the Transaction to represent the transactions for
  * the REPORT requests
  * 
  * @author João André Pereira Antunes
- * 
  */
 public class ReportTransaction
     extends Transaction
@@ -39,10 +38,13 @@ public class ReportTransaction
 	 * @param session the originating session.
 	 * @param transaction	the originating transaction.
 	 * @throws InternalErrorException invalid arguments or object states.
+	 * @throws IllegalUseException invalid parameter...
 	 */
 	public ReportTransaction(Message message, Session session, Transaction transaction)
-							throws InternalErrorException
+							throws InternalErrorException, IllegalUseException
 	{
+        super(	transaction.getTransactionManager().generateNewTID(),
+        		TransactionType.REPORT, transaction.getTransactionManager(), OUT);
         /*
          * "Must check to see if session is valid" as specified in RFC4975 valid
          * being for now if it exists or not FIXME(?!)
@@ -60,13 +62,7 @@ public class ReportTransaction
     			"Invalid argument or in generating a report, the total number "
         		+ "of bytes of this message was unintialized");
 
-        direction = OUT;
-        readIndex[HEADER] = readIndex[ENDLINE] = 0;
-        transactionType = TransactionType.REPORT;
-
         this.message = message;
-        transactionManager = session.getTransactionManager();
-        tID = transactionManager.generateNewTID();
         continuation_flag = FLAG_END;
 	}
 

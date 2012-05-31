@@ -29,7 +29,6 @@ import javax.net.msrp.utils.TextUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * Class that represents a MSRP Transaction (either request or response,
  * incoming or outgoing). It is responsible for parsing all of the data related
@@ -208,7 +207,7 @@ public class Transaction
      * @uml.associationEnd multiplicity="(1 1)"
      *                     inverse="_transactions:javax.net.msrp.Connection"
      */
-    private javax.net.msrp.Connection _connection = null;
+    private Connection _connection = null;
 
     private TransactionResponse response = null;
 
@@ -273,7 +272,7 @@ public class Transaction
     private boolean interruptible = false;
 
     /**
-     * Constructor called when there is an incoming transaction
+     * Generic constructor for (possibly incoming) transactions
      * 
      * @param tid
      * @param method
@@ -282,17 +281,15 @@ public class Transaction
         TransactionManager manager, int direction)
         throws IllegalUseException
     {
-        logger.info("Transaction created (incoming?) Tx-" + method + "[" + tid
+        logger.info("Transaction created Tx-" + method + "[" + tid
         			+ "], handled by " + manager);
         // sanity check:
         if (direction != IN && direction != OUT)
-            throw new IllegalUseException("direction has an invalid argument"
-                + ": " + direction);
+            throw new IllegalUseException("Invalid direction: " + direction);
 
         this.direction = direction;
         transactionManager = manager;
-        readIndex[HEADER] =
-            readIndex[ENDLINE] = readIndex[DATA] = 0;
+        readIndex[HEADER] = readIndex[ENDLINE] = readIndex[DATA] = 0;
         byteRange[0] = byteRange[1] = totalMessageBytes = UNINTIALIZED;
         transactionType = method;
         setTID(tid);
@@ -309,7 +306,7 @@ public class Transaction
     public Transaction(OutgoingMessage messageToSend, TransactionManager manager)
     {
         transactionType = TransactionType.SEND;
-        this.transactionManager = manager;
+        transactionManager = manager;
         tID = manager.generateNewTID();
         message = messageToSend;
 
@@ -365,7 +362,7 @@ public class Transaction
         continuation_flag = FLAG_END;
         initializeDataStructures();
 
-        logger.info("Created Tx-SEND[" + tID + "], associated Message-ID: " + 
+        logger.info("Created Tx-SEND[" + tID + "], associated Message-ID: " +
         			messageToSend);
     }
 
@@ -386,7 +383,6 @@ public class Transaction
     public int getDirection()
     {
         return direction;
-
     }
 
     /**
@@ -430,7 +426,6 @@ public class Transaction
 
     public String getTID()
     {
-
         return tID;
     }
 
@@ -447,7 +442,6 @@ public class Transaction
         if (hasResponse())
             toReturn.append(", response code[").append(response.responseCode).append("]");
         return toReturn.toString();
-
     }
 
     /**
@@ -841,8 +835,8 @@ public class Transaction
     {
         if (interrupted || readIndex[ENDLINE] > 0)
         {
-            throw new ImplementationException("The Transaction.get() " +
-            		"when it should have been the Transaction.getEndLineByte");
+            throw new ImplementationException("Called Transaction.get() " +
+            		"when it should've been Transaction.getEndLineByte()");
         }
 
         int bytesCopied = 0;
@@ -898,32 +892,22 @@ public class Transaction
     byte getEndLineByte() throws InternalErrorException
     {
         if (hasContentStuff && readIndex[DATA] < 2)
-        {
-            /*
-             * Add the extra CRLF separating data and end-line
-             */
+        {								/* CRLF separating data and end-line */
             if (readIndex[DATA]++ == 0)
                 return 13;
-            else
-                return 10;
+            return 10;
         }
-        if (readIndex[ENDLINE] >= 0 && readIndex[ENDLINE] <= 6)
+        if (readIndex[ENDLINE] <= 6)
         {
             readIndex[ENDLINE]++;
             return (byte) '-';
         }
         int endlen = tID.length() + 7;
-        if (readIndex[ENDLINE] > 6
-            && (readIndex[ENDLINE] < endlen))
+        if (readIndex[ENDLINE] > 6 && (readIndex[ENDLINE] < endlen))
         {
-//            byte[] byteTID = tID.getBytes(TextUtils.utf8);
             return (byte) tID.charAt((int) (readIndex[ENDLINE]++ - 7));
-//            return byteTID[(int) (readIndex[ENDLINE]++ - 7)];
         }
-        // TODO If we are in the last character, get the
-        // interruption end of line flag and use it here
-        if (readIndex[ENDLINE] > (endlen)
-            && readIndex[ENDLINE] <= (endlen + 2))
+        if (readIndex[ENDLINE] > (endlen) && readIndex[ENDLINE] <= (endlen + 2))
         {
             if (readIndex[ENDLINE]++ == endlen + 2)
                 return 10;
@@ -932,7 +916,7 @@ public class Transaction
         if (readIndex[ENDLINE] > endlen + 2)
         {
             throw new InternalErrorException(
-                "Error the .get() of the transaction was called without available bytes to get");
+                "Error: getEndLineByte() called without available bytes to get");
         }
         readIndex[ENDLINE]++;
         return continuation_flag;
@@ -941,21 +925,15 @@ public class Transaction
     /**
      * Asserts if a transaction is interruptible or not.
      * 
-     * according to the RFC:
-     * "Any chunk that is larger than 2048 octets MUST be interruptible"
+     * According the RFC:
+     * "Any chunk that is larger than 2048 octets MUST be interruptible".
      * 
-     * Also REPORT requests and responses to transactions shouldn't be
-     * interruptible
+     * REPORT requests and responses to transactions shouldn't be interruptible
      * 
      * @return true if the transaction is interruptible false otherwise.
      */
     public boolean isInterruptible()
     {
-        /*
-         * if (dataBytes.length + headerBytes.length > 2048 && !hasResponse() &&
-         * (transactionType != TransactionType.REPORT)) return true;
-         * return false;
-         */
         return interruptible;
     }
 
@@ -987,22 +965,22 @@ public class Transaction
      * @throws IllegalUseException if this method was inapropriately called
      *             (meaning the transaction can't be interrupted either because
      *             it's not an OutgoingMessage or is not interruptible)
-     * 
      */
     public void interrupt() throws IllegalUseException
     {
         if (!isInterruptible() || message.getDirection() != Message.OUT)
-            throw new IllegalUseException("interrupt method of transaction: "
-                + tID + " was called on a non interruptible transaction");
+            throw new IllegalUseException("Transaction.interrupt(" +
+            					tID + ") was called but is non interruptible");
 
-        if (((OutgoingMessage) this.message).getSentBytes() != message
-            .getSize())
+        if (((OutgoingMessage) message).getSentBytes() != message.getSize())
         {
-            // FIXME (?!) TODO check to see if there can be the case where the
-            // message when gets interrupted has no remaining bytes left to be
-            // sent due to possible concurrency here
+            /*
+             * FIXME:(?!) check if there is a case where the
+             * message being interrupted has no remaining bytes left to
+             * sent due to possible concurrency.
+             */
             continuation_flag = FLAG_IRQ;
-            logger.trace("Called the interrupt of transaction " + tID);
+            logger.info("Interrupted transaction " + tID);
             interrupted = true;
         }
     }
@@ -1077,32 +1055,24 @@ public class Transaction
             return headerBytes[(int) readIndex[HEADER]++];
         else
         {
-            if (interrupted
-                && readIndex[ENDLINE] <= (7 + tID.length() + 2))
+            if (interrupted && readIndex[ENDLINE] <= (7 + tID.length() + 2))
             {
-                throw new ImplementationException("The Transaction.get() "
-                    + "when it should have been the "
-                    + "Transaction.getEndLineByte");
-
+                throw new ImplementationException("Called Transaction.get() " +
+                		"when it should've been Transaction.getEndLineByte()");
             }
             if (!interrupted && message.hasData())
             {
                 hasContentStuff = true;
                 return message.get();
             }
-            if (!interrupted
-                && readIndex[ENDLINE] <= (7 + tID.length() + 2))
+            if (!interrupted && readIndex[ENDLINE] <= (7 + tID.length() + 2))
             {
-                throw new ImplementationException("The Transaction.get() "
-                    + "when it should have been the "
-                    + "Transaction.getEndLineByte");
+                throw new ImplementationException("Called Transaction.get() " +
+                		"when it should've been Transaction.getEndLineByte()");
             }
-
-            throw new ImplementationException(new InternalErrorException(
-                "Error the .get() of the transaction was called without "
-                    + "available bytes to get"));
+            throw new ImplementationException(
+                "Error: Transaction.get() called without available bytes to get");
         }
-
     }
 
     /**
