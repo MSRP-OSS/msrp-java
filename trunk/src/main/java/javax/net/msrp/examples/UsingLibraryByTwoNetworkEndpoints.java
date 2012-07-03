@@ -26,7 +26,6 @@ import java.util.*;
 import javax.net.msrp.*;
 import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.messages.Message;
-import javax.net.msrp.messages.OutgoingMessage;
 import javax.net.msrp.testutils.*;
 
 
@@ -70,14 +69,14 @@ public class UsingLibraryByTwoNetworkEndpoints
     static class MessageReceiver
     {
         /**
-         * This example uses the MockMSRPSessionListener, the SessionListener is
+         * This example uses the MockSessionListener, the SessionListener is
          * the interface between the application and the library, see the
-         * MSRPSessionListener javadoc:
+         * SessionListener javadoc:
          * 
-         * @see javax.net.msrp.MSRPSessionListener
+         * @see javax.net.msrp.SessionListener
          */
-        static MockMSRPSessionListener receivingSessionListener =
-            new MockMSRPSessionListener("receivingSessionListener");
+        static MockSessionListener receivingSessionListener =
+            new MockSessionListener("receivingSessionListener");
 
         /**
          * The created session object for the receiving endpoint
@@ -105,7 +104,7 @@ public class UsingLibraryByTwoNetworkEndpoints
             receivingSession =Session.create(false, false, uriEndpoint,
             						receivingBoundAddress);
 
-            /* bound the session with the created MSRPSessionListener */
+            /* bound the session with the created SessionListener */
             receivingSession.addListener(receivingSessionListener);
             System.out.println("Generated URI by the receiver:"
                 + receivingSession.getURI());
@@ -124,13 +123,13 @@ public class UsingLibraryByTwoNetworkEndpoints
     static class MessageSender
     {
         /**
-         * Sender MSRPSessionListener that also uses the MockMSRPSessionListener
+         * Sender SessionListener that also uses the MockSessionListener
          * More info:
          * 
          * @see MessageReceiver#receivingSessionListener
          */
-        static MockMSRPSessionListener sendingSessionListener =
-            new MockMSRPSessionListener("sendinSessionListener");
+        static MockSessionListener sendingSessionListener =
+            new MockSessionListener("sendinSessionListener");
 
         /**
          * The created session object for the receiving endpoint
@@ -159,7 +158,7 @@ public class UsingLibraryByTwoNetworkEndpoints
             System.out.println("The generated URI for the MessageSender is:"
                 + sendingSession.getURI());
 
-            /* bound the session with the created MSRPSessionListener */
+            /* bound the session with the created SessionListener */
             sendingSession.addListener(sendingSessionListener);
             return sendingSession.getURI();
 

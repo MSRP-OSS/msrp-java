@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
 /**
  * An MSRP Session.
  * 
- * This interface, combined with the {@code MSRPSessionListener} is the primary
+ * This interface, combined with the {@code SessionListener} is the primary
  * interface for sending and receiving MSRP traffic. 
  * The class contains a list of MSRP Messages with which it's currently
  * associated.
@@ -49,12 +49,12 @@ public class Session
      */
     private static final Logger logger = LoggerFactory.getLogger(Session.class);
 
-    private MSRPStack stack = MSRPStack.getInstance();
+    private Stack stack = Stack.getInstance();
 
     /**
      * Associates an interface to the session, used to process incoming messages
      */
-    private MSRPSessionListener msrpSessionListener;
+    private SessionListener msrpSessionListener;
 
     private ArrayList<URI> toUris = new ArrayList<URI>();
 
@@ -185,7 +185,7 @@ public class Session
         this.isRelay = isRelay;
         try
         {
-            connection = MSRPStack.getConnectionsInstance(address);
+            connection = Stack.getConnectionsInstance(address);
             uri = ((Connections) connection).generateNewUri();
             stack.addConnection(uri, connection);
         }
@@ -228,9 +228,9 @@ public class Session
      * 
      * @param listener	the session listener
      */
-    public void addListener(MSRPSessionListener listener)
+    public void addListener(SessionListener listener)
     {
-        if (listener != null && listener instanceof MSRPSessionListener)
+        if (listener != null && listener instanceof SessionListener)
         {
             msrpSessionListener = listener;
             logger.trace("MSRP Session Listener added to Session: " + this);
@@ -576,9 +576,9 @@ public class Session
      * calling the callback or cleanup after.
      */
     /**
-     * trigger for the registered {@code MSRPSessionListener} callback.
+     * trigger for the registered {@code SessionListener} callback.
      * 
-     * @see MSRPSessionListener
+     * @see SessionListener
      * @param report the transaction associated with the Report
      */
     protected void triggerReceivedReport(Transaction report)
@@ -588,9 +588,9 @@ public class Session
     }
 
     /**
-     * trigger for the registered {@code MSRPSessionListener} callback.
+     * trigger for the registered {@code SessionListener} callback.
      * 
-     * @see MSRPSessionListener
+     * @see SessionListener
      * @param message the received message
      */
     protected void triggerReceiveMessage(Message message)
@@ -602,9 +602,9 @@ public class Session
     }
 
     /**
-     * trigger for the registered {@code MSRPSessionListener} callback.
+     * trigger for the registered {@code SessionListener} callback.
      * 
-     * @see MSRPSessionListener
+     * @see SessionListener
      * @param message the message to accept or not
      * @return true or false if we are accepting the message or not
      */
@@ -615,9 +615,9 @@ public class Session
     }
 
     /**
-     * trigger for the registered {@code MSRPSessionListener} callback.
+     * trigger for the registered {@code SessionListener} callback.
      * 
-     * @see MSRPSessionListener
+     * @see SessionListener
      */
     protected void triggerUpdateSendStatus(Session session,
         OutgoingMessage outgoingMessage)
@@ -646,7 +646,7 @@ public class Session
         MessageAbortedEvent abortedEvent =
             new MessageAbortedEvent(message, this, reason, extraReasonInfo,
                 transaction);
-        MSRPSessionListener sessionListener;
+        SessionListener sessionListener;
         synchronized (msrpSessionListener)
         {
             sessionListener = msrpSessionListener;
@@ -655,7 +655,7 @@ public class Session
     }
 
     /**
-     * trigger for the registered {@code MSRPSessionListener} callback.
+     * trigger for the registered {@code SessionListener} callback.
      * 
      * @deprecated use MessageAbortedEvents instead, this one only works for
      *             incoming messages that get a ABORT in the CONTINUATION FLAG
