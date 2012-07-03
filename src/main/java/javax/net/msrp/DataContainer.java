@@ -112,13 +112,13 @@ public abstract class DataContainer
     /**
      * The maximum number of bytes that can be stored on memory.
      * 
-     * this maximum number of bytes is defined by the MSRPStack short message
+     * this maximum number of bytes is defined by the Stack short message
      * 
-     * @see MSRPStack#setShortMessageBytes(int)
-     *      MSRPStack.setShortMessageBytes(int)
+     * @see Stack#setShortMessageBytes(int)
+     *      Stack.setShortMessageBytes(int)
      */
     public final int MAXIMUMNUMBERBYTES =
-        MSRPStack.getShortMessageBytes();
+        Stack.getShortMessageBytes();
 
     /**
      * Convenience number 0 that used as size argument on the get operations

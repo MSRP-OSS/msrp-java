@@ -157,16 +157,16 @@ public abstract class Message
      * @param reportMechanism the report mechanism to be used for this message
      * @return the newly created message
      * @throws IllegalUseException if this message content is too big, as
-     *             defined on MSRPStack, to be sent with a memory content
+     *             defined on Stack, to be sent with a memory content
      *             message
-     * @see MSRPStack#setShortMessageBytes(int)
+     * @see Stack#setShortMessageBytes(int)
      * 
      */
     public Message(Session session, String contentType, byte[] data,
             ReportMechanism reportMechanism)
         throws IllegalUseException
     {
-        if (data.length > MSRPStack.getShortMessageBytes())
+        if (data.length > Stack.getShortMessageBytes())
         {
             // TODO create new exception for this
             throw new IllegalUseException(
@@ -174,7 +174,7 @@ public abstract class Message
         }
         this.session = session;
         this.contentType = contentType;
-		messageId = MSRPStack.generateMessageID();
+		messageId = Stack.generateMessageID();
         dataContainer = new MemoryDataContainer(data);
         size = data.length;
         constructorAssociateReport(reportMechanism);

@@ -19,7 +19,7 @@ package javax.net.msrp.testutils;
 import java.util.ArrayList;
 
 import javax.net.msrp.DataContainer;
-import javax.net.msrp.MSRPSessionListener;
+import javax.net.msrp.SessionListener;
 import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Session;
 import javax.net.msrp.Transaction;
@@ -33,20 +33,17 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * Class used to test the callbacks of the MSRPStack
+ * Class used to test the callbacks of the Stack
  * 
  * @author João André Pereira Antunes 2008
  * 
  */
-public class MockMSRPSessionListener
-    implements MSRPSessionListener
+public class MockSessionListener
+    implements SessionListener
 {
-
-    /**
-     * The logger associated with this class
-     */
+    /** The logger associated with this class */
     private static final Logger logger =
-        LoggerFactory.getLogger(MockMSRPSessionListener.class);
+        LoggerFactory.getLogger(MockSessionListener.class);
 
     /* The field results of the calls: */
     private Session acceptHookSession;
@@ -82,7 +79,7 @@ public class MockMSRPSessionListener
      * number of calls to the updateSendStatus method and its values the number
      * of bytes that the function was called with
      * 
-     * @see MSRPSessionListener#updateSendStatus(Session, Message, long)
+     * @see SessionListener#updateSendStatus(Session, Message, long)
      */
     public ArrayList<Long> updateSendStatusCounter = new ArrayList<Long>();
 
@@ -107,7 +104,7 @@ public class MockMSRPSessionListener
      * @param name the String that names this constructor, used for debug
      *            purposes
      */
-    public MockMSRPSessionListener(String name)
+    public MockSessionListener(String name)
     {
     }
 

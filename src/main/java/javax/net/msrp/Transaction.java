@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  * incoming or outgoing). It is responsible for parsing all of the data related
  * with the transaction (either incoming or outgoing). When enough data is
  * received to take action upon, it notifies the TransactionManager and the
- * global MSRPStack classes (The communication between these classes is done via
+ * global Stack classes (The communication between these classes is done via
  * the Observer design pattern)
  * 
  * @author João André Pereira Antunes
@@ -235,7 +235,7 @@ public class Transaction
 
     private StatusHeader statusHeader = null;
 
-    private MSRPStack stack = MSRPStack.getInstance();
+    private Stack stack = Stack.getInstance();
 
     /**
      * The session associated with this transaction
@@ -343,7 +343,7 @@ public class Transaction
         /*
          * Currently all transactions are interruptible, solving Issue #25
          * if ((message.getSize() - ((OutgoingMessage)message).getSize()) >
-         * 								MSRPStack.MAXIMUMUNINTERRUPTIBLE) {
+         * 								Stack.MAXIMUMUNINTERRUPTIBLE) {
          */
         interruptible = true;
         header	.append("Byte-Range: ").append(firstByteChunk).append("-*/")
@@ -1227,7 +1227,7 @@ public class Transaction
     {
         if (transactionType != TransactionType.SEND)
         {
-            bodyBytes = new byte[MSRPStack.MAXNONSENDBODYSIZE];
+            bodyBytes = new byte[Stack.MAXNONSENDBODYSIZE];
             bodyByteBuffer = ByteBuffer.wrap(bodyBytes);
         }
     }
@@ -1361,7 +1361,7 @@ public class Transaction
             // No session associated, go see if there is one in the list of
         	// yet to be validated Connections
             Connections connectionsInstance =
-                MSRPStack.getConnectionsInstance(transactionManager
+                Stack.getConnectionsInstance(transactionManager
                 					.getConnection().getLocalAddress());
             relatedSession =
                 connectionsInstance.sessionToIdentify((getToPath())[0]);

@@ -498,7 +498,7 @@ class Connection extends Observable implements Runnable
 	 */
 	void notifyConnectionLoss(Throwable t) {
 		Collection<Session> attachedSessions = new ArrayList<Session>();
-		for (Session s : MSRPStack.getInstance().getActiveSessions()) {
+		for (Session s : Stack.getInstance().getActiveSessions()) {
 			if (this.equals(s.getConnection()))
 				attachedSessions.add(s);
 		}
@@ -791,7 +791,7 @@ class Connection extends Observable implements Runnable
 
         socketChannel.connect(remoteAddress);
         Connections connectionsInstance =
-            MSRPStack.getConnectionsInstance(address);
+            Stack.getConnectionsInstance(address);
 
         ioOperationGroup =
             new ThreadGroup(connectionsInstance.getConnectionsGroup(),

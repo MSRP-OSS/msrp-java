@@ -274,7 +274,7 @@ public class Connections
         return urisSessionsToIdentify.get(uri);
     }
 
-    private MSRPStack stack = MSRPStack.getInstance();
+    private Stack stack = Stack.getInstance();
 
     protected void identifiedSession(Session session)
     {

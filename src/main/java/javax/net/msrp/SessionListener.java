@@ -32,7 +32,7 @@ import javax.net.msrp.messages.Message;
  * 
  * @author João André Pereira Antunes
  */
-public interface MSRPSessionListener
+public interface SessionListener
     extends EventListener
 {
 
@@ -49,7 +49,7 @@ public interface MSRPSessionListener
      * 		 {@code message.reject(code)} to
      *       specify the reason why, default is 413
      */
-    boolean acceptHook(Session session, IncomingMessage message);
+    public boolean acceptHook(Session session, IncomingMessage message);
 
     /**
      * Signal a received message
@@ -57,7 +57,7 @@ public interface MSRPSessionListener
      * @param session the session on which the message was received
      * @param message the message received
      */
-    void receiveMessage(Session session, Message message);
+    public void receiveMessage(Session session, Message message);
 
     /**
      * Signal a received REPORT
@@ -65,7 +65,7 @@ public interface MSRPSessionListener
      * @param session the Session on which the REPORT was received
      * @param report the Transaction associated with the REPORT
      */
-    void receivedReport(Session session, Transaction report);
+    public void receivedReport(Session session, Transaction report);
 
     /**
      * Signal an aborted message
@@ -74,14 +74,14 @@ public interface MSRPSessionListener
      * @param session the session associated with the message
      * @param message the IncomingMessage that was aborted
      */
-    void abortedMessage(Session session, IncomingMessage message);
+    public void abortedMessage(Session session, IncomingMessage message);
 
     /**
      * Aignal an aborted message
      * 
      * @param abortEvent the Message aborted event used
      */
-    void abortedMessageEvent(MessageAbortedEvent abortEvent);
+    public void abortedMessageEvent(MessageAbortedEvent abortEvent);
 
     /**
      * Notify the application of updates on the sending status of a message.
@@ -92,7 +92,7 @@ public interface MSRPSessionListener
      * @param message	the message it pertains to
      * @param numberBytesSent the total number of sent bytes from the message
      */
-    void updateSendStatus(Session session, Message message, long numberBytesSent);
+    public void updateSendStatus(Session session, Message message, long numberBytesSent);
 
 	/** Notify application that underlying connection to this session has
 	 * ceased to be.
@@ -100,5 +100,5 @@ public interface MSRPSessionListener
 	 * @param session	the session it pertains to
 	 * @param cause		why was it lost?
 	 */
-	void connectionLost(Session session, Throwable cause);
+    public void connectionLost(Session session, Throwable cause);
 }

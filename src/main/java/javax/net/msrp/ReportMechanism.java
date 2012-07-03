@@ -142,7 +142,7 @@ public abstract class ReportMechanism
                  * if there was a change in the number of bytes accounted for
                  */
 
-                MSRPStack.generateAndSendSuccessReport(message, transaction, null);
+                Stack.generateAndSendSuccessReport(message, transaction, null);
             }
 
         }
@@ -184,7 +184,7 @@ public abstract class ReportMechanism
      * 
      * The implementation of this method allows the specific application to
      * decide upon the granularity of the callbacks to the updateSendStatus on
-     * the MSRPSessionListener
+     * the SessionListener
      * 
      * 
      * @param outgoingMessage the message that triggered the call
