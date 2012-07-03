@@ -343,7 +343,7 @@ public class Transaction
         /*
          * Currently all transactions are interruptible, solving Issue #25
          * if ((message.getSize() - ((OutgoingMessage)message).getSize()) >
-         * 								Stack.MAXIMUMUNINTERRUPTIBLE) {
+         * 								Stack.MAX_UNINTERRUPTIBLE_CHUNK) {
          */
         interruptible = true;
         header	.append("Byte-Range: ").append(firstByteChunk).append("-*/")
@@ -1227,7 +1227,7 @@ public class Transaction
     {
         if (transactionType != TransactionType.SEND)
         {
-            bodyBytes = new byte[Stack.MAXNONSENDBODYSIZE];
+            bodyBytes = new byte[Stack.MAX_NONSEND_BODYSIZE];
             bodyByteBuffer = ByteBuffer.wrap(bodyBytes);
         }
     }
