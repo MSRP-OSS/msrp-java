@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * connection (that can have many sessions).
  * 
  * It generates the automatic responses, and also triggers some reporting
- * mechanisms and some of the callbacks on the MSRPSessionListener
+ * mechanisms and some of the callbacks on the SessionListener
  * 
  * @author João André Pereira Antunes
  */
@@ -175,7 +175,7 @@ public class TransactionManager
      */
     private Session getAssociatedSession(Transaction transaction)
     {
-        return MSRPStack.getInstance().getSession((transaction.getToPath())[0]);
+        return Stack.getInstance().getSession((transaction.getToPath())[0]);
     }
 
     /**

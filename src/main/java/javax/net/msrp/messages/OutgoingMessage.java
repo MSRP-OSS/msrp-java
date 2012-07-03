@@ -16,7 +16,7 @@
  */
 package javax.net.msrp.messages;
 
-import javax.net.msrp.MSRPSessionListener;
+import javax.net.msrp.SessionListener;
 import javax.net.msrp.Session;
 import javax.net.msrp.TransactionManager;
 import javax.net.msrp.exceptions.IllegalUseException;
@@ -61,7 +61,7 @@ public class OutgoingMessage
      * current SEND transaction will end with the # continuation-flag char and
      * further data belonging to the message will not be sent. On the other end,
      * if the message is being sent, receiving the # continuation-flag will
-     * trigger a call to the abortedMessageEvent method on MSRPSessionListener
+     * trigger a call to the abortedMessageEvent method on SessionListener
      * binded to the session.
      * 
      * @param reason Irrelevant for an OutgoingMessage
@@ -69,7 +69,7 @@ public class OutgoingMessage
      * 
      * @throws InternalErrorException If we have a failure on the sanity checks
      * 
-     * @see MSRPSessionListener#abortedMessageEvent(javax.net.msrp.event.MessageAbortedEvent)
+     * @see SessionListener#abortedMessageEvent(javax.net.msrp.event.MessageAbortedEvent)
      */
     public void abort(int reason, String extraReasonInfo)
         throws InternalErrorException

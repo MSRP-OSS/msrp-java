@@ -38,7 +38,7 @@ import java.nio.CharBuffer;
 
 import javax.net.msrp.DataContainer;
 import javax.net.msrp.FileDataContainer;
-import javax.net.msrp.MSRPSessionListener;
+import javax.net.msrp.SessionListener;
 import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Session;
 import javax.net.msrp.Transaction;
@@ -52,7 +52,7 @@ import javax.net.msrp.utils.TextUtils;
 
 
 public class MiscTests
-    implements MSRPSessionListener, Runnable
+    implements SessionListener, Runnable
 {
     static Random test = new Random();
 
@@ -358,59 +358,59 @@ public class MiscTests
         }
     }
 
-    private static void testRegexEndChars()
-    {
-        byte[] tid = new byte[8];
-        TextUtils.generateRandom(tid);
-        String tID = new String(tid, TextUtils.usascii);
-
-        String emptySend = ("garbage" + "\r\n-------" + tID);
-
-        int i;
-        int j;
-        int trim = 12;
-        // Generate the pattern for the trim:
-        char[] toSave;
-        for (j = 0, i = emptySend.lastIndexOf('\r'), toSave =
-            new char[emptySend.length() - i - trim]; i < emptySend.length()
-            - trim; i++, j++)
-        {
-            if (i == -1 || i == emptySend.length())
-            {
-                break;
-            }
-
-            toSave[j] = emptySend.charAt(i);
-        }
-        String patternStringEndT =
-            new String(
-                "((\r\n)|(\r\n-)|(\r\n--)|(\r\n---)|(\r\n----)|(\r\n-----)|(\r\n------)|"
-                    + "(\r\n-------)");
-        CharBuffer tidBuffer = CharBuffer.wrap(tID);
-        for (i = 0; i < tID.length(); i++)
-        {
-            patternStringEndT =
-                patternStringEndT.concat("|(\r\n-------"
-                    + tidBuffer.subSequence(0, i) + ")");
-        }
-        patternStringEndT = patternStringEndT.concat(")?$");
-
-        Pattern endTransactionTrim =
-            Pattern.compile(patternStringEndT, Pattern.DOTALL);
-        String toSaveString = new String(toSave);
-
-        // toSaveString = "\n--r";
-
-        Matcher matchEndTransaction = endTransactionTrim.matcher(toSaveString);
-        System.out.println("looking at endTransaction:"
-            + matchEndTransaction.matches());
-        System.out.println("group 1:" + matchEndTransaction.group(1)
-            + ":end group1");
-        System.out.println("group 2:" + matchEndTransaction.group(2).toString()
-            + ":end group2");
-        System.out.println("group 3:" + matchEndTransaction.group(3).toString()
-            + ":end group3");
-    }
+//    private static void testRegexEndChars()
+//    {
+//        byte[] tid = new byte[8];
+//        TextUtils.generateRandom(tid);
+//        String tID = new String(tid, TextUtils.usascii);
+//
+//        String emptySend = ("garbage" + "\r\n-------" + tID);
+//
+//        int i;
+//        int j;
+//        int trim = 12;
+//        // Generate the pattern for the trim:
+//        char[] toSave;
+//        for (j = 0, i = emptySend.lastIndexOf('\r'), toSave =
+//            new char[emptySend.length() - i - trim]; i < emptySend.length()
+//            - trim; i++, j++)
+//        {
+//            if (i == -1 || i == emptySend.length())
+//            {
+//                break;
+//            }
+//
+//            toSave[j] = emptySend.charAt(i);
+//        }
+//        String patternStringEndT =
+//            new String(
+//                "((\r\n)|(\r\n-)|(\r\n--)|(\r\n---)|(\r\n----)|(\r\n-----)|(\r\n------)|"
+//                    + "(\r\n-------)");
+//        CharBuffer tidBuffer = CharBuffer.wrap(tID);
+//        for (i = 0; i < tID.length(); i++)
+//        {
+//            patternStringEndT =
+//                patternStringEndT.concat("|(\r\n-------"
+//                    + tidBuffer.subSequence(0, i) + ")");
+//        }
+//        patternStringEndT = patternStringEndT.concat(")?$");
+//
+//        Pattern endTransactionTrim =
+//            Pattern.compile(patternStringEndT, Pattern.DOTALL);
+//        String toSaveString = new String(toSave);
+//
+//        // toSaveString = "\n--r";
+//
+//        Matcher matchEndTransaction = endTransactionTrim.matcher(toSaveString);
+//        System.out.println("looking at endTransaction:"
+//            + matchEndTransaction.matches());
+//        System.out.println("group 1:" + matchEndTransaction.group(1)
+//            + ":end group1");
+//        System.out.println("group 2:" + matchEndTransaction.group(2).toString()
+//            + ":end group2");
+//        System.out.println("group 3:" + matchEndTransaction.group(3).toString()
+//            + ":end group3");
+//    }
 
     public static void main(String[] args)
     {

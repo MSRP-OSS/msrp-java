@@ -22,13 +22,13 @@ import java.util.Random;
 
 import javax.net.msrp.DataContainer;
 import javax.net.msrp.FileDataContainer;
-import javax.net.msrp.MSRPStack;
+import javax.net.msrp.Stack;
 import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Session;
 import javax.net.msrp.messages.Message;
 import javax.net.msrp.messages.OutgoingFileMessage;
 import javax.net.msrp.messages.OutgoingMessage;
-import javax.net.msrp.testutils.MockMSRPSessionListener;
+import javax.net.msrp.testutils.MockSessionListener;
 import javax.net.msrp.utils.TextUtils;
 
 
@@ -47,11 +47,11 @@ public abstract class TestFrame {
     Session sendingSession;
     Session receivingSession;
 
-    MockMSRPSessionListener sendingSessionListener =
-        new MockMSRPSessionListener("sendinSessionListener");
+    MockSessionListener sendingSessionListener =
+        new MockSessionListener("sendinSessionListener");
 
-    MockMSRPSessionListener receivingSessionListener =
-            new MockMSRPSessionListener("receivingSessionListener");
+    MockSessionListener receivingSessionListener =
+            new MockSessionListener("receivingSessionListener");
 
     String tempFileDir;
     File tempFile;
@@ -121,7 +121,7 @@ public abstract class TestFrame {
         try
         {
             /* Set the limit to be of 30 MB of messages allowed in memory */
-            MSRPStack.setShortMessageBytes(30024 * 1024);
+            Stack.setShortMessageBytes(30024 * 1024);
 
             testProperties.load(TestFrame.class
             					.getResourceAsStream("/test.properties"));

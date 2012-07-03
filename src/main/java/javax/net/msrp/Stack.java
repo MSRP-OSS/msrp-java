@@ -41,13 +41,11 @@ import org.slf4j.LoggerFactory;
  * @author João André Pereira Antunes
  * 
  */
-public class MSRPStack implements Observer {
+public class Stack implements Observer {
 
-	/**
-	 * The logger associated with this class
-	 */
+	/** The logger associated with this class */
 	private static final Logger logger = LoggerFactory
-			.getLogger(MSRPStack.class);
+			.getLogger(Stack.class);
 
 	/**
 	 * RFC 4975: "Non-SEND request bodies MUST NOT be larger than 10240 octets."
@@ -83,7 +81,7 @@ public class MSRPStack implements Observer {
 
 	private Hashtable<URI, Session> activeSessions;
 
-	protected MSRPStack() {
+	protected Stack() {
 		localUriConnections = new Hashtable<URI, Connection>();
 		sessionConnections = new Hashtable<URI, Connection>();
 		transactions = new Hashtable<String, Transaction>();
@@ -94,10 +92,10 @@ public class MSRPStack implements Observer {
 	 * Singleton class
 	 */
 	private static class SingletonHolder {
-		private final static MSRPStack INSTANCE = new MSRPStack();
+		private final static Stack INSTANCE = new Stack();
 	}
 
-	public static MSRPStack getInstance() {
+	public static Stack getInstance() {
 		return SingletonHolder.INSTANCE;
 	}
 

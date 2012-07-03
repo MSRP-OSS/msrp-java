@@ -110,7 +110,7 @@ public class FirstMilestoneFunctionalities
             // customReportMechanism);
 
             // We have to add a Listener to both the sessions so that the
-            // MSRPStack interfaces with the application that is using it.
+            // Stack interfaces with the application that is using it.
             // More info about these Listener can be found on the comments of
             // the private class created for demonstration's and instruction
             // sake
@@ -136,7 +136,7 @@ public class FirstMilestoneFunctionalities
             catch (IllegalUseException e)
             {
                 // this is caused by a too big message, see
-                // MSRPStack.setShortMessageBytes(int) for more info
+                // Stack.setShortMessageBytes(int) for more info
                 e.printStackTrace();
             }
 
@@ -193,19 +193,19 @@ public class FirstMilestoneFunctionalities
     }
 
     /**
-     * This is the class that implements the MSRPSessionListener which through
+     * This is the class that implements the SessionListener which through
      * the stack communicates with it's user
      * 
      * @author João André Pereira Antunes
      * 
      */
     private class MSRPExampleSessionHandler
-        implements MSRPSessionListener
+        implements SessionListener
     {
         /*
          * (non-Javadoc)
          * 
-         * @see javax.net.msrp.MSRPSessionListener#acceptHook(javax.net.msrp.Session,
+         * @see javax.net.msrp.SessionListener#acceptHook(javax.net.msrp.Session,
          * javax.net.msrp.IncomingMessage)
          */
         /*
@@ -218,9 +218,6 @@ public class FirstMilestoneFunctionalities
 
             if (weFeelLikeIt)
             {
-                // if we feel like it, or have a better reason to, we can reject
-                // the message
-                int validCode = 0;
                 /*
                  * this message doesn't get accepted and therefore the method
                  * returns false we can always set the response code with the
@@ -273,7 +270,7 @@ public class FirstMilestoneFunctionalities
         /*
          * (non-Javadoc)
          * 
-         * @see javax.net.msrp.MSRPSessionListener#receiveMessage(javax.net.msrp.Session,
+         * @see javax.net.msrp.SessionListener#receiveMessage(javax.net.msrp.Session,
          * javax.net.msrp.Message)
          */
         /*
@@ -312,7 +309,7 @@ public class FirstMilestoneFunctionalities
         /*
          * (non-Javadoc)
          * 
-         * @see javax.net.msrp.MSRPSessionListener#receivedReport(javax.net.msrp.Session,
+         * @see javax.net.msrp.SessionListener#receivedReport(javax.net.msrp.Session,
          * javax.net.msrp.Transaction)
          */
         /*
@@ -348,7 +345,7 @@ public class FirstMilestoneFunctionalities
         /*
          * (non-Javadoc)
          * 
-         * @see javax.net.msrp.MSRPSessionListener#updateSendStatus(javax.net.msrp.Session,
+         * @see javax.net.msrp.SessionListener#updateSendStatus(javax.net.msrp.Session,
          * javax.net.msrp.Message, long)
          */
         /*

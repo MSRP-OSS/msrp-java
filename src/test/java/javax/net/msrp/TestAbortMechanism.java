@@ -22,7 +22,7 @@ import java.io.*;
 
 import javax.net.msrp.Connection;
 import javax.net.msrp.DataContainer;
-import javax.net.msrp.MSRPSessionListener;
+import javax.net.msrp.SessionListener;
 import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Session;
 import javax.net.msrp.events.*;
@@ -36,10 +36,10 @@ import org.junit.*;
  * This class is used to test the abort mechanism of the messages implemented on
  * this MSRP library. The two points of contact of the app with the abort
  * mechanism are the method Message.abortSend(), and the callback on
- * MSRPSessionListener.abortedMessage
+ * SessionListener.abortedMessage
  * 
  * @see Message#abortSend()
- * @see MSRPSessionListener#abortedMessage(Session, Message)
+ * @see SessionListener#abortedMessage(Session, Message)
  * 
  * @author João André Pereira Antunes
  */
