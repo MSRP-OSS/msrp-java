@@ -44,66 +44,97 @@ import org.slf4j.LoggerFactory;
 public class Stack implements Observer {
 
 	/** The logger associated with this class */
-	private static final Logger logger = LoggerFactory
-			.getLogger(Stack.class);
+	private static final Logger logger = LoggerFactory.getLogger(Stack.class);
 
 	/**
-	 * RFC 4975: "Non-SEND request bodies MUST NOT be larger than 10240 octets."
+	 * Field containing the maximum size of a "short message"
+	 * (= size that can still be handled in memory; 1M default).
 	 */
-	protected static final int MAXNONSENDBODYSIZE = 10240;
+	private static int shortMessageBytes = 1024 * 1024;
 
 	/**
-	 * Default value for the "short" message bytes
-	 * "short" messages are the ones that can be put in memory
+	 * Stores all {@link Connections} objects mapped to the address they are bound to.
 	 */
-	protected static final int DEFAULTSHORTMESSAGEBYTES = 1025 * 1024;
-
-	/**
-	 * Maximum number of bytes per un-interruptible transaction
-	 */
-	protected static final int MAXIMUMUNINTERRUPTIBLE = 2048;
-
-	/**
-	 * Field that has the number of bytes of the short message
-	 */
-	private static int shortMessageBytes = DEFAULTSHORTMESSAGEBYTES;
-
-	/**
-	 * Stores all Connections objects mapped to the address they are bound to
-	 */
-	private static Hashtable<InetAddress, Connections> addressConnections = new Hashtable<InetAddress, Connections>();
+	private static Hashtable<InetAddress, Connections> addressConnections =
+						new Hashtable<InetAddress, Connections>();
 
 	private Hashtable<URI, Connection> localUriConnections;
 
 	private Hashtable<URI, Connection> sessionConnections;
 
-	private Hashtable<String, Transaction> transactions;
-
+	/**
+	 * The {@link Session}s that are active in this stack.
+	 */
 	private Hashtable<URI, Session> activeSessions;
 
 	protected Stack() {
 		localUriConnections = new Hashtable<URI, Connection>();
 		sessionConnections = new Hashtable<URI, Connection>();
-		transactions = new Hashtable<String, Transaction>();
 		activeSessions = new Hashtable<URI, Session>();
 	}
 
-	/**
-	 * Singleton class
-	 */
 	private static class SingletonHolder {
 		private final static Stack INSTANCE = new Stack();
 	}
 
+	/**
+	 * @return an instance of the MSRP Stack class.
+	 */
 	public static Stack getInstance() {
 		return SingletonHolder.INSTANCE;
 	}
 
 	/**
+	 * RFC 4975: "Non-SEND request bodies MUST NOT be larger than 10240 octets."
+	 */
+	public static final int MAX_NONSEND_BODYSIZE = 10240;
+
+	/**
+	 * RFC 4975: Maximum un-interruptible chunk-size in octets.
+	 */
+	public static final int MAX_UNINTERRUPTIBLE_CHUNK = 2048;
+
+	/**
+	 * Set the maximum short message size for this stack.
+	 * <P>
+	 * A "short message' is a message that can be put in memory.
+	 * The definition of this short message parameter is used to allow the stack
+	 * to safely handle messages without file storage and consuming too much memory.
+	 * 
+	 * @param bytes  the new maximum size (in bytes) of short messages.
+	 */
+	// FIXME: Note: that ATM the number of received messages that need
+	// to be stored (with success report = yes) has no way of being controlled
+	public static void setShortMessageBytes(int bytes) {
+		shortMessageBytes = bytes;
+	}
+
+	/**
+	 * Get the short message size of this stack.
+	 * @see #setShortMessageBytes(int)
+	 * 
+	 * @return current maximum size (in bytes) of short messages. 
+	 */
+	public static int getShortMessageBytes() {
+		return shortMessageBytes;
+	}
+
+	/**
+	 * Generate a new unique message-ID
+	 * 
+	 * @return the generated message-ID
+	 */
+	public static String generateMessageID() {
+		UUID id = UUID.randomUUID();
+		return 	Long.toHexString(id.getMostSignificantBits()) +
+				Long.toHexString(id.getLeastSignificantBits());
+	}
+
+	/**
 	 * @param address
 	 *            the ip address to bind to
-	 * @return a Connections instance bound to the given address if it exists,
-	 *         or creates one
+	 *            
+	 * @return a {@link Connections} instance bound to the given address.
 	 */
 	protected static Connections getConnectionsInstance(InetAddress address) {
 		Connections toReturn = addressConnections.get(address);
@@ -115,22 +146,26 @@ public class Stack implements Observer {
 		return toReturn;
 	}
 
+	public void update(Observable arg0, Object arg1) {
+		/* empty */;
+	}
+
+	// TODO (?!) relocate method?! needs to be a method?! REFACTORING?!
 	/**
-	 * TODO (?!) relocate method?! needs to be a method?! FIXME (?!) REFACTORING
 	 * Method that generates and sends a success report based on the range of
-	 * the original transaction or of the whole message It interrupts any
+	 * the original transaction or of the whole message. It interrupts any
 	 * interruptible ongoing transaction as specified in RFC 4975
 	 * 
 	 * @param message
-	 *            Message associated with the report to be generated
+	 *            {@link Message} upon which the report is generated.
 	 * @param transaction
-	 *            Transaction that triggered the need to send the report is used
+	 *            {@link Transaction} that triggered the need to send the report is used
 	 *            to gather the range of bytes on which this report will report
 	 *            on and the associated session as well. the value of transaction
 	 *            can be null if we are invoking this method in order to
 	 *            generate a report for the whole message
-	 * 
-	 * 
+	 * @param comment
+	 * 			Text to be put in the comment field of the Status header.
 	 */
 	protected static void generateAndSendSuccessReport(Message message,
 			Transaction transaction, String comment) {
@@ -158,37 +193,32 @@ public class Stack implements Observer {
 		activeSessions.remove(session.getURI());
 	}
 
-	/**
-	 * Method used to set the short message bytes of this stack.
-	 * 
-	 * A "short" message is a message that can be put in memory. the definition
-	 * of this short message parameter is used to allow the stack to handle
-	 * safely messages without storing them in file and without consuming too
-	 * much memory. To note: that ATM the number of received messages that need
-	 * to be stored (which success report = yes) has no way of being controlled
-	 * FIXME
-	 * 
-	 * @param newValue
-	 *            the new int value of the short message
+	/** Is there an active {@link Session} for this URI?
+	 * @param uri the (from-)URI that this session should handle. 
+	 * @return  there is an active session handling this URI (true)
 	 */
-	public static void setShortMessageBytes(int newValue) {
-		shortMessageBytes = newValue;
+	protected boolean isActive(URI uri) {
+		return activeSessions.containsKey(uri);
+	}
+
+	/** Get the active {@link Session} handling this URI
+	 * @param uri the (from-)URI that this session should handle. 
+	 * @return  the {@link Session} handling this URI (or null).
+	 */
+	protected Session getSession(URI uri) {
+		return activeSessions.get(uri);
+	}
+
+	/** Get a collection of all active sessions
+	 * @return a collection of all active sessions
+	 */
+	protected Collection<Session> getActiveSessions() {
+		return activeSessions.values();
 	}
 
 	/**
-	 * Getter for the value shortMessageBytes see the field or the setter for a
-	 * definition of a short message
-	 * 
-	 * @return an int that has the actual shortMessageBytes
-	 */
-	public static int getShortMessageBytes() {
-		return shortMessageBytes;
-	}
-
-	/**
-	 * 
 	 * @param connection
-	 *            adds the received connection into the connections list
+	 *            adds the received {@link Connection} into the connections list
 	 */
 	protected void addConnection(Connection connection) {
 		if (connection == null)
@@ -197,21 +227,30 @@ public class Stack implements Observer {
 	}
 
 	/**
+	 * @param uri the URI used to search for a connection.
+	 *
+	 * @return The {@link Connection} associated with the given local URI
+	 */
+	protected Connection getConnectionByLocalURI(URI uri) {
+		return localUriConnections.get(uri);
+	}
+
+	/**
 	 * adds a connection associated with the session URI
 	 * 
 	 * @param uri
 	 *            the URI to add to the existing connections
 	 * @param connection
-	 *            the connection associated with this URI
+	 *            the {@link Connection} associated with this URI
 	 */
-	public void addConnection(URI uri, Connection connection) {
+	protected void addConnection(URI uri, Connection connection) {
 		sessionConnections.put(uri, connection);
 	}
 
 	/**
 	 * Returns an activeConnection
 	 * 
-	 * @return
+	 * @return an active (bound) {@link Connection}
 	 */
 	protected Connection getActiveConnection() {
 		for (Connection conn : sessionConnections.values()) {
@@ -219,65 +258,5 @@ public class Stack implements Observer {
 				return conn;
 		}
 		return null;
-	}
-
-	/**
-	 * 
-	 * @param localUriToSearch
-	 *            the local uri to which we are searching for a connection
-	 * @return returns the connection associated with the given local uri
-	 */
-	protected Connection getConnectionByLocalURI(URI localUriToSearch) {
-		return localUriConnections.get(localUriToSearch);
-	}
-
-	protected void addTransaction(String tid, Transaction transaction)
-			throws Exception {
-		if (!validTransaction(tid))		// this shouldn't be possible
-			throw new Exception("Invalid transaction ID");
-		transactions.put(tid, transaction);
-	}
-
-	/**
-	 * Asserts if this transactionId exists
-	 * 
-	 * @param tid
-	 *            Transaction ID to be validated
-	 * @return true if it exists false if not
-	 */
-	protected boolean validTransaction(String tid) {
-		if (transactions.containsKey(tid))
-			return false;
-		return true;
-	}
-
-	/**
-	 * Simple 16 bit counter
-	 */
-	static short counter = 0;
-
-	/**
-	 * Generate a new unique message-ID
-	 */
-	public static String generateMessageID() {
-		UUID id = UUID.randomUUID();
-		return 	Long.toHexString(id.getMostSignificantBits()) +
-				Long.toHexString(id.getLeastSignificantBits());
-	}
-
-	public void update(Observable arg0, Object arg1) {
-		/* empty */;
-	}
-
-	protected boolean isActive(URI uri) {
-		return activeSessions.containsKey(uri);
-	}
-
-	protected Session getSession(URI uri) {
-		return activeSessions.get(uri);
-	}
-
-	protected Collection<Session> getActiveSessions() {
-		return activeSessions.values();
 	}
 }
