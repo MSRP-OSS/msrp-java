@@ -21,7 +21,6 @@ import java.net.URI;
 import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.exceptions.ImplementationException;
 import javax.net.msrp.exceptions.InternalErrorException;
-import javax.net.msrp.messages.Message;
 import javax.net.msrp.utils.TextUtils;
 
 /**
@@ -95,7 +94,7 @@ public class ReportTransaction
         else
             header.append(totalBytes);
         /*
-         * TODO validate the comment with a regex in RegexMSRPFactory that
+         * TODO validate the comment with a regex in RegEx that
          * validates the comment is utf8text, if not, log it and skip comment
          */
         header.append("\r\nStatus: ").append(namespace).append(" ").append(statusCode);

@@ -18,9 +18,6 @@ package javax.net.msrp;
 
 import java.util.HashMap;
 
-import javax.net.msrp.messages.*;
-
-
 /**
  * Public "interface" that allows one to define it's own report mechanisms of
  * receiving/sending of messages

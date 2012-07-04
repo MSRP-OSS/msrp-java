@@ -24,7 +24,6 @@ import static org.junit.Assert.fail;
 import java.io.File;
 
 import javax.net.msrp.FileDataContainer;
-import javax.net.msrp.messages.OutgoingFileMessage;
 
 import org.junit.*;
 

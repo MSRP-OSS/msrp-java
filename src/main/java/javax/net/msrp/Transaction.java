@@ -23,7 +23,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.net.msrp.exceptions.*;
-import javax.net.msrp.messages.*;
 import javax.net.msrp.utils.TextUtils;
 
 import org.slf4j.Logger;

@@ -3,7 +3,7 @@ package javax.net.msrp.wrap.cpim;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
-import javax.net.msrp.messages.WrappedMessage;
+import javax.net.msrp.WrappedMessage;
 import javax.net.msrp.utils.TextUtils;
 
 

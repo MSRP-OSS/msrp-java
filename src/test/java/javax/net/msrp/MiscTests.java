@@ -45,9 +45,6 @@ import javax.net.msrp.Transaction;
 import javax.net.msrp.TransactionManager;
 import javax.net.msrp.TransactionType;
 import javax.net.msrp.events.MessageAbortedEvent;
-import javax.net.msrp.messages.IncomingMessage;
-import javax.net.msrp.messages.Message;
-import javax.net.msrp.messages.OutgoingMessage;
 import javax.net.msrp.utils.TextUtils;
 
 

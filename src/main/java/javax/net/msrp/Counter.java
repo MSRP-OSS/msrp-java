@@ -18,8 +18,6 @@ package javax.net.msrp;
 
 import java.util.*;
 
-import javax.net.msrp.messages.*;
-
 import org.slf4j.*;
 
 

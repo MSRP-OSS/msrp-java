@@ -25,8 +25,6 @@ import javax.net.msrp.DataContainer;
 import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Transaction;
 import javax.net.msrp.TransactionType;
-import javax.net.msrp.messages.Message;
-import javax.net.msrp.messages.OutgoingMessage;
 import javax.net.msrp.utils.*;
 
 import org.junit.*;

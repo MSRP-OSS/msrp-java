@@ -17,7 +17,6 @@
 package javax.net.msrp;
 
 import javax.net.msrp.exceptions.*;
-import javax.net.msrp.messages.*;
 
 /**
  * Class used as a specific implementation of a Success report that comes from

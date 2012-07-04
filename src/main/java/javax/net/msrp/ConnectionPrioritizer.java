@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.HashMap;
 
 import javax.net.msrp.exceptions.InternalErrorException;
-import javax.net.msrp.messages.*;
 
 
 /**
