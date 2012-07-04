@@ -21,8 +21,6 @@ import java.net.*;
 import java.util.*;
 
 import javax.net.msrp.FileDataContainer;
-import javax.net.msrp.messages.*;
-
 
 import org.junit.*;
 

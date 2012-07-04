@@ -34,7 +34,6 @@ import javax.net.msrp.exceptions.ConnectionParserException;
 import javax.net.msrp.exceptions.ConnectionReadException;
 import javax.net.msrp.exceptions.ConnectionWriteException;
 import javax.net.msrp.exceptions.IllegalUseException;
-import javax.net.msrp.messages.Message;
 import javax.net.msrp.utils.NetworkUtils;
 import javax.net.msrp.utils.TextUtils;
 
@@ -698,7 +697,7 @@ class Connection extends Observable implements Runnable
                      * identify if transaction has content-stuff or not:
                      * 'Content-Type 2CRLF' from formal syntax.
                      */
-                    String tokenRegex = RegexMSRPFactory.token.pattern();
+                    String tokenRegex = RegEx.token.pattern();
                     Pattern contentStuff = Pattern.compile(
                     		"(.*)(Content-Type:) (" + tokenRegex
                             + "/" + tokenRegex + ")(\r\n\r\n)(.*)",

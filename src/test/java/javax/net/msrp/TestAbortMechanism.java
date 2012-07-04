@@ -26,7 +26,6 @@ import javax.net.msrp.SessionListener;
 import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Session;
 import javax.net.msrp.events.*;
-import javax.net.msrp.messages.*;
 
 import static org.junit.Assert.*;
 

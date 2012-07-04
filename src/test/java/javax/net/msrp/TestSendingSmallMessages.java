@@ -25,7 +25,6 @@ import java.util.*;
 
 import javax.net.msrp.DataContainer;
 import javax.net.msrp.MemoryDataContainer;
-import javax.net.msrp.messages.*;
 import javax.net.msrp.utils.TextUtils;
 
 

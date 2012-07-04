@@ -25,7 +25,6 @@ import java.util.*;
 
 import javax.net.msrp.*;
 import javax.net.msrp.exceptions.IllegalUseException;
-import javax.net.msrp.messages.Message;
 import javax.net.msrp.testutils.*;
 
 

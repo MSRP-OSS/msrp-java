@@ -19,14 +19,14 @@ package javax.net.msrp.testutils;
 import java.util.ArrayList;
 
 import javax.net.msrp.DataContainer;
+import javax.net.msrp.IncomingMessage;
+import javax.net.msrp.Message;
+import javax.net.msrp.OutgoingMessage;
 import javax.net.msrp.SessionListener;
 import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Session;
 import javax.net.msrp.Transaction;
 import javax.net.msrp.events.MessageAbortedEvent;
-import javax.net.msrp.messages.IncomingMessage;
-import javax.net.msrp.messages.Message;
-import javax.net.msrp.messages.OutgoingMessage;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

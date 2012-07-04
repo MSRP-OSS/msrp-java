@@ -25,9 +25,6 @@ import javax.net.msrp.FileDataContainer;
 import javax.net.msrp.Stack;
 import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Session;
-import javax.net.msrp.messages.Message;
-import javax.net.msrp.messages.OutgoingFileMessage;
-import javax.net.msrp.messages.OutgoingMessage;
 import javax.net.msrp.testutils.MockSessionListener;
 import javax.net.msrp.utils.TextUtils;
 

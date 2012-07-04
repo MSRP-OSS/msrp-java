@@ -14,9 +14,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
-package javax.net.msrp.messages;
+package javax.net.msrp;
 
-import javax.net.msrp.*;
+import java.nio.BufferOverflowException;
+
 import javax.net.msrp.exceptions.*;
 import javax.net.msrp.utils.TextUtils;
 
@@ -143,34 +144,30 @@ public abstract class Message
     protected Transaction lastSendTransaction = null;
 
     public Message(Session session, String contentType, byte[] data)
-        throws IllegalUseException
     {
         this(session, contentType, data, null);
     }
 
     /* End of wrappers for report mechanism */
 
-    /**
+    /** Create new MSRP message and queue in session for sending.
      * @param session the session associated with the message
      * @param contentType the content type associated withe this byteArarray
-     * @param byteArray the content of the message to be sent eventually
+     * @param byteArray the content of the message to be sent
      * @param reportMechanism the report mechanism to be used for this message
      * @return the newly created message
-     * @throws IllegalUseException if this message content is too big, as
-     *             defined on Stack, to be sent with a memory content
-     *             message
+     * @throws RuntimeException if message content is too big to send in memory,
+     * 					as defined on Stack (cause {@code BufferOverflowException})
      * @see Stack#setShortMessageBytes(int)
-     * 
      */
     public Message(Session session, String contentType, byte[] data,
             ReportMechanism reportMechanism)
-        throws IllegalUseException
     {
         if (data.length > Stack.getShortMessageBytes())
         {
-            // TODO create new exception for this
-            throw new IllegalUseException(
-                "Error! message data too big, use file source or stream constructors");
+            throw new RuntimeException("Session[" + session +
+            			"] data too big, use file source or stream constructors",
+            			new BufferOverflowException());
         }
         this.session = session;
         this.contentType = contentType;

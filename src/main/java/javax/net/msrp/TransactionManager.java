@@ -25,7 +25,6 @@ import java.util.Vector;
 
 import javax.net.msrp.events.MessageAbortedEvent;
 import javax.net.msrp.exceptions.*;
-import javax.net.msrp.messages.*;
 import javax.net.msrp.utils.*;
 
 import org.slf4j.Logger;
@@ -138,7 +137,7 @@ public class TransactionManager
             && responseCode != 506)
             throw new IllegalUseException("Invalid response code");
         // TODO FIXME validate the comment based on the utf8text regex pattern
-        // that will be defined in RegexMSRPFactory
+        // that will be defined in RegEx
         // TODO generate the responses based on the success report field
 
         // generate response based on failure report field
@@ -509,7 +508,7 @@ public class TransactionManager
 			try {
 				// TODO: should be empty message...
 				new OutgoingMessage(session, "text/plain", " ".getBytes());
-			} catch (IllegalUseException e) {
+			} catch (Exception e) {
 				logger.warn(e.getMessage());
 			}
     }

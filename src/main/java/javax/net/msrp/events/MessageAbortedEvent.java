@@ -19,9 +19,6 @@ package javax.net.msrp.events;
 import java.util.*;
 
 import javax.net.msrp.*;
-import javax.net.msrp.messages.*;
-
-
 
 /**
  * The <tt>MessageAbortedEvent</tt> is the event indicating that a MSRP message

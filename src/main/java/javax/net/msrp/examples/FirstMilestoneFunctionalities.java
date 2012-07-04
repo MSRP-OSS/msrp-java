@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import javax.net.msrp.*;
 import javax.net.msrp.events.MessageAbortedEvent;
 import javax.net.msrp.exceptions.*;
-import javax.net.msrp.messages.*;
 
 
 /**
@@ -133,7 +132,7 @@ public class FirstMilestoneFunctionalities
                 Message exampleMessage = sendingSession.sendMessage(
                 		"MIMEType/MIMEsubType", someData);
             }
-            catch (IllegalUseException e)
+            catch (Exception e)
             {
                 // this is caused by a too big message, see
                 // Stack.setShortMessageBytes(int) for more info

@@ -7,7 +7,7 @@ import static org.junit.Assert.*;
 
 import java.nio.ByteBuffer;
 
-import javax.net.msrp.messages.WrappedMessage;
+import javax.net.msrp.WrappedMessage;
 import javax.net.msrp.wrap.Wrap;
 
 import org.junit.Test;

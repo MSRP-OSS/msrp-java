@@ -17,7 +17,6 @@
 package javax.net.msrp.testutils;
 
 import javax.net.msrp.*;
-import javax.net.msrp.messages.Message;
 
 /**
  * Class used to resolve Issues #2 and #3 This class is a custom Report
