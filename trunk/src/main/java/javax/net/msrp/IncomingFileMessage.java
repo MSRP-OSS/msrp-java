@@ -14,15 +14,11 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
-package javax.net.msrp.messages;
+package javax.net.msrp;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 
-import javax.net.msrp.FileDataContainer;
-import javax.net.msrp.Stack;
-import javax.net.msrp.ReportMechanism;
-import javax.net.msrp.Session;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

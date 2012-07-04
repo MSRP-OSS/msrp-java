@@ -16,56 +16,70 @@
  */
 package javax.net.msrp;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.regex.Matcher;
 
-import javax.net.msrp.RegexMSRPFactory;
+import javax.net.msrp.RegEx;
 
+import static org.junit.Assert.*;
 import org.junit.*;
 
 /**
- * Class that tests thorougly the RegexMSRPFactory class
+ * Class that tests thorougly the RegEx class
  * 
- * @see RegexMSRPFactory
+ * @see RegEx
  * @author João André Pereira Antunes
- * 
  */
-public class TestRegexMSRPFactory
+public class TestRegEx
 {
     @Test
     public void testTokenRegex()
     {
         Matcher testMatcher;
         // Test with the empty string
-        testMatcher = RegexMSRPFactory.token.matcher("");
-        Assert.assertFalse(
+        testMatcher = RegEx.token.matcher("");
+        assertFalse(
             "Error, the empty string shouldn't be considered a token",
             testMatcher.matches());
 
         // with a single character from one of the groups
-        testMatcher = RegexMSRPFactory.token.matcher("~");
-        Assert.assertTrue("Error, the ~ char should be considered a token",
+        testMatcher = RegEx.token.matcher("~");
+        assertTrue("Error, the ~ char should be considered a token",
             testMatcher.matches());
 
         // with one character from each group
-        testMatcher = RegexMSRPFactory.token.matcher("!#*-1A^");
-        Assert
-            .assertTrue(
+        testMatcher = RegEx.token.matcher("!#*-1A^");
+        assertTrue(
                 "Error, token regex badly defined: !#*-1A^ should be considered a valid token",
                 testMatcher.matches());
-        
+
         // a string with a blank space shouldn't be a token
-        testMatcher = RegexMSRPFactory.token.matcher("test ");
-        Assert
-            .assertFalse(
+        testMatcher = RegEx.token.matcher("test ");
+        assertFalse(
                 "Error, a string with a space shouldn't be a considered a token",
                 testMatcher.matches());
 
         // Just something extra to remember this issue by:
         testMatcher =
-            RegexMSRPFactory.token.matcher("prs.genericfile/prs.rawbyte");
-        Assert
-            .assertTrue(
+            RegEx.token.matcher("prs.genericfile/prs.rawbyte");
+        assertTrue(
                 "oh nooo 'prs.genericfile/prs.rawbyte' should definitely be considered a token",
                 testMatcher.matches());
+    }
+
+    @Test
+    public void testUri()
+    {
+    	try {
+			assertTrue("hmm, not an msrp URI?",
+					RegEx.isMsrpUri(new URI("msrp://alicepc.example.com:7777/iau39soe2843z;tcp")));
+			assertTrue("hmm, not an msrp URI?",
+					RegEx.isMsrpUri(new URI("msrp://alicepc.example.com:7777;tcp")));
+			assertFalse("hmm, *is* an msrp URI?",
+					RegEx.isMsrpUri(new URI("msrp:/iau39soe2843z;tcp")));
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
     }
 }

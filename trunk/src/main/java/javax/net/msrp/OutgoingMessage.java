@@ -14,12 +14,8 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with MSRP Java Stack. If not, see <http://www.gnu.org/licenses/>.
  */
-package javax.net.msrp.messages;
+package javax.net.msrp;
 
-import javax.net.msrp.SessionListener;
-import javax.net.msrp.Session;
-import javax.net.msrp.TransactionManager;
-import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.exceptions.InternalErrorException;
 
 
@@ -40,9 +36,7 @@ public class OutgoingMessage
     private static final Logger logger =
         LoggerFactory.getLogger(OutgoingMessage.class);
 
-    public OutgoingMessage(Session sendingSession, String contentType,
-        byte[] someData)
-        throws IllegalUseException
+    public OutgoingMessage(Session sendingSession, String contentType, byte[] someData)
     {
         super(sendingSession, contentType, someData);
     }

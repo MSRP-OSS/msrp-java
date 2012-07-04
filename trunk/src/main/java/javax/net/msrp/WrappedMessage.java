@@ -1,7 +1,7 @@
 /**
  * 
  */
-package javax.net.msrp.messages;
+package javax.net.msrp;
 
 import java.nio.ByteBuffer;
 

@@ -25,7 +25,6 @@ import java.util.Observer;
 import java.util.UUID;
 
 import javax.net.msrp.exceptions.*;
-import javax.net.msrp.messages.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

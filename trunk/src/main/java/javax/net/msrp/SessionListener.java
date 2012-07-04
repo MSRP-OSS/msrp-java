@@ -19,8 +19,6 @@ package javax.net.msrp;
 import java.util.EventListener;
 
 import javax.net.msrp.events.*;
-import javax.net.msrp.messages.IncomingMessage;
-import javax.net.msrp.messages.Message;
 
 
 /**

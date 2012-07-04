@@ -5,7 +5,7 @@ package javax.net.msrp.wrap;
 
 import java.util.Hashtable;
 
-import javax.net.msrp.messages.WrappedMessage;
+import javax.net.msrp.WrappedMessage;
 import javax.net.msrp.wrap.cpim.Message;
 
 
