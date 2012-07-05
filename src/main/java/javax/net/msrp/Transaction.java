@@ -1031,50 +1031,6 @@ public class Transaction
     }
 
     /**
-     * Function responsible for giving out the bytes associated with this
-     * transaction DATA only, the end-line should be retrieved using the
-     * appropriate method {@link #getEndLineByte()} TODO: put it to write the
-     * end of transaction dynamically without having to be on the body TODO:
-     * tidy up a lil'bit the code
-     * 
-     * @deprecated use {@link #get(byte[], int)} instead
-     * 
-     * @return the next byte associated with this transaction
-     * @throws ImplementationException if this method was called when the
-     *             getEndLineData should have been called or when no more bytes
-     *             remain
-     */
-    protected byte get() throws ImplementationException
-    {
-        if (hasResponse())
-        {
-            return response.get();
-        }
-        if (readIndex[HEADER] < headerBytes.length)
-            return headerBytes[(int) readIndex[HEADER]++];
-        else
-        {
-            if (interrupted && readIndex[ENDLINE] <= (7 + tID.length() + 2))
-            {
-                throw new ImplementationException("Called Transaction.get() " +
-                		"when it should've been Transaction.getEndLineByte()");
-            }
-            if (!interrupted && message.hasData())
-            {
-                hasContentStuff = true;
-                return message.get();
-            }
-            if (!interrupted && readIndex[ENDLINE] <= (7 + tID.length() + 2))
-            {
-                throw new ImplementationException("Called Transaction.get() " +
-                		"when it should've been Transaction.getEndLineByte()");
-            }
-            throw new ImplementationException(
-                "Error: Transaction.get() called without available bytes to get");
-        }
-    }
-
-    /**
      * Method used by the TransactionManager to assert if this is or not an
      * incoming response
      */

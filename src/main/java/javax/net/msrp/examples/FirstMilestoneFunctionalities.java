@@ -276,7 +276,7 @@ public class FirstMilestoneFunctionalities
          * This method is called upon successfully receiving a message
          */
         public void receiveMessage(Session sessionThatReceivedMessage,
-            Message receivedMessage)
+            IncomingMessage receivedMessage)
         {
             // here you can do whatever you want with the received message
 

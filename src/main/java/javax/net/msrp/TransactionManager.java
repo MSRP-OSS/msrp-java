@@ -236,7 +236,7 @@ public class TransactionManager
             {
                 logger.error("Generating success report for " + transaction);
             }
-            Message message = transaction.getMessage();
+            IncomingMessage message = (IncomingMessage) transaction.getMessage();
             if (message != null && message.isComplete())
             {
                 logger.trace(transaction + " has an associated message-id[" +
@@ -886,108 +886,6 @@ public class TransactionManager
 	        }	// end of main while, the one that goes across transactions
         }
         return byteCounter;
-    }
-
-    /**
-     * Method used by the connection object to retrieve the byte array of data
-     * to be sent by the connection
-     * 
-     * Also it's at this level that the sending of bytes is accounted for
-     * purposes of triggering the sendUpdateStatus and the prioritizer
-     * 
-     * @deprecated use #dataToSend2 remove this method when the other is proven
-     *             that is working right
-     * 
-     * @param outData the byte to fill with data to be sent
-     * @return the number of bytes filled on outData
-     * @throws Exception
-     */
-    protected int dataToSend(byte[] outData) throws Exception
-    {
-        int i = 0;
-        int bytesToAccount = 0;		/* Number of bytes per transaction to store */
-
-        synchronized (this)
-        {
-	        for (i = 0; hasDataToSend() && i < outData.length;)
-	        {
-	            Transaction t = transactionsToSend.get(0);
-	            outgoingDataValidator.init(t.getTID());
-	
-	            while (i < outData.length)
-	            {
-	                if (!t.hasData())
-	                {
-	                    if (t.hasEndLine())
-	                    {
-	                        outgoingDataValidator.parse(outData, i);
-	                        outgoingDataValidator.reset();
-	                        if (outgoingDataValidator.dataHasEndLine())
-	                        {
-	                            int numberPositionsToRewind =
-	                                outgoingDataValidator.numberPositionsToRewind();
-	                            t.rewind(numberPositionsToRewind);
-	                            t.interrupt();
-	                            i -= numberPositionsToRewind;
-	                            bytesToAccount -= numberPositionsToRewind;
-	                            continue;
-	                        }
-	                        bytesToAccount++;
-	                        outData[i++] = t.getEndLineByte();
-	                    }
-	                    else
-	                    {
-	                        /*
-	                         * Removing given transaction from queue of
-	                         * transactions to send
-	                         */
-	                        removeTransactionToSend(t);
-	                        /*
-	                         * we should also reset outgoingDataValidator, so
-	                         * that future calls to the parser won't misjudge the
-	                         * correct end-line as an end-line on the body content.
-	                         */
-	                        outgoingDataValidator.reset();
-	                        break;
-	                    }
-	                }
-	                else
-	                {
-	                    bytesToAccount++;
-	                    outData[i++] = t.get();
-	                }
-	            }
-	            outgoingDataValidator.parse(outData, i);
-	            if (outgoingDataValidator.dataHasEndLine())
-	            {
-	                int numberPositionsToRewind =
-	                    outgoingDataValidator.numberPositionsToRewind();
-	                t.rewind(numberPositionsToRewind);
-	                t.interrupt();
-	                i -= numberPositionsToRewind;
-	                bytesToAccount -= numberPositionsToRewind;
-	                outgoingDataValidator.reset();
-	            }
-	            if (!t.isIncomingResponse()
-	                && t.transactionType == TransactionType.SEND
-	                && !t.hasResponse())
-	            {
-	                /*
-	                 * reporting the sent update status seen that this is an
-	                 * outgoing send request
-	                 */
-	                OutgoingMessage transactionMessage =
-	                    (OutgoingMessage) t.getMessage();
-	                if (transactionMessage != null)
-	                {
-	                    transactionMessage.reportMechanism.countSentBodyBytes(
-	                        transactionMessage, bytesToAccount);
-	                    bytesToAccount = 0;
-	                }
-	            }
-	        }
-        }
-        return i;
     }
 
     /**

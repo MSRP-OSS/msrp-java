@@ -152,7 +152,7 @@ public class MockSessionListener
     }
 
     @Override
-    public void receiveMessage(Session session, Message message)
+    public void receiveMessage(Session session, IncomingMessage message)
     {
         logger.debug("receiveMessage(id=[" + message.getMessageID() + "])");
         receiveMessage = message;
