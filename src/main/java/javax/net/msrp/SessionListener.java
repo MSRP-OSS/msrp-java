@@ -53,7 +53,7 @@ public interface SessionListener
      * @param session the session on which the message was received
      * @param message the message received
      */
-    public void receiveMessage(Session session, Message message);
+    public void receiveMessage(Session session, IncomingMessage message);
 
     /**
      * Signal a received REPORT

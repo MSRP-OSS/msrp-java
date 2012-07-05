@@ -428,7 +428,7 @@ public class MiscTests
         testRandomStringGenerator();
     }
 
-    public void receiveMessage(Session session, Message message)
+    public void receiveMessage(Session session, IncomingMessage message)
     {
         // TODO print the content of the message
         System.out.println("******Debug: on: " + session.toString()

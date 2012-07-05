@@ -433,7 +433,7 @@ public class Session
      * @param _connection The _connection to set.
      * @uml.property name="_connection"
      */
-    public void setConnection(Connection connection)
+    protected void setConnection(Connection connection)
     {
         this.connection = connection;
     }
@@ -457,7 +457,7 @@ public class Session
      * 
      * @param message the message to be added to the end of the message queue
      */
-    public void addMessageToSend(Message message)
+    protected void addMessageToSend(Message message)
     {
         sendQueue.add(message);
         triggerSending();
@@ -606,7 +606,7 @@ public class Session
      * @param message the received message
      * @see SessionListener
      */
-    protected void triggerReceiveMessage(Message message)
+    protected void triggerReceiveMessage(IncomingMessage message)
     {
         logger.trace("Called the triggerReceiveMessage hook");
         myListener.receiveMessage(this, message);

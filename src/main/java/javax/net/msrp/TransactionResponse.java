@@ -140,12 +140,6 @@ public class TransactionResponse
     }
 
     @Override
-    public byte get()
-    {
-        return content.get();
-    }
-
-    @Override
     public boolean hasData()
     {
         return content.hasRemaining();
