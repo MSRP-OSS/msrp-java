@@ -697,10 +697,9 @@ class Connection extends Observable implements Runnable
                      * identify if transaction has content-stuff or not:
                      * 'Content-Type 2CRLF' from formal syntax.
                      */
-                    String tokenRegex = RegEx.token.pattern();
                     Pattern contentStuff = Pattern.compile(
-                    		"(.*)(Content-Type:) (" + tokenRegex
-                            + "/" + tokenRegex + ")(\r\n\r\n)(.*)",
+                    		"(.*)(Content-Type:) (" + RegEx.token
+                            + "/" + RegEx.token + ")(\r\n\r\n)(.*)",
                             Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
                     matcher = contentStuff.matcher(toParse);
                     if (matcher.matches())
