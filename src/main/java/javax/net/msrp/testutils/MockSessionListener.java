@@ -248,13 +248,6 @@ public class MockSessionListener
         }
     }
 
-    @Override
-    public void abortedMessage(Session session, IncomingMessage message)
-    {
-        // Deprecated
-
-    }
-
     /**
      * @return the acceptHookSession
      */

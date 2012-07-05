@@ -847,11 +847,6 @@ public class MiscTests
     }
 
     @Override
-    public void abortedMessage(Session session, IncomingMessage message)
-    {
-    }
-
-    @Override
     public void abortedMessageEvent(MessageAbortedEvent abortEvent)
     {
     }

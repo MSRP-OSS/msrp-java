@@ -20,9 +20,8 @@ import java.util.EventListener;
 
 import javax.net.msrp.events.*;
 
-
 /**
- * Interface used for callbacks by the MSRP stack.
+ * Callback interface of the MSRP session.
  * 
  * It provides callbacks for events at a message level (associated with some
  * action regarding a message) in the session that is associated with the class
@@ -35,17 +34,16 @@ public interface SessionListener
 {
 
     /**
-     * Accept or reject the message by the stack SHOULD ALWAYS
-     * assign a {@code DataContainer} to the given message otherwise it is
-     * discarded
+     * Accept or reject the incoming message. SHOULD ALWAYS
+     * assign a {@code DataContainer} to the given message, otherwise it is
+     * discarded.
+     * <p>
+     * <strong>Note:</strong> if the message is rejected one should call
+     * 		 {@link IncomingMessage#setResult(int)} to specify why, defaults to 413
      * 
      * @param session the session on which we have an incoming message
-     * @param message the message to decide upon accepting or rejecting
+     * @param message the message to be accepted or rejected
      * @return true if the message is to be accepted, false otherwise
-     * 
-     * Note: if the message is rejected one should call
-     * 		 {@code message.reject(code)} to
-     *       specify the reason why, default is 413
      */
     public boolean acceptHook(Session session, IncomingMessage message);
 
@@ -68,23 +66,15 @@ public interface SessionListener
     /**
      * Signal an aborted message
      * 
-     * @deprecated use abortedMessageEvent instead
-     * @param session the session associated with the message
-     * @param message the IncomingMessage that was aborted
-     */
-    public void abortedMessage(Session session, IncomingMessage message);
-
-    /**
-     * Aignal an aborted message
-     * 
-     * @param abortEvent the Message aborted event used
+     * @param abortEvent the abort-event with additional info.
+     * @see MessageAbortedEvent
      */
     public void abortedMessageEvent(MessageAbortedEvent abortEvent);
 
     /**
-     * Notify the application of updates on the sending status of a message.
+     * Signal updates on the sending status of a message.
      * The granularity of such updates can be set by
-     * implementing {@code shouldTriggerSentHook} of {@code ReportMechanism}
+     * implementing {@link ReportMechanism#shouldTriggerSentHook(Message, Session, long)
      * 
      * @param session	the session used
      * @param message	the message it pertains to
@@ -92,8 +82,7 @@ public interface SessionListener
      */
     public void updateSendStatus(Session session, Message message, long numberBytesSent);
 
-	/** Notify application that underlying connection to this session has
-	 * ceased to be.
+	/** Signal that underlying connection to this session has ceased to be.
 	 * 
 	 * @param session	the session it pertains to
 	 * @param cause		why was it lost?

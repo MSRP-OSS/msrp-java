@@ -18,6 +18,7 @@ package javax.net.msrp;
 
 import java.nio.BufferOverflowException;
 
+import javax.net.msrp.events.MessageAbortedEvent;
 import javax.net.msrp.exceptions.*;
 import javax.net.msrp.utils.TextUtils;
 
@@ -621,7 +622,7 @@ public abstract class Message
         aborted = true;
         if (dataContainer != null)
         	dataContainer.dispose();
-        session.triggerAbortedMessage(session, (IncomingMessage) this, transaction);
+        session.fireMessageAbortedEvent(this, MessageAbortedEvent.CONTINUATIONFLAG, null, transaction);
     }
 
     /**
