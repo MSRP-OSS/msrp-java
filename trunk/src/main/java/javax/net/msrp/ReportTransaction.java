@@ -105,25 +105,6 @@ public class ReportTransaction
         headerBytes = header.toString().getBytes(TextUtils.utf8);
 	}
 
-	@Override
-    protected byte get() throws ImplementationException
-    {
-        if (readIndex[HEADER] < headerBytes.length)
-            return headerBytes[(int) readIndex[HEADER]++];
-        else if (readIndex[ENDLINE] <= (7 + tID.length() + 2))
-            try
-            {
-                return getEndLineByte();
-            }
-            catch (InternalErrorException e)
-            {
-                throw new ImplementationException(e);
-            }
-        throw new ImplementationException(
-            "Error the .get() of the transaction was called without available bytes to get");
-
-    }
-
     /**
      * Method that fills the given array with DATA (header and content excluding
      * end of line) bytes starting from offset and stopping at the array limit

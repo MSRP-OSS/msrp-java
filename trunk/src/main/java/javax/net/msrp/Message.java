@@ -394,26 +394,6 @@ public abstract class Message
     }
 
     /**
-     * Function used to retrieve the message content byte by byte
-     * 
-     * @deprecated due to performance issues please use
-     *             {@link #get(byte[], int)}
-     * @return a byte of this message's content
-     */
-    public byte get()
-    {
-        try
-        {
-            return dataContainer.get();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-        return -1;
-    }
-
-    /**
      * Handy method to retrieve the associated counter of this message
      * 
      * @return the counter associated with this message
@@ -528,7 +508,7 @@ public abstract class Message
      * @param _session The _session to set.
      * @uml.property name="_session"
      */
-    public void setSession(Session _session)
+    protected void setSession(Session _session)
     {
         this.session = _session;
     }
@@ -558,7 +538,7 @@ public abstract class Message
     /**
      * @param lastSendTransaction the lastSendTransaction to set
      */
-    public void setLastSendTransaction(Transaction lastSendTransaction)
+    protected void setLastSendTransaction(Transaction lastSendTransaction)
     {
         this.lastSendTransaction = lastSendTransaction;
     }
