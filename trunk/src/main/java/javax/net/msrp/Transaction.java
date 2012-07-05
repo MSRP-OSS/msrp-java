@@ -1482,9 +1482,9 @@ public class Transaction
                 }
 
                 boolean result = session.triggerAcceptHook(incomingMessage);
-                if (result && incomingMessage.result != 200)
+                if (result && incomingMessage.getResult() != 200)
                 {
-                    incomingMessage.result = 200;
+                    incomingMessage.setResult(200);
                     /*
                      * if the user didn't assigned a data container to the
                      * message then we discard the message and log the
@@ -1516,7 +1516,7 @@ public class Transaction
                     try
                     {
                         transactionManager.generateResponse(this,
-                            incomingMessage.result, "Message rejected by user");
+                            incomingMessage.getResult(), "Message rejected by user");
                     }
                     catch (IllegalUseException e)
                     {

@@ -123,13 +123,24 @@ public class IncomingMessage
         return valueToReturn;
     }
 
-    /**
-     * 
-     * Contains the response code of the accept hook call
-     */
-    public int result = 413;
+    /** Response code of the accept hook call. */
+    private int result = 413;
 
-    @Override
+	/**
+	 * @return the result
+	 */
+	public int getResult() {
+		return result;
+	}
+
+	/**
+	 * @param result the result to set
+	 */
+	public void setResult(int result) {
+		this.result = result;
+	}
+
+	@Override
     public int getDirection()
     {
         return IN;

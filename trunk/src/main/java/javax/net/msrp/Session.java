@@ -523,10 +523,7 @@ public class Session
     }
 
     /**
-     * FIXME This method shouldn't usually be used by the user, but it is
-     * required due to the package structure.. related with Issue #27
-     * 
-     * @return the txManager
+     * @return the txManager for this session.
      */
     protected TransactionManager getTransactionManager()
     {
@@ -670,22 +667,6 @@ public class Session
             listener = myListener;
         }
         listener.abortedMessageEvent(abortedEvent);
-    }
-
-    /**
-     * trigger for the registered
-     * {@link SessionListener#abortedMessage(Session, Message)} callback.
-     * 
-     * @deprecated use MessageAbortedEvents instead, this one only works for
-     *             incoming messages that get a ABORT in the CONTINUATION FLAG
-     */
-    protected void triggerAbortedMessage(Session session, IncomingMessage message,
-        Transaction transaction)
-    {
-        logger.trace("Called the triggerAbortedMessage hook");
-        myListener.abortedMessage(session, message);
-        fireMessageAbortedEvent(message, MessageAbortedEvent.CONTINUATIONFLAG,
-            null, transaction);
     }
 
     /**
