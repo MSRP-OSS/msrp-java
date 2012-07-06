@@ -17,49 +17,31 @@
  */
 package javax.net.msrp.exceptions;
 
-/**
- * @author João André Pereira Antunes 2008
+/** Header field cannot be parsed or has unknown/invalid content.
  * 
+ * @author João André Pereira Antunes 2008
  */
 @SuppressWarnings("serial")
 public class InvalidHeaderException
     extends Exception
 {
-
-    /**
-	 * 
-	 */
     public InvalidHeaderException()
     {
-        // TODO Auto-generated constructor stub
+        /* empty */;
     }
 
-    /**
-     * @param arg0
-     */
-    public InvalidHeaderException(String arg0)
+    public InvalidHeaderException(String reason)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(reason);
     }
 
-    /**
-     * @param arg0
-     */
-    public InvalidHeaderException(Throwable arg0)
+    public InvalidHeaderException(Throwable cause)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(cause);
     }
 
-    /**
-     * @param arg0
-     * @param arg1
-     */
-    public InvalidHeaderException(String arg0, Throwable arg1)
+    public InvalidHeaderException(String reason, Throwable cause)
     {
-        super(arg0, arg1);
-        // TODO Auto-generated constructor stub
+        super(reason, cause);
     }
-
 }

@@ -867,7 +867,7 @@ public class TransactionManager
 	            // account for the bytes sent from this transaction if they should
 	            // be accounted for
 	            if (!t.isIncomingResponse()
-	                && t.transactionType == TransactionType.SEND
+	                && t.getTransactionType() == TransactionType.SEND
 	                && !t.hasResponse())
 	            {
 	                /*
@@ -965,7 +965,7 @@ public class TransactionManager
     	synchronized (this)
     	{
 	        for (Transaction t : transactionsToSend)
-	            if (t.transactionType == TransactionType.SEND &&
+	            if (t.getTransactionType() == TransactionType.SEND &&
 	                t.getMessage().equals(message) && t.isInterruptible())
                     t.interrupt();
     	}
@@ -977,7 +977,7 @@ public class TransactionManager
     	{
     		boolean first = true;
     		for (Transaction t : transactionsToSend)
-	            if (t.transactionType == TransactionType.SEND &&
+	            if (t.getTransactionType() == TransactionType.SEND &&
 	                t.getMessage().equals(message))
 	            {
 	            	logger.debug(t + " aborted");

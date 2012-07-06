@@ -17,51 +17,30 @@
 package javax.net.msrp.exceptions;
 
 /**
- * Generic exception used for identifying an exception that came from the parser
- * method of the connection class
+ * Generic exception for parsing MSRP stuff.
  * 
  * @author João André Pereira Antunes
- * 
  */
 @SuppressWarnings("serial")
-public class ConnectionParserException
+public class ParseException
     extends Exception
 {
-
-    /**
-     * 
-     */
-    public ConnectionParserException()
+    public ParseException()
     {
-        // TODO Auto-generated constructor stub
     }
 
-    /**
-     * @param arg0
-     */
-    public ConnectionParserException(String arg0)
+    public ParseException(String reason)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(reason);
     }
 
-    /**
-     * @param arg0
-     */
-    public ConnectionParserException(Throwable arg0)
+    public ParseException(Throwable cause)
     {
-        super(arg0);
-        // TODO Auto-generated constructor stub
+        super(cause);
     }
 
-    /**
-     * @param arg0
-     * @param arg1
-     */
-    public ConnectionParserException(String arg0, Throwable arg1)
+    public ParseException(String reason, Throwable cause)
     {
-        super(arg0, arg1);
-        // TODO Auto-generated constructor stub
+        super(reason, cause);
     }
-
 }

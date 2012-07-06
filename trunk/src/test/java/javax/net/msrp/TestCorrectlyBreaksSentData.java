@@ -128,7 +128,7 @@ public class TestCorrectlyBreaksSentData extends TestFrame
             for (Transaction transaction : existingTransactions)
             {
                 if (transaction.getTID().equals(tidString)
-                    && transaction.transactionType == TransactionType.SEND)
+                    && transaction.getTransactionType() == TransactionType.SEND)
                 {
                     if (foundFirstSendTransaction)
                         fail("Something odd happened, there was "
@@ -138,7 +138,7 @@ public class TestCorrectlyBreaksSentData extends TestFrame
                     foundFirstSendTransaction = true;
                 }
                 if (!transaction.getTID().equals(tidString)
-                    && transaction.transactionType == TransactionType.SEND)
+                    && transaction.getTransactionType() == TransactionType.SEND)
                 {
                     if (foundSecondSendTransaction)
                         fail("Something odd happened, there was "

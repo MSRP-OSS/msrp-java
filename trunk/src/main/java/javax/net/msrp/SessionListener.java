@@ -53,13 +53,14 @@ public interface SessionListener
      * @param session the session on which the message was received
      * @param message the message received
      */
-    public void receiveMessage(Session session, IncomingMessage message);
+    public void receivedMessage(Session session, IncomingMessage message);
 
     /**
      * Signal a received REPORT
      * 
      * @param session the Session on which the REPORT was received
      * @param report the Transaction associated with the REPORT
+     * @see Transaction#getStatusHeader()
      */
     public void receivedReport(Session session, Transaction report);
 

@@ -8,7 +8,7 @@ import static org.junit.Assert.*;
 import java.net.InetAddress;
 
 import javax.net.msrp.Connection;
-import javax.net.msrp.exceptions.ConnectionParserException;
+import javax.net.msrp.exceptions.ParseException;
 
 
 import org.junit.After;
@@ -76,7 +76,7 @@ public class TestConnectionPreparser {
 
 		try {
 			in.preParser.preParse(inbuffer, inbuffer.length);
-		} catch (ConnectionParserException cpe) {
+		} catch (ParseException cpe) {
 			fail("Error parsing: " + cpe.getMessage());
 		} catch (Exception e) {
 			fail(e.getMessage());
@@ -89,7 +89,7 @@ public class TestConnectionPreparser {
 
 		try {
 			in.preParser.preParse(inbuffer, inbuffer.length);
-		} catch (ConnectionParserException cpe) {
+		} catch (ParseException cpe) {
 			fail("Error parsing: " + cpe.getMessage());
 		} catch (Exception e) {
 			fail(e.getMessage());
