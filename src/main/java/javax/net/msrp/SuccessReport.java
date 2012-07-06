@@ -46,12 +46,12 @@ public class SuccessReport
     {
     	super(message, session, transaction);
 
-    	if (transaction.getSuccessReport() != message.getSuccessReport())
+    	if (transaction.wantSuccessReport() != message.wantSuccessReport())
             throw new InternalErrorException(
 		                "Report request of the originating transaction "
 		        		+ "differs from that of the message");
 
-        if (!message.getSuccessReport())
+        if (!message.wantSuccessReport())
             throw new IllegalUseException(
                 "Constructing a success report for a message that didn't want one?");
 

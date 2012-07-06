@@ -152,7 +152,7 @@ public class MockSessionListener
     }
 
     @Override
-    public void receiveMessage(Session session, IncomingMessage message)
+    public void receivedMessage(Session session, IncomingMessage message)
     {
         logger.debug("receiveMessage(id=[" + message.getMessageID() + "])");
         receiveMessage = message;
@@ -183,7 +183,7 @@ public class MockSessionListener
             + tReport.getByteRange()[1] + " bytes were sent(== "
             + (tReport.getByteRange()[1] * 100)
             / tReport.getTotalMessageBytes() + "%) Tx-"
-            + tReport.transactionType + ", status:"
+            + tReport.getTransactionType() + ", status:"
             + tReport.getStatusHeader().getStatusCode());
         receivedReportSession = session;
         receivedReportTransaction = tReport;

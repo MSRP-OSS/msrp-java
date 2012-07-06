@@ -24,7 +24,6 @@ import java.util.Random;
 import javax.net.msrp.Transaction;
 import javax.net.msrp.TransactionManager;
 import javax.net.msrp.TransactionType;
-import javax.net.msrp.exceptions.ConnectionParserException;
 import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.exceptions.ImplementationException;
 import javax.net.msrp.exceptions.InternalErrorException;
@@ -117,7 +116,7 @@ public class TestTransaction
     @Test
     public void testParsingCompleteBody()
         throws InvalidHeaderException,
-        ImplementationException, IllegalUseException, ConnectionParserException
+        ImplementationException, IllegalUseException
     {
 
         Transaction newTransaction =
@@ -144,9 +143,8 @@ public class TestTransaction
     @Test
     public void testParsingUnPreparsedCompleteBody()
         throws InvalidHeaderException,
-        ImplementationException, IllegalUseException, ConnectionParserException
+        ImplementationException, IllegalUseException
     {
-
         Transaction newTransaction =
             new Transaction(tID, TransactionType.REPORT,
                 dummyTransactionManager, Transaction.IN);
@@ -170,7 +168,7 @@ public class TestTransaction
     @Test
     public void testParseBotchedHeader()
         throws InvalidHeaderException,
-        ImplementationException, IllegalUseException, ConnectionParserException
+        ImplementationException, IllegalUseException
     {
         Transaction tx =
                 new Transaction(tID, TransactionType.SEND,
@@ -185,7 +183,7 @@ public class TestTransaction
     @Test
     public void testParsingEmptySendHeaders()
         throws InvalidHeaderException,
-        ImplementationException, IllegalUseException, ConnectionParserException
+        ImplementationException, IllegalUseException
     {
         Transaction tx =
             new Transaction(tID, TransactionType.REPORT,

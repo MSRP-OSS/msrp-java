@@ -30,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.net.msrp.exceptions.ConnectionLostException;
-import javax.net.msrp.exceptions.ConnectionParserException;
+import javax.net.msrp.exceptions.ParseException;
 import javax.net.msrp.exceptions.ConnectionReadException;
 import javax.net.msrp.exceptions.ConnectionWriteException;
 import javax.net.msrp.exceptions.IllegalUseException;
@@ -544,10 +544,10 @@ class Connection extends Observable implements Runnable
      *            position
      * @param inContentStuff true if it is receiving data regarding the body
      *            of a transaction, false otherwise
-     * @throws ConnectionParserException Generic parsing exception
+     * @throws ParseException Generic parsing exception
      */
     void parser(byte[] incomingBytes, int offset, int length,
-        boolean inContentStuff) throws ConnectionParserException
+        boolean inContentStuff) throws ParseException
     {
         if (inContentStuff)
         {
@@ -657,7 +657,7 @@ class Connection extends Observable implements Runnable
                         }
                         catch (IllegalUseException e)
                         {
-                            throw new ConnectionParserException(
+                            throw new ParseException(
                                 "Cannot create transaction response", e);
                         }
                     }
@@ -665,7 +665,7 @@ class Connection extends Observable implements Runnable
                     {
                         logger.error("Start of transaction not found while parsing:\n"
                                 + incomingString);
-                        throw new ConnectionParserException(
+                        throw new ParseException(
                             "Error, start of the transaction not found on thread: "
                             + Thread.currentThread().getName());
                     }

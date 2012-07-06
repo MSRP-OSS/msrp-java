@@ -91,7 +91,7 @@ public abstract class ReportMechanism
         // messages, if the connectionprioritizer is called the next lines
         // should be removed:
         // Store the sent message based on the success report
-        if (outgoingMessage.getSuccessReport())
+        if (outgoingMessage.wantSuccessReport())
             outgoingMessage.getSession().addSentOrSendingMessage(
                 outgoingMessage);
 
@@ -127,7 +127,7 @@ public abstract class ReportMechanism
         Transaction transaction, long lastCallCount, long callCount)
     {
 
-        if (message.getSuccessReport())
+        if (message.wantSuccessReport())
         {
             /*
              * use this mechanism also as a way of asserting also if a message
