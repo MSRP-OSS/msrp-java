@@ -3,7 +3,7 @@ package javax.net.msrp;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 
-import javax.net.msrp.exceptions.ConnectionParserException;
+import javax.net.msrp.exceptions.ParseException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,11 +54,11 @@ class PreParser
      * 
      * @param incomingData buffer containing received data
      * @param length number of bytes of received data
-     * @throws ConnectionParserException an exception occurred
+     * @throws ParseException an exception occurred
      *             calling the parser method of this class
      */
     void preParse(byte[] incomingData, int length)
-        throws ConnectionParserException
+        throws ParseException
     {
         ByteBuffer data = ByteBuffer.wrap(incomingData, 0, length);
         /*
@@ -116,7 +116,7 @@ class PreParser
                             data.position() - indexProcessed,
                             inContentStuff);
                         if (connection.getCurrentIncomingTid() == null)
-                        	throw new ConnectionParserException(
+                        	throw new ParseException(
                         					"no transaction found");
 
                         indexProcessed = data.position();
@@ -156,7 +156,7 @@ class PreParser
                     if (preState >= 9)
                     {
                         if (connection.getCurrentIncomingTid() == null)
-                        	throw new ConnectionParserException(
+                        	throw new ParseException(
                         					"no transaction found");
 
                         int tidSize = connection.getCurrentIncomingTid().length();

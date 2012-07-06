@@ -601,7 +601,7 @@ public class Session
 
     /**
      * trigger for the registered
-     * {@link SessionListener#receiveMessage(Session, Message)} callback.
+     * {@link SessionListener#receivedMessage(Session, Message)} callback.
      * 
      * @param message the received message
      * @see SessionListener
@@ -609,7 +609,7 @@ public class Session
     protected void triggerReceiveMessage(IncomingMessage message)
     {
         logger.trace("Called the triggerReceiveMessage hook");
-        myListener.receiveMessage(this, message);
+        myListener.receivedMessage(this, message);
         if (hasMessagesToSend())
         	triggerSending();
     }

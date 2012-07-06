@@ -33,18 +33,16 @@ import org.slf4j.LoggerFactory;
  * incoming or outgoing). It is responsible for parsing all of the data related
  * with the transaction (either incoming or outgoing). When enough data is
  * received to take action upon, it notifies the TransactionManager and the
- * global Stack classes (The communication between these classes is done via
- * the Observer design pattern)
+ * global Stack classes.
  * 
  * @author João André Pereira Antunes
  */
 public class Transaction
 {
     /**
-     * the method associated with this transaction we call it transactionType
-     * 
+     * the method associated with this transaction
      */
-    public TransactionType transactionType;
+    protected TransactionType transactionType;
 
     /**
      * Field that defines the type of transaction it is, regarding the
@@ -54,14 +52,14 @@ public class Transaction
 
     /**
      * this variable is used to denote if this transaction has "content-stuff"
-     * or not Used to know if one should add the extra CRLF after the data or
+     * or not. Used to know if one should add the extra CRLF after the data or
      * not
      */
     protected boolean hasContentStuff = false;
 
     /**
      * the From-Path parsed to the Transaction containing the associated
-     * From-Path URIs from left to right in a growing index order
+     * From-Path URIs from left to right in growing index order.
      */
     protected URI[] fromPath;
 
@@ -172,7 +170,7 @@ public class Transaction
     /**
      * if this is a complete transaction Note: A transaction could be created
      * and being in the filling process and is only considered complete when
-     * signaled by the Connection class
+     * signalled by the Connection class
      */
     private boolean completeTransaction = false;
 
@@ -253,13 +251,6 @@ public class Transaction
     private ByteBuffer bodyByteBuffer;
 
     /**
-     * the number of bytes to surpass in order to be considered a not so short
-     * message that can be stored on memory. - Chosen value 10MB MAYBE TODO
-     * implement a more dynamic method considering the total number of existent
-     * messages
-     */
-
-    /**
      * the real chunk size of this message and not the one reported in the
      * Byte-Range header field
      */
@@ -296,7 +287,7 @@ public class Transaction
     }
 
     /**
-     * Constructor used to send new simple short transactions used for one
+     * Constructor used to send new simple short transactions used for single
      * transaction messages
      * 
      * @param messageToSend
@@ -324,7 +315,7 @@ public class Transaction
         		.append(fromPathUri.toASCIIString()).append("\r\nMessage-ID: ")
         		.append(messageID).append("\r\n");
 
-        if (messageToSend.getSuccessReport())
+        if (messageToSend.wantSuccessReport())
             header.append("Success-Report: yes\r\n");
 
         if (!messageToSend.getFailureReport().equalsIgnoreCase("yes"))
@@ -385,7 +376,7 @@ public class Transaction
     }
 
     /**
-     * @return the failureReport
+     * @return the failureReport ['yes', 'no', 'partial']
      */
     public String getFailureReport()
     {
@@ -393,10 +384,10 @@ public class Transaction
     }
 
     /**
-     * @return true if the success report value of the header of this
-     *         transaction is yes or false otherwise or if it's omitted
+     * @return true if the success report value of the header for this
+     *         transaction is 'yes', 'false' otherwise (default).
      */
-    public boolean getSuccessReport()
+    public boolean wantSuccessReport()
     {
         return successReport;
     }
@@ -407,7 +398,7 @@ public class Transaction
      * @return Returns the _connection.
      * @uml.property name="_connection"
      */
-    public javax.net.msrp.Connection get_connection()
+    public Connection get_connection()
     {
         return _connection;
     }
@@ -621,27 +612,21 @@ public class Transaction
     }
 
     /**
-     * TODO do what is needed if it receives an # char (that being: mark the
-     * message as aborted and "send" it to the TransactionManager thread to deal
-     * with so that this thread can focus on reading from the socket)
-     * 
      * Responsible for marking the needed elements so that further processing
-     * could be correctly done Note: this method is called by the reader thread,
-     * as such, it should do minimum work and dispatch things to the transaction
-     * manager thread with the update
+     * can be correctly done.
+     * <p>
+     * Note: this is called by the reader thread, as such, it should do
+     * minimum work and leave the rest to the transaction manager thread
      * 
-     * @param endTransactionChar the character associated with the end of
-     *            transaction ($, + or #)
-     * @throws ConnectionParserException if this method was called in an
-     *             outgoing transaction
+     * @param flag the continuation flag ($, + or #)
+     * @throws InternalError if called in an outgoing transaction
      */
     public void signalizeEnd(char flag)
-        throws ConnectionParserException
     {
         if (direction == OUT)
-            throw new ConnectionParserException("Wrong use of signalizeEnd");
-        this.continuation_flag = (byte) flag;
+            throw new InternalError("Wrong use of signalizeEnd()");
 
+        this.continuation_flag = (byte) flag;
         if (!headerComplete)
         {
             try
@@ -1084,7 +1069,7 @@ public class Transaction
     /**
      * @return the transactionType
      */
-    protected TransactionType getTransactionType()
+    public TransactionType getTransactionType()
     {
         return transactionType;
     }

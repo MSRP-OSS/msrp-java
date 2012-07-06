@@ -52,9 +52,7 @@ public abstract class Message
     public static final int UNKNOWN = -1;
 
     public static final String YES = "yes";
-
     public static final String NO = "no";
-
     public static final String PARTIAL = "partial";
 
     /**
@@ -319,35 +317,6 @@ public abstract class Message
     }
 
     /**
-     * method used to set the failure report string
-     * 
-     * @param failureReport String representing the failure report field, it
-     *            must be one of: yes no partial. case insensitive
-     * @throws IllegalUseException if the argument wasn't valid
-     */
-    public void setFailureReport(String failureReport)
-        throws IllegalUseException
-    {
-        if (failureReport.equalsIgnoreCase("yes") ||
-            failureReport.equalsIgnoreCase("no") ||
-            failureReport.equalsIgnoreCase("partial"))
-            this.failureReport = failureReport;
-        else
-        	throw new IllegalUseException("Failure report must be one of: " +
-        									"'partial', 'yes' or 'no'");
-    }
-
-    /**
-     * Method used to set the success report field associated with this message.
-     * 
-     * @param successReport true to set it to "yes" false to set it to "no"
-     */
-    public void setSuccessReport(boolean successReport)
-    {
-        this.successReport = successReport;
-    }
-
-    /**
      * Method used to check if this message object still has unused content
      * 
      * @return true if this message still has some data to retrieve
@@ -435,8 +404,48 @@ public abstract class Message
 		return null;
 	}
 
+    /**
+     * Method used to set the success report field associated with this message.
+     * 
+     * @param successReport true to set it to "yes" false to set it to "no"
+     */
+    public void setSuccessReport(boolean successReport)
+    {
+        this.successReport = successReport;
+    }
+
+    /**
+     * Get header content of successReport
+     * 
+     * @return Returns success report header field of this message. True
+     *         represents "yes" and false "no"
+     */
+    public boolean wantSuccessReport()
+    {
+        return successReport;
+    }
+
+    /**
+     * method used to set the failure report string
+     * 
+     * @param failureReport String representing the failure report field, it
+     *            must be one of: yes no partial. case insensitive
+     * @throws IllegalUseException if the argument wasn't valid
+     */
+    public void setFailureReport(String failureReport)
+        throws IllegalUseException
+    {
+        if (failureReport.equalsIgnoreCase(YES) ||
+            failureReport.equalsIgnoreCase(NO) ||
+            failureReport.equalsIgnoreCase(PARTIAL))
+            this.failureReport = failureReport.toLowerCase();
+        else
+        	throw new IllegalUseException(
+        			"Failure report must be one of: 'partial', 'yes' or 'no'.");
+    }
+
 	/**
-     * Getter of the property <tt>_failureReport</tt>
+     * Get header content of failureReport.
      * 
      * @return Returns the report.
      * @uml.property name="_failureReport"
@@ -511,18 +520,6 @@ public abstract class Message
     protected void setSession(Session _session)
     {
         this.session = _session;
-    }
-
-    /**
-     * Getter of the property <tt>successReport</tt> that represents the
-     * Success-Report field.
-     * 
-     * @return Returns the success report header field of this message. True
-     *         represents "yes" and false "no"
-     */
-    public boolean getSuccessReport()
-    {
-        return successReport;
     }
 
     /**

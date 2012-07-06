@@ -45,6 +45,10 @@ import javax.net.msrp.Transaction;
 import javax.net.msrp.TransactionManager;
 import javax.net.msrp.TransactionType;
 import javax.net.msrp.events.MessageAbortedEvent;
+import javax.net.msrp.exceptions.ParseException;
+import javax.net.msrp.exceptions.IllegalUseException;
+import javax.net.msrp.exceptions.ImplementationException;
+import javax.net.msrp.exceptions.InvalidHeaderException;
 import javax.net.msrp.utils.TextUtils;
 
 
@@ -428,7 +432,7 @@ public class MiscTests
         testRandomStringGenerator();
     }
 
-    public void receiveMessage(Session session, IncomingMessage message)
+    public void receivedMessage(Session session, IncomingMessage message)
     {
         // TODO print the content of the message
         System.out.println("******Debug: on: " + session.toString()
@@ -585,9 +589,15 @@ public class MiscTests
      * norms
      * 
      * @param incomingString raw text data to be handled
-     * @throws Exception Generic error exception TODO specialize in the future
+     * @throws IllegalUseException 
+     * @throws ParseException 
+     * @throws ImplementationException 
+     * @throws InvalidHeaderException 
+     * @throws Exception Generic error exception TODO specialise in the future
      */
-    private void parser(String incomingString) throws Exception
+    private void parser(String incomingString) throws
+    	IllegalUseException, ParseException,
+    	InvalidHeaderException, ImplementationException
     {
         String toParse;
         String tID;
@@ -714,11 +724,9 @@ public class MiscTests
                 }
                 else
                 {
-                    // TODO alter the class of the Exception, get a more
-                    // complete exceptions infrastructure?!
                     // TODO receive the exception by the connection and treat it
                     // accordingly
-                    throw new Exception("Error, start of the TID not found");
+                    throw new ParseException("Error, start of the TID not found");
                 }
 
             }// if (!receivingTransaction)

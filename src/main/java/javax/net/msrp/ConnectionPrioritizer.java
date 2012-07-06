@@ -77,7 +77,7 @@ public abstract class ConnectionPrioritizer
             tm.generateTransactionsToSend(messageToSend);
 
             // Store the sent message based on the success report
-            if (message.getSuccessReport())
+            if (message.wantSuccessReport())
                 session.addSentOrSendingMessage(message);
         }
         else if (shouldSwap(tm.getAssociatedSessions(), session, message))

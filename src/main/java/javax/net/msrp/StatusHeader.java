@@ -17,14 +17,12 @@
  */
 package javax.net.msrp;
 
-
 import javax.net.msrp.exceptions.InvalidHeaderException;
 
 /**
  * This class implements the Status header as defined in RFC 4975
  * 
  * @author João André Pereira Antunes 2008
- * 
  */
 public class StatusHeader
 {
@@ -35,15 +33,12 @@ public class StatusHeader
     private String comment;
 
     /**
-     * Generates a new StatusHeader class
+     * Constructs a StatusHeader object
      * 
-     * @param namespace String representing the namespace defined in RFC4975
-     * @param statusCode String representing the status-code as defined in
-     *            RFC4975
-     * @param comment String representing the comment as defined in
-     *            RFC4975
-     * @throws InvalidHeaderException if it was found any error with the parsing
-     *             of this status header field
+     * @param namespace String representing the namespace (RFC4975)
+     * @param statusCode String representing the status-code (RFC4975)
+     * @param comment Represents the comment (RFC4975)
+     * @throws InvalidHeaderException invalid response code, namespaces, etc.
      */
     protected StatusHeader(String namespace, String statusCode, String comment)
         throws InvalidHeaderException
@@ -57,13 +52,8 @@ public class StatusHeader
         this.comment = comment;
 
         /* Validate the status code */
-        if (this.statusCode != 200 && this.statusCode != 400
-            && this.statusCode != 403 && this.statusCode != 408
-            && this.statusCode != 413 && this.statusCode != 415
-            && this.statusCode != 423 && this.statusCode != 481
-            && this.statusCode != 501 && this.statusCode != 506)
-            throw new InvalidHeaderException("Error in Status header field, "
-                + "the given status code is not supported");
+        if (!ResponseCode.isValid(this.statusCode))
+            throw new InvalidHeaderException(ResponseCode.toString(this.statusCode));
 
         /* Validate the namespace */
         if (this.namespace != 000)
