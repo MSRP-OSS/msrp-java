@@ -681,8 +681,8 @@ public class Transaction
                 if (message == null)
                     /* TODO log it and maybe try to recover from the error (?!) */
                     throw new RuntimeException(
-                        "Error! implementation error, we should always have "
-                            + "a message associated at this point");
+                        "Error! implementation error, we should always have " +
+                        "a message associated at this point");
                 message.gotAborted(this);
             }
         }
@@ -784,10 +784,9 @@ public class Transaction
     }
 
     /**
-     * TODO: take dynamic creation of an end of transaction into account
-     * 
      * @return true = transaction still has data (or headers) to be read.
      */
+    // TODO: take dynamic creation of an end of transaction into account
     public boolean hasData()
     {
         if (interrupted)
@@ -1025,17 +1024,10 @@ public class Transaction
     }
 
     /**
-     * Method used to dispose the body content
-     */
-    protected void disposeBody()
-    {
-        // TODO
-    }
-
-    /**
-     * This method is used to rewind positions on the read offsets of this
-     * transaction. It's main purpose it's to allow the transaction manager to
-     * rewind the data prior from interrupting the transaction when an end-line
+     * Rewind positions on the read offsets of this transaction.
+     * <p>
+     * It's main purpose it's to allow the transaction manager to
+     * rewind the data prior to interrupting the transaction when an end-line
      * is found on the content of the transaction.
      * 
      * @param numberPositionsToRewind the number of positions to rewind on this
@@ -1225,11 +1217,9 @@ public class Transaction
     }
 
     /**
-     * Method that takes into account the validTransaction field of the
-     * transaction and other checks in order to assert if this is a valid
-     * transaction or not.
-     * 
-     * TODO
+     * Method that checks whether this is a valid transaction or not.
+     */
+    /* TODO
      * complete this method so that it catches any incoherences with the
      * protocol syntax. All of the syntax problems should be found at this point
      * 
@@ -1246,7 +1236,7 @@ public class Transaction
 
     /**
      * Assign a session and message to the transaction when headers are complete
-     * 
+     * <p>
      * called whenever the transaction's headers are complete and used
      * to validate the headers, to generate the needed responses ASAP. (It
      * also permits one to start receiving the body already knowing which
@@ -1272,11 +1262,16 @@ public class Transaction
 
         if (getTransactionType() == TransactionType.UNSUPPORTED)
         {
-            /* TODO if this isn't a valid method send back a 501 response */
-            /*
-             * "important" question: does this 501 response precedes the 506 or
-             * not?! should the to-path also be checked before?!
-             */
+            try
+            {
+                transactionManager.generateResponse(this, ResponseCode.RC501, null);
+            }
+            catch (IllegalUseException e)
+            {
+                logger.error("Generating response: " +
+            			ResponseCode.toString(ResponseCode.RC501), e);
+
+            }
             return;
         }
         validate();
@@ -1301,19 +1296,19 @@ public class Transaction
             // No session associated, go see if there is one in the list of
         	// yet to be validated Connections
             Connections connectionsInstance =
-                Stack.getConnectionsInstance(transactionManager
-                					.getConnection().getLocalAddress());
+                Stack.getConnectionsInstance(
+                		transactionManager.getConnection().getLocalAddress());
             relatedSession =
                 connectionsInstance.sessionToIdentify((getToPath())[0]);
             if (relatedSession == null)
             {
                 /*
                  * if there are no sessions associated with this transaction
-                 * manager and also no sessions available to identify associated
-                 * with the ToPath URI we have one of two cases: - either this
-                 * transaction belongs to another active session (give a 506
-                 * response) - or this session doesn't exist at all (give a 481
-                 * response)
+                 * manager and also no sessions available to associate
+                 * with the ToPath URI we have one of two cases:
+                 * - either this transaction belongs to another active session
+                 *   (give a 506 response)
+                 * - or this session doesn't exist at all (give a 481 response)
                  */
             	int rspCode;
                 if (stack.isActive((getToPath())[0]))
@@ -1394,10 +1389,9 @@ public class Transaction
             /*
              * if the message was previously aborted it shouldn't be on the
              * queue, log the event, delete it from the list of the messages to
-             * be received by the bound session and continue the process TODO
+             * be received by the bound session and continue the process
              * FIXME: eventually need to check with the stack if the messageID
-             * is known and not only with the session and act according to the
-             * RFC
+             * is known and not only with the session and act according RFC
              */
             {
                 session.delMessageToReceive((IncomingMessage) message);
@@ -1420,7 +1414,7 @@ public class Transaction
                 catch (IllegalUseException e1)
                 {
                     // TODO invalidate this transaction and
-                    // trigger the appropriate response
+                    // trigger appropriate response
                     e1.printStackTrace();
                 }
 
@@ -1429,23 +1423,20 @@ public class Transaction
                 {
                     incomingMessage.setResult(ResponseCode.RC200);
                     /*
-                     * if the user didn't assigned a data container to the
-                     * message then we discard the message and log the
-                     * occurrence
+                     * if the user didn't assign a data container to the
+                     * message we discard it and log the occurrence
                      */
                     if (incomingMessage.getDataContainer() == null)
                     {
+                    	logger.error(
+                			"No datacontainer given to store incoming data, " +
+            				"discarding incoming message " + incomingMessage);
                         result = false;
-                        /*
-                         * TODO log it Log the fact that the user got his
-                         * message discarded because he didn't filled out the
-                         * dataContainer field
-                         */
                     }
                     else
                     {
                         /*
-                         * otherwise we put this message on the receiving
+                         * otherwise, put it on the receiving
                          * message "list" of the Session
                          */
                         session.putReceivingMessage(incomingMessage);
@@ -1464,7 +1455,7 @@ public class Transaction
                     catch (IllegalUseException e)
                     {
                         // the user set an invalid result, let's log it and
-                        // resend it with the 413 default
+                        // re-send it with the 413 default
                         logger.warn("Attempt to use invalid response code, forcing to default.");
                         try
                         {
@@ -1532,8 +1523,8 @@ public class Transaction
 	                Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     /**
-     * will recognize the headers stored on headerBuffer initializing all of the
-     * variables related to the header and checking for violations of the
+     * will recognise the headers stored on headerBuffer, initialise all of the
+     * variables related to the header and check for violations of the
      * protocol
      * 
      * @throws InvalidHeaderException if it's found that the header is invalid
@@ -1599,8 +1590,6 @@ public class Transaction
             matcher = messageIDPattern.matcher(headerBuffer);
             if (matcher.matches())
             {
-                // TODO get the corresponding message from the messageID or
-                // create a new one
                 messageID = matcher.group(3);
             }
             else
@@ -1661,7 +1650,7 @@ public class Transaction
             }
             break;
         case UNSUPPORTED:
-            // TODO
+        	/* nothing to do (yet) */
             break;
         }
     }

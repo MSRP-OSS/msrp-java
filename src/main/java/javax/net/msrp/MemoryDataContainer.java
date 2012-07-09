@@ -40,6 +40,8 @@ import javax.net.msrp.exceptions.NotEnoughStorageException;
 public class MemoryDataContainer
     extends DataContainer
 {
+    private ByteBuffer	byteBuffer;
+    private byte[]		content;
 
     /**
      * Creates a blank DataContainer that stores the data in memory
@@ -53,7 +55,7 @@ public class MemoryDataContainer
     }
 
     /**
-     * Creates a DataContainer used to interface with the given data byte array
+     * Creates a DataContainer using the given data byte array
      * 
      * @param data the byte[] containing the data
      */
@@ -63,16 +65,16 @@ public class MemoryDataContainer
         byteBuffer = ByteBuffer.wrap(content);
     }
 
-    private ByteBuffer byteBuffer;
-
-    /**
-     * The content of this DataContainer
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#size()
      */
-    private byte[] content;
+    @Override
+    public long size()
+    {
+        return content.length;
+    }
 
-    /*
-     * (non-Javadoc)
-     * 
+    /* (non-Javadoc)
      * @see javax.net.msrp.DataContainer#currentReadOffset()
      */
     @Override
@@ -81,34 +83,23 @@ public class MemoryDataContainer
         return byteBuffer.position();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.net.msrp.DataContainer#get()
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#hasDataToRead()
      */
     @Override
-    public byte get() throws NotEnoughDataException, IOException
+    public boolean hasDataToRead()
     {
-
-        try
-        {
-            return byteBuffer.get();
-        }
-        catch (BufferUnderflowException e)
-        {
-            throw new NotEnoughDataException(e);
-        }
+        if (byteBuffer == null)
+            return false;
+        return byteBuffer.hasRemaining();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.net.msrp.DataContainer#put(int, byte[])
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#put(long, byte[])
      */
     @Override
     public void put(long startingIndex, byte[] dataToPut)
-        throws NotEnoughStorageException,
-        IOException
+        throws NotEnoughStorageException, IOException
     {
         try
         {
@@ -117,16 +108,13 @@ public class MemoryDataContainer
         }
         catch (BufferOverflowException e)
         {
-            throw new NotEnoughStorageException("Putting " + dataToPut.length
-                + " bytes of data starting in " + startingIndex
-                + " on a buffer with " + byteBuffer.capacity(), e);
+            throw new NotEnoughStorageException("Putting " + dataToPut.length +
+                " bytes of data starting in " + startingIndex +
+                " on a buffer with " + byteBuffer.capacity(), e);
         }
-
     }
 
-    /*
-     * (non-Javadoc)
-     * 
+    /* (non-Javadoc)
      * @see javax.net.msrp.DataContainer#put(byte)
      */
     @Override
@@ -142,55 +130,38 @@ public class MemoryDataContainer
         {
             throw new NotEnoughStorageException(e);
         }
-
     }
 
-    @Override
-    public void dispose()
-    {
-        content = null;
-        byteBuffer = null;
-
-    }
-
-    @Override
-    public boolean hasDataToRead()
-    {
-        if (byteBuffer == null)
-            return false;
-        return byteBuffer.hasRemaining();
-    }
-
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#put(long, byte)
+     */
     @Override
     public void put(long startingIndex, byte byteToPut)
         throws NotEnoughStorageException
     {
         if (startingIndex < 0)
-            throw new IllegalArgumentException(
-                "The starting index should be >=0");
+            throw new IllegalArgumentException("Starting index should be >= 0");
         try
         {
-
             byteBuffer.put((int) startingIndex, byteToPut);
         }
         catch (IndexOutOfBoundsException e)
         {
             throw new NotEnoughStorageException();
         }
-
     }
 
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#get(long, long)
+     */
     @Override
     public ByteBuffer get(long offsetIndex, long size)
-        throws NotEnoughDataException,
-        IllegalUseException,
-        IOException
+        throws NotEnoughDataException, IllegalUseException, IOException
     {
         if (size < 0 || offsetIndex < 0)
-            throw new IllegalUseException("negative size or offsetindex");
+            throw new IllegalUseException("negative size or index");
         try
         {
-
             byte[] newByteArray;
             ByteBuffer auxByteBuffer = byteBuffer.duplicate();
             if (size == 0)
@@ -205,7 +176,6 @@ public class MemoryDataContainer
             }
             ByteBuffer newByteBuffer = ByteBuffer.wrap(newByteArray);
             return newByteBuffer;
-
         }
         catch (IllegalArgumentException e)
         {
@@ -215,22 +185,11 @@ public class MemoryDataContainer
         {
             throw new NotEnoughDataException(e);
         }
-
     }
 
-    @Override
-    public long size()
-    {
-        return content.length;
-    }
-
-    @Override
-    public void rewindRead(long nrPositions)
-    {
-        byteBuffer.position((int) (byteBuffer.position() - nrPositions));
-
-    }
-
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#get(byte[], int)
+     */
     @Override
     public int get(byte[] dst, int offset)
         throws IndexOutOfBoundsException,
@@ -243,5 +202,24 @@ public class MemoryDataContainer
             bytesToCopy = dst.length - offset;
         byteBuffer.get(dst, offset, bytesToCopy);
         return bytesToCopy;
+    }
+
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#rewindRead(long)
+     */
+    @Override
+    public void rewindRead(long nrPositions)
+    {
+        byteBuffer.position((int) (byteBuffer.position() - nrPositions));
+    }
+
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#dispose()
+     */
+    @Override
+    public void dispose()
+    {
+        content = null;
+        byteBuffer = null;
     }
 }

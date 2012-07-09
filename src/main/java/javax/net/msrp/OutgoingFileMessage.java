@@ -25,28 +25,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Class that represents an outgoing MSRP message whose content is in a file
+ * Represents an outgoing MSRP message whose content is in a file.
  * 
  * @author João André Pereira Antunes
- * 
  */
 public class OutgoingFileMessage
     extends OutgoingMessage
 {
-    /**
-     * The logger associated with this class
-     */
+    /** The logger associated with this class */
     private static final Logger logger =
         LoggerFactory.getLogger(OutgoingFileMessage.class);
 
-    public OutgoingFileMessage(Session session, String contentType,
+    protected OutgoingFileMessage(Session session, String contentType,
         File file)
         throws FileNotFoundException, SecurityException
     {
         this(session, contentType, file, null);
     }
 
-    public OutgoingFileMessage(Session session, String contentType, File file, ReportMechanism reportMechanism)
+    protected OutgoingFileMessage(Session session, String contentType,
+    		File file, ReportMechanism reportMechanism)
         throws FileNotFoundException, SecurityException
     {
         this.session = session;
@@ -63,20 +61,16 @@ public class OutgoingFileMessage
         this.session.addMessageToSend(this);
     }
 
-    /**
-     * Returns the sent bytes determined by the offset of the data container
-     * 
-     * @return the number of sent bytes
+    /* (non-Javadoc)
+     * @see javax.net.msrp.OutgoingMessage#getSentBytes()
      */
     public long getSentBytes()
     {
         return dataContainer.currentReadOffset();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.net.msrp.messages.Message#isComplete()
+    /* (non-Javadoc)
+     * @see javax.net.msrp.OutgoingMessage#isComplete()
      */
     @Override
     public boolean isComplete()
@@ -84,6 +78,9 @@ public class OutgoingFileMessage
         return outgoingIsComplete(getSentBytes());
     }
 
+    /* (non-Javadoc)
+     * @see javax.net.msrp.OutgoingMessage#getDirection()
+     */
     @Override
     public int getDirection()
     {

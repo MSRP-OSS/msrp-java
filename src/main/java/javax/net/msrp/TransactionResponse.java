@@ -6,8 +6,8 @@ import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.utils.TextUtils;
 
 /**
- * This class represents a response to a Transaction, which is considered a
- * transaction as well TODO use the parser to validate the response ?!
+ * A response to a Transaction, which is considered a transaction as well
+ * TODO use the parser to validate the response ?!
  * 
  * @author João André Pereira Antunes
  */
@@ -64,14 +64,9 @@ public class TransactionResponse
             String comment, int direction)
             throws IllegalUseException
     {
-        // validate the response code
-        if (responseCode != 200 && responseCode != 400 && responseCode != 403
-            && responseCode != 408 && responseCode != 413
-            && responseCode != 415 && responseCode != 423
-            && responseCode != 481 && responseCode != 501
-            && responseCode != 506)
-            throw new IllegalUseException("Creating a transaction response "
-                + "with an invalid response code of: " + responseCode);
+        if (!ResponseCode.isValid(responseCode))
+            throw new IllegalUseException("Creating a transaction response " +
+                "with an invalid response code of: " + responseCode);
 
         StringBuilder response = new StringBuilder(256);
         response.append("MSRP ").append(transaction.tID).append(" ").append(responseCode);
@@ -79,10 +74,10 @@ public class TransactionResponse
         	response.append(" ").append(comment);
 
         response.append("\r\nTo-Path: ").append(
-                transaction.fromPath[transaction.fromPath.length - 1]);
-        response.append("\r\nFrom-Path: ").append(
-                transaction.toPath[transaction.toPath.length - 1]);
-        response.append("\r\n-------").append(transaction.tID).append("$\r\n");
+                transaction.fromPath[transaction.fromPath.length - 1])
+        		.append("\r\nFrom-Path: ").append(
+                transaction.toPath[transaction.toPath.length - 1])
+                .append("\r\n-------").append(transaction.tID).append("$\r\n");
 
         this.fromPath = transaction.toPath;
         this.toPath = transaction.fromPath;
@@ -94,8 +89,10 @@ public class TransactionResponse
     /**
      * Constructor to create the incoming transaction
      * 
-     * @param responseCode one of the response codes defined on RFC 4975
      * @param transaction the transaction related with this
+     * @param responseCode one of the response codes defined on RFC 4975
+     * @param comment status commment field
+     * @param direction IN or OUT
      * @throws IllegalUseException when constructing for outgoing non-original SEND.
      */
     private void CreateIncomingResponse(Transaction transaction,
@@ -104,26 +101,18 @@ public class TransactionResponse
     {
     	;
     }
-    
+
     /**
      * 
-     * @return an int representing the number of bytes remaining for this
-     *         response
+     * @return the number of bytes remaining for this response
      */
     public int getNumberBytesRemaining()
     {
         return content.remaining();
     }
 
-    /**
-     * Method that gets bulks of data (int maximum)
-     * 
-     * @param toFill byte array to be filled
-     * @param offset the offset index to start filling the outData
-     * 
-     * @return the number of bytes filled of the array
-     * @throws IndexOutOfBoundsException if the offset is bigger than the array
-     *             length
+    /* (non-Javadoc)
+     * @see javax.net.msrp.Transaction#getData(byte[], int)
      */
     @Override
     public int getData(byte[] toFill, int offset)
@@ -139,6 +128,9 @@ public class TransactionResponse
         return lengthToTransfer;
     }
 
+    /* (non-Javadoc)
+     * @see javax.net.msrp.Transaction#hasData()
+     */
     @Override
     public boolean hasData()
     {
@@ -151,7 +143,9 @@ public class TransactionResponse
         return "Response to Tx[" + tID + "], code[" + responseCode + "]";
     }
 
-    /**
+    /* (non-Javadoc)
+     * @see javax.net.msrp.Transaction#hasEndLine()
+     * 
      * Seen that we use the content field to put the end line we will always
      * return false on this method call
      */
@@ -161,6 +155,9 @@ public class TransactionResponse
         return false;
     }
 
+    /* (non-Javadoc)
+     * @see javax.net.msrp.Transaction#isIncomingResponse()
+     */
     @Override
     protected boolean isIncomingResponse()
     {

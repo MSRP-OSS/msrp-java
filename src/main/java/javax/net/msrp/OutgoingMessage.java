@@ -30,13 +30,11 @@ import org.slf4j.LoggerFactory;
 public class OutgoingMessage
     extends Message
 {
-    /**
-     * The logger associated with this class
-     */
+    /** The logger associated with this class */
     private static final Logger logger =
         LoggerFactory.getLogger(OutgoingMessage.class);
 
-    public OutgoingMessage(Session sendingSession, String contentType, byte[] someData)
+    protected OutgoingMessage(Session sendingSession, String contentType, byte[] someData)
     {
         super(sendingSession, contentType, someData);
     }
@@ -99,9 +97,7 @@ public class OutgoingMessage
         return dataContainer.currentReadOffset();
     }
 
-    /*
-     * (non-Javadoc)
-     * 
+    /* (non-Javadoc)
      * @see javax.net.msrp.Message#isComplete()
      */
     @Override
@@ -110,6 +106,9 @@ public class OutgoingMessage
         return outgoingIsComplete(getSentBytes());
     }
 
+    /* (non-Javadoc)
+     * @see javax.net.msrp.Message#getDirection()
+     */
     @Override
     public int getDirection()
     {

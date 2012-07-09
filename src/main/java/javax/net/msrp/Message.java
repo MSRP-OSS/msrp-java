@@ -26,25 +26,19 @@ import javax.net.msrp.utils.TextUtils;
 import org.slf4j.*;
 
 /**
- * Class that represents a generic MSRP message.
+ * Class representing a generic MSRP message.
  * 
  * @author João André Pereira Antunes
  */
 public abstract class Message
 {
-    /**
-     * The logger associated with this class
-     */
+    /** The logger associated with this class */
     private static final Logger logger = LoggerFactory.getLogger(Message.class);
 
-    /**
-     * Message is incoming.
-     */
+    /** Message is incoming. */
     public static final int IN = 1;
 
-    /**
-     * Message is outgoing.
-     */
+    /** Message is outgoing. */
     public static final int OUT = 2;
 
     public static final int UNINTIALIZED = -2;
@@ -56,8 +50,7 @@ public abstract class Message
     public static final String PARTIAL = "partial";
 
     /**
-     * Variable that contains the size of this message as indicated on the
-     * byte-range header field
+     * Size of this message as indicated on the byte-range header field
      */
     public long size = UNINTIALIZED;
 
@@ -67,43 +60,40 @@ public abstract class Message
     private String failureReport = YES;
 
     /**
-     * Field used to conserve the abortion state of the message
+     * Abort-state of message
      */
     protected boolean aborted = false;
 
     /**
-     * The field that contains the data associated with this message (it allows
-     * abstraction on the actual container of the data)
+     * The data associated with this message (allows for abstraction on the
+     * actual container of the data)
      */
     protected DataContainer dataContainer;
 
     /**
-     * a field that contains the number of bytes sent on the last call made to
-     * the shouldTriggerSentHook in Report Mechanism status
+     * Number of bytes sent on the last call made to
+     * shouldTriggerSentHook in ReportMechanism status
      * 
-     * @see ReportMechanism#shouldTriggerSentHook(Message, Session)
-     *      ReportMechanism.shouldTriggerSentHook(..)
+     * @see ReportMechanism#shouldTriggerSentHook(Message, Session, long)
      */
     public long lastCallSentData = 0;
 
     /**
-     * a field that contains the number of bytes sent on the last call made to
-     * the shouldGenerateReport in Report Mechanism status
+     * Number of bytes sent on the last call made to
+     * shouldGenerateReport in ReportMechanism status
      * 
-     * @see ReportMechanism#shouldGenerateReport(Message, long)
-     *      ReportMechanism.shouldGenerateReport(Message, long)
+     * @see ReportMechanism#shouldGenerateReport(Message, long, long)
      */
     public long lastCallReportCount = 0;
 
     /**
-     * this field points to the report mechanism associated with this message
-     * the report mechanism basicly is used to decide upon the granularity of
-     * the success reports
+     * The report mechanism associated with this message.
+     * Basically used to decide upon the granularity of success reports.
      */
     public ReportMechanism reportMechanism;
 
     /**
-     * Field to be used by the prioritizer.
+     * To be used by ConnectionPrioritizer.
      * 
      * Default value of 0 means no special priority
      * 
@@ -116,8 +106,6 @@ public abstract class Message
      * @uml.property name="_contentType"
      */
     protected String contentType = null;
-
-    /* Constructors: */
 
     /**
      * @uml.property name="messageId"
@@ -142,24 +130,22 @@ public abstract class Message
      */
     protected Transaction lastSendTransaction = null;
 
-    public Message(Session session, String contentType, byte[] data)
+    protected Message(Session session, String contentType, byte[] data)
     {
         this(session, contentType, data, null);
     }
 
-    /* End of wrappers for report mechanism */
-
     /** Create new MSRP message and queue in session for sending.
      * @param session the session associated with the message
      * @param contentType the content type associated withe this byteArarray
-     * @param byteArray the content of the message to be sent
+     * @param data the content of the message to be sent
      * @param reportMechanism the report mechanism to be used for this message
      * @return the newly created message
      * @throws RuntimeException if message content is too big to send in memory,
      * 					as defined on Stack (cause {@code BufferOverflowException})
      * @see Stack#setShortMessageBytes(int)
      */
-    public Message(Session session, String contentType, byte[] data,
+    protected Message(Session session, String contentType, byte[] data,
             ReportMechanism reportMechanism)
     {
         if (data.length > Stack.getShortMessageBytes())
@@ -185,15 +171,13 @@ public abstract class Message
     }
 
     /**
-     * The file transfer direction.
-     * 
-     * @return returns the direction of the file transfer : IN or OUT.
+     * @return the direction of the transfer: {@link #IN} or {@link #OUT}.
      */
     public abstract int getDirection();
 
     /**
-     * This method must be used by the acceptHook on the listener in order to
-     * allow the message to be received
+     * This method must be used by the listener acceptHook() to
+     * enable the message to be received.
      * 
      * @param dataContainer the dataContainer to set
      */
@@ -209,7 +193,7 @@ public abstract class Message
     }
 
     /**
-     * @return the reportMechanism
+     * @return the report mechanism
      */
     public ReportMechanism getReportMechanism()
     {
@@ -217,9 +201,11 @@ public abstract class Message
     }
 
     /**
-     * MUST be called after a session is associated convenience method called
-     * internally by the constructors of this class to associate the given
-     * reportMechanism or the session's default to the newly created message
+     * Convenience method called internally by the constructors of this class
+     * to associate the given reportMechanism (or session's default) to the
+     * newly created message.
+     * <p>
+     * MUST be called after a session is associated.
      * 
      * @param reportMechanism
      */
@@ -233,41 +219,36 @@ public abstract class Message
         {
             this.reportMechanism = reportMechanism;
         }
-
     }
 
     /**
-     * Method that is called by the OutgoingMessages when their isComplete() is
+     * Called by OutgoingMessages when their isComplete() is
      * called
      * 
      * @see #isComplete()
-     * @return true if the message is completely sent
+     * @return true if message is completely sent
      */
     protected boolean outgoingIsComplete(long sentBytes)
     {
-        boolean toReturn;
-        if (sentBytes == size)
-            toReturn = true;
-        else
-            toReturn = false;
-
-        logger.trace("Called isComplete, sent bytes: " + sentBytes
-            + " message size: " + size + " going to return: " + toReturn);
-        return toReturn;
+    	if (logger.isTraceEnabled())
+            logger.trace(String.format(
+            		"Called isComplete(), message(size[%d], sent[%d]) will return[%b]",
+            		sentBytes, size, sentBytes == size));
+        return sentBytes == size;
     }
 
     /**
-     * This method interrupts all of the existing and interruptible SEND request
+     * Interrupts all of the existing and interruptible SEND request
      * transactions associated with this message that are on the transactions to
      * be sent queue, and gets this message back on top of the messages to send
-     * queue on the respective session.
+     * queue of the respective session.
      * 
-     * This method is meant to be called internally by the prioritizer.
+     * This method is meant to be called internally by the ConnectionPrioritizer.
      * 
      * @throws InternalErrorException if this method, that is called internally,
      *             was called with the message in an invalid state
      */
-    public void pause() throws InternalErrorException
+    protected void pause() throws InternalErrorException
     {
         if (this.isComplete())			/* Sanity checks */
             throw new InternalErrorException("pause()" +
@@ -291,33 +272,33 @@ public abstract class Message
     }
 
     /**
-     * TODO WORKINPROGRESS Method to be used by the MessagePrioritizer by now
+     * TODO WORKINPROGRESS to be used by ConnectionPrioritizer. Currently
      * the priority field of the messages is irrelevant as the messages work in
-     * a FIFO for each session (TODO not sure if a prioritizer within messages
-     * in same session will serve any practical purpose)
+     * a FIFO for each session (NB: not sure if a prioritizer within messages
+     * of same session will serve any practical purpose)
      * 
      * @return the priority of this message
      */
-    public short getPriority()
+    protected short getPriority()
     {
         return priority;
     }
 
     /**
-     * TODO WORKINPROGRESS Method to be used by the MessagePrioritizer by now
+     * TODO WORKINPROGRESS to be used by the ConnectinPrioritizer.Currently,
      * the priority field of the messages is irrelevant as the messages work in
-     * a FIFO for each session (TODO not shure if a prioritizer within messages
+     * a FIFO for each session (NB: not sure if a prioritizer within messages
      * in same session will serve any practical purpose)
      * 
      * @param priority the priority to set
      */
-    public void setPriority(short priority)
+    protected void setPriority(short priority)
     {
         this.priority = priority;
     }
 
     /**
-     * Method used to check if this message object still has unused content
+     * Has this message object still unused content?
      * 
      * @return true if this message still has some data to retrieve
      */
@@ -327,10 +308,9 @@ public abstract class Message
     }
 
     /**
-     * 
-     * Method that fills the given array with DATA bytes starting from offset
-     * and stopping at the array limit or end of data and returns the number of
-     * bytes filled
+     * Fill the given array with DATA bytes, starting from offset
+     * and stopping at the array limit or end of data.
+     * Returns the number of bytes filled.
      * 
      * @param outData the byte array to fill
      * @param offset the offset index to start filling the outData
@@ -350,14 +330,10 @@ public abstract class Message
         }
         catch (IndexOutOfBoundsException e)
         {
-            // TODO log it
-            e.printStackTrace();
             throw new ImplementationException(e);
         }
         catch (Exception e)
         {
-            // TODO log it
-            e.printStackTrace();
             throw new InternalErrorException(e);
         }
     }
@@ -476,13 +452,13 @@ public abstract class Message
     }
 
     /**
+     * Note: even if the value is unknown at a first
+     *       stage, if this is an incoming message, when the message is
+     *       complete this method should report the actual size of the
+     *       received message
      * 
-     * @return the size, in bytes, of the message or -1 if this value is
-     *         uninitialized or -2 if the total message bytes is unknown for
-     *         this message. Note: even if the value is unknown at a first
-     *         stage, if this is an incoming message, when the message is
-     *         complete this method should report the actual size of the
-     *         received message
+     * @return the size (bytes) of the message, -1 if this value is
+     *         uninitialized, -2 if the total size is unknown for this message.
      */
     public long getSize()
     {
@@ -491,7 +467,7 @@ public abstract class Message
 
     /**
      * @return the string representing the total number of bytes of this message
-     *         or * if it's unknown
+     *         or '*' if it's unknown
      */
     public String getStringTotalSize()
     {
@@ -581,38 +557,51 @@ public abstract class Message
         throws InternalErrorException, IllegalUseException;
 
     /**
-     * Method called by the Transaction when it wants to notify a message that
-     * it got aborted.
-     * 
+     * Called by Transaction when it wants to notify a message that it got aborted.
+     * <p>
      * It is this method's responsibility to notify the listeners associated
      * with it's session and change it's internal state accordingly
      * 
+     * @param transaction the transaction associated with the abort
+     */
+    /*
      * TODO reflect about the possibility to eliminate all the data associated
      * with this message or not. Could be done with a variable associated with
      * the stack, in some cases it may be useful to keep the data. ATM it
      * disposes the DataContainer associated with it
-     * 
-     * @param transaction the transaction that is associated with the abort
      */
     public void gotAborted(Transaction transaction)
     {
         aborted = true;
         if (dataContainer != null)
         	dataContainer.dispose();
-        session.fireMessageAbortedEvent(this, MessageAbortedEvent.CONTINUATIONFLAG, null, transaction);
+        session.fireMessageAbortedEvent(this, MessageAbortedEvent.CONTINUATIONFLAG,
+        		null, transaction);
     }
 
     /**
-     * Method used to detect if the message was aborted or not
+     * Was message aborted?
      * 
      * @return true if the message was previously aborted (received the #
-     *         continuation flag, called the gotAborted() method) or false
-     *         otherwise
-     * @see #gotAborted()
+     *         continuation flag, called the gotAborted() method)
+     * @see #gotAborted(Transaction)
      */
     public boolean wasAborted()
     {
         return aborted;
+    }
+
+    /**
+     * This creates and fires a MessageAbortEvent
+     * 
+     * @param reason the reason for the Abort
+     * @param extraReasonInfo the String that was carried in the
+     *            REPORT request triggering this event (null if empty).
+     * @see MessageAbortedEvent
+     */
+    public void fireMessageAbortedEvent(int reason, String extraReasonInfo, Transaction transaction)
+    {
+        session.fireMessageAbortedEvent(this, reason, extraReasonInfo, transaction);
     }
 
     /**
@@ -623,19 +612,5 @@ public abstract class Message
     {
         if (dataContainer != null)
         	dataContainer.dispose();
-    }
-
-    /**
-     * This creates and fires a MessageAbortEvent
-     * 
-     * @param reason the reason for the Abort
-     * @param extraReasonInfo eventually the String that was carried in the
-     *            REPORT request that triggered this event, or null if none
-     *            exists or is being considered
-     * @see MessageAbortEvent
-     */
-    public void fireMessageAbortedEvent(int reason, String extraReasonInfo, Transaction transaction)
-    {
-        session.fireMessageAbortedEvent(this, reason, extraReasonInfo, transaction);
     }
 }
