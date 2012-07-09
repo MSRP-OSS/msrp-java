@@ -21,57 +21,24 @@ import java.util.*;
 import javax.net.msrp.*;
 
 /**
- * The <tt>MessageAbortedEvent</tt> is the event indicating that a MSRP message
- * has been aborted. More details can be accessed through its methods
- * 
+ * Indicates an MSRP message has been aborted.
+ * <br>
+ * More details can be accessed through its methods
+ * <p>
  * This class captures all the cases where an MSRP can be seen as being aborted.
  * Depending on the reasons, different actions should be performed
  * 
  * @author João André Pereira Antunes
- * 
  */
 public class MessageAbortedEvent
     extends EventObject
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 1L;
 
     /**
-     * The message got a continuation flag of # that means it was aborted
+     * Message got a continuation flag of # meaning it was aborted
      */
     public static final int CONTINUATIONFLAG = 0;
-
-    /**
-     * The message got a 400 response - request unintelligible - message can be
-     * resent if the sender corrects the error
-     */
-    public static final int RESPONSE400 = 400;
-
-    /**
-     * The message got a 403 response - attempted action is not allowed - the
-     * sender should not try the request again, therefore the Message was
-     * aborted
-     */
-    public static final int RESPONSE403 = 403;
-
-    /**
-     * The message got a 413 response - the receiver wishes that the sender
-     * stops sending this message
-     */
-    public static final int RESPONSE413 = 413;
-
-    /**
-     * The Message was wrapped in a Content/Media type not understood by the
-     * receiver
-     */
-    public static final int RESPONSE415 = 415;
-
-    /**
-     * The session does not exist! the sender should terminate the session
-     */
-    public static final int RESPONSE481 = 481;
 
     /**
      * The reason for this abort event
@@ -94,13 +61,8 @@ public class MessageAbortedEvent
      * Constructor used to create the abort event
      * 
      * @param message the message that got aborted
-     * @param reason the reason, one of: CONTINUATIONFLAG; RESPONSE4XX
+     * @param reason the reason, one of: CONTINUATIONFLAG; RC4XX
      * @see #CONTINUATIONFLAG
-     * @see #RESPONSE400
-     * @see #RESPONSE403
-     * @see #RESPONSE413
-     * @see #RESPONSE415
-     * @see #RESPONSE481
      * @param extraReasonInfo this can be the string that can be on the body of
      *            a REPORT or null if it doesn't exist
      */
@@ -114,16 +76,7 @@ public class MessageAbortedEvent
     }
 
     /**
-     * 
-     * The reason of the abort
-     * 
-     * @return the reason, one of:
-     * @see #CONTINUATIONFLAG
-     * @see #RESPONSE400
-     * @see #RESPONSE403
-     * @see #RESPONSE413
-     * @see #RESPONSE415
-     * @see #RESPONSE481
+     * @return The reason of the abort
      */
     public int getReason()
     {
@@ -159,5 +112,4 @@ public class MessageAbortedEvent
     {
         return session;
     }
-
 }
