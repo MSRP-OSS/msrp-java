@@ -18,13 +18,13 @@
 package javax.net.msrp;
 
 /**
- * TODO UNIMPLEMENTED CLASS, should act as an abstract one Used to validate the
- * content of the message according to the defined content type
+ * Used to validate content of a message according to the defined content type
  * 
  * @author João André Pereira Antunes 2008
  * 
  */
-public class Validator
+// TODO UNIMPLEMENTED CLASS, should act as an abstract one.
+public abstract class Validator
 {
 
 }

@@ -9,23 +9,15 @@ package javax.net.msrp;
  */
 public enum TransactionType
 {
-    /**
-     * Transaction associated with the SEND method
-     */
+    /** Transaction associated with the SEND method */
     SEND,
 
-    /**
-     * Transaction associated with the REPORT method
-     */
+    /** Transaction associated with the REPORT method */
     REPORT,
 
-    /**
-     * Represents the unsupported methods
-     */
+    /** Represents the unsupported methods */
     UNSUPPORTED,
 
-    /**
-     * Transaction that is a response to a SEND
-     */
+    /** Transaction that is a response to a SEND */
     SENDRESPONSE,
 }

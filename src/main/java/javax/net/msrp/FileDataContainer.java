@@ -30,10 +30,9 @@ import javax.net.msrp.exceptions.NotEnoughStorageException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * An implementation of the data container class.
- * 
+ * <p>
  * It uses a file read from/write to the data associated with an MSRP message
  * @see DataContainer
  * 
@@ -43,46 +42,11 @@ import org.slf4j.LoggerFactory;
 public class FileDataContainer
     extends DataContainer
 {
+	private static final String IOERR = "I/O problems: ";
 
-    /**
-     * The logger associated with this class
-     */
+	/** The logger associated with this class */
     private static final Logger logger =
         LoggerFactory.getLogger(FileDataContainer.class);
-
-    /**
-     * Creates a new DataContainer based on the given file, The file must be
-     * readable and writable. Note: if the file exists it's content will be
-     * overwritten
-     * 
-     * @throws FileNotFoundException if the file was not found
-     * @throws SecurityException if a security manager exists and its checkRead
-     *             method denies read access to the file or the mode is "rw" and
-     *             the security manager's checkWrite method denies write access
-     *             to the file
-     */
-    public FileDataContainer(File file)
-        throws FileNotFoundException,
-        SecurityException
-    {
-        this.file = file;
-        randomAccessFile = new RandomAccessFile(file, "rw");
-        fileChannel = randomAccessFile.getChannel();
-        logger.trace("Created a FileDataContainer for file: "
-            + file.getAbsolutePath());
-
-    }
-
-    private Long currentReadOffset = new Long(0);
-
-    /**
-     * WORK IN PROGRESS TODO(?!) field that will be used to optimize the writes
-     * on the file so that we don't have too much of a overhead with IOs
-     * 
-     * currently used for all of the operations of file channel that require a
-     * ByteBuffer
-     */
-    private ByteBuffer auxByteBuffer;
 
     /**
      * Original File reference
@@ -100,8 +64,65 @@ public class FileDataContainer
     private FileChannel fileChannel;
 
     /*
-     * (non-Javadoc)
+     * TODO: WORK IN PROGRESS field that will be used to optimise the writes
+     * on the file so that we don't have too much of an overhead with IOs
      * 
+     * currently used for all operations of file channel that require a ByteBuffer
+     */
+    private ByteBuffer auxByteBuffer;
+
+    private Long currentReadOffset = new Long(0);
+
+    /**
+     * Creates a new DataContainer based on the given file, The file must be
+     * readable and writable.
+     * <p>
+     * Note: if the file exists it's content will be overwritten
+     * 
+     * @throws FileNotFoundException if the file was not found
+     * @throws SecurityException if a security manager exists and its checkRead
+     *             method denies read access to the file or the mode is "rw" and
+     *             the security manager's checkWrite method denies write access
+     *             to the file
+     */
+    public FileDataContainer(File file)
+        throws FileNotFoundException, SecurityException
+    {
+        this.file = file;
+        randomAccessFile = new RandomAccessFile(file, "rw");
+        fileChannel = randomAccessFile.getChannel();
+        logger.trace("Created a FileDataContainer for file: " +
+        			file.getAbsolutePath());
+    }
+
+    /**
+     * Specific method to retrieve the File associated with this container
+     * 
+     * @return the File object, used to store the data
+     */
+    public File getFile()
+    {
+        return file;
+    }
+
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#size()
+     */
+    @Override
+    public long size()
+    {
+        try
+        {
+            return fileChannel.size();
+        }
+        catch (IOException e)
+        {
+        	logger.error(IOERR, e);
+        }
+        return 0;
+    }
+
+    /* (non-Javadoc)
      * @see javax.net.msrp.DataContainer#currentReadOffset()
      */
     @Override
@@ -113,53 +134,40 @@ public class FileDataContainer
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.net.msrp.DataContainer#get()
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#hasDataToRead()
      */
     @Override
-    public byte get() throws NotEnoughDataException, IOException
+    public boolean hasDataToRead()
     {
-
         synchronized (currentReadOffset)
         {
-
-            long oldPosition = fileChannel.position();
-            if (oldPosition != currentReadOffset.longValue())
+            try
             {
-                fileChannel.position(currentReadOffset.longValue());
+                if (currentReadOffset.longValue() < fileChannel.size())
+                    return true;
             }
-            auxByteBuffer = ByteBuffer.allocate(1);
-            int result = fileChannel.read(auxByteBuffer);
-            if (result == 0 || result == -1)
-                throw new NotEnoughDataException();
-
-            currentReadOffset++;
-            fileChannel.position(oldPosition);
-            return auxByteBuffer.get(0);
+            catch (IOException e)
+            {
+                logger.error(IOERR, e);
+            }
+            return false;
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.net.msrp.DataContainer#put(int, byte[])
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#put(long, byte[])
      */
     @Override
     public void put(long startingIndex, byte[] dataToPut)
         throws NotEnoughStorageException,
         Exception
     {
-
         auxByteBuffer = ByteBuffer.wrap(dataToPut);
         fileChannel.write(auxByteBuffer, startingIndex);
-
     }
 
-    /*
-     * (non-Javadoc)
-     * 
+    /* (non-Javadoc)
      * @see javax.net.msrp.DataContainer#put(byte)
      */
     @Override
@@ -175,49 +183,14 @@ public class FileDataContainer
             throw new NotEnoughStorageException();
     }
 
-    @Override
-    public boolean hasDataToRead()
-    {
-        synchronized (currentReadOffset)
-        {
-            try
-            {
-                if (currentReadOffset.longValue() < fileChannel.size())
-                    return true;
-            }
-            catch (IOException e)
-            {
-                // TODO log it
-                e.printStackTrace();
-            }
-            return false;
-        }
-    }
-
-    @Override
-    public void dispose()
-    {
-        try
-        {
-            fileChannel.close();
-            randomAccessFile.close();
-        }
-        catch (IOException e)
-        {
-            // TODO log it
-            e.printStackTrace();
-        }
-
-    }
-
-    /**
-     * TODO: if needed use a small buffer in order to make more efficient the
-     * writes here!
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#put(long, byte)
+     * 
+     * TODO: if needed use a small buffer in order to make writes more efficient.
      */
     @Override
     public void put(long startingIndex, byte byteToPut)
-        throws NotEnoughStorageException,
-        IOException
+        throws NotEnoughStorageException, IOException
     {
         byte[] auxByteArray = new byte[1];
         auxByteArray[1] = byteToPut;
@@ -258,32 +231,6 @@ public class FileDataContainer
             return auxByteBuffer;
         }
 
-    }
-
-    /**
-     * Specific FileDataContainer method used to retrieve the File associated
-     * with this container
-     * 
-     * @return the File object that was used to store the data
-     */
-    public File getFile()
-    {
-        return file;
-    }
-
-    @Override
-    public long size()
-    {
-        try
-        {
-            return fileChannel.size();
-        }
-        catch (IOException e)
-        {
-            // TODO log it
-            e.printStackTrace();
-        }
-        return 0;
     }
 
     @Override
@@ -333,5 +280,22 @@ public class FileDataContainer
             return result;
         }
 
+    }
+
+    /* (non-Javadoc)
+     * @see javax.net.msrp.DataContainer#dispose()
+     */
+    @Override
+    public void dispose()
+    {
+        try
+        {
+            fileChannel.close();
+            randomAccessFile.close();
+        }
+        catch (IOException e)
+        {
+        	logger.error(IOERR, e);
+        }
     }
 }

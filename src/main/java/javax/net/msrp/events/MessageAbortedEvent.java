@@ -62,9 +62,9 @@ public class MessageAbortedEvent
      * 
      * @param message the message that got aborted
      * @param reason the reason, one of: CONTINUATIONFLAG; RC4XX
+     * @param extraReasonInfo additional info-string as body of a REPORT or
+     * 							null if it doesn't exist
      * @see #CONTINUATIONFLAG
-     * @param extraReasonInfo this can be the string that can be on the body of
-     *            a REPORT or null if it doesn't exist
      */
     public MessageAbortedEvent(Message message, Session session, int reason,
         String extraReasonInfo, Transaction transaction)
@@ -84,8 +84,6 @@ public class MessageAbortedEvent
     }
 
     /**
-     * Returns the message that got aborted
-     * 
      * @return the message that got aborted
      */
     public Message getMessage()
@@ -94,19 +92,15 @@ public class MessageAbortedEvent
     }
 
     /**
-     * Returns the extra info that can be on the Status comment
-     * 
-     * @return the extra info or null if it doesn't exist
+     * @return the extra abort-info or null if it wasn't given.
      */
-    public String reasonInfo()
+    public String getReasonInfo()
     {
         return extraReasonInfo;
     }
 
     /**
-     * Returns the session associated with this abortion event
-     * 
-     * @return the session associated with this abor event
+     * @return the session associated with this abort-event
      */
     public Session getSession()
     {
