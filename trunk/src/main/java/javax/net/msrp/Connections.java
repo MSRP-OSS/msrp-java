@@ -16,7 +16,6 @@
  */
 package javax.net.msrp;
 
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -37,7 +36,6 @@ import javax.net.msrp.utils.NetworkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * This is the class responsible for accepting incoming TCP connection requests
  * and generating the Connection object.
@@ -48,11 +46,32 @@ public class Connections
     extends Connection
     implements Runnable
 {
-    /**
-     * The logger associated with this class
-     */
+    /** The logger associated with this class */
     private static final Logger logger =
         LoggerFactory.getLogger(Connections.class);
+
+    private Stack stack = Stack.getInstance();
+
+    private ThreadGroup connectionsGroup =
+            new ThreadGroup("MSRP Stack connections");
+
+    private boolean hasStarted = false;
+
+    private Thread associatedThread = null;
+
+    private ServerSocketChannel serverSocketChannel = null;
+
+    private HashMap<URI, Session> urisSessionsToIdentify =
+        new HashMap<URI, Session>();
+
+    /**
+     * @uml.property name="_connections"
+     * @uml.associationEnd multiplicity="(1 1)"
+     *                     inverse="connections:javax.net.msrp.TransactionManager"
+     */
+    private TransactionManager transactionManager = null;
+
+    private HashSet<URI> existingURISessions = new HashSet<URI>();
 
     public Connections(InetAddress address)
     {
@@ -88,16 +107,7 @@ public class Connections
         }
     }
 
-    private boolean hasStarted = false;
-
-    private Thread associatedThread = null;
-
-    private ServerSocketChannel serverSocketChannel = null;
-
-    private HashMap<URI, Session> urisSessionsToIdentify =
-        new HashMap<URI, Session>();
-
-    // Protected constructor is sufficient to suppress unauthorized calls to the
+    // Protected constructor is sufficient to suppress unauthorised calls to the
     // constructor
     protected Connection Connection()
     {
@@ -108,10 +118,10 @@ public class Connections
             boolean localAddress = false;
 
             InetAddress newAddress = InetAddress.getLocalHost();
-
-            // sanity check, check that the given address is a local one where a
-            // socket
-            // could be bound
+            /*
+             * sanity check, check that the given address is a local one where
+             * a socket can be bound
+             */
             InetAddress local[] =
                 InetAddress.getAllByName(InetAddress.getLocalHost()
                     .getHostName());
@@ -147,15 +157,6 @@ public class Connections
         return this;
     }
 
-    /**
-     * @uml.property name="_connections"
-     * @uml.associationEnd multiplicity="(1 1)"
-     *                     inverse="connections:javax.net.msrp.TransactionManager"
-     */
-    private TransactionManager transactionManager = null;
-
-    private HashSet<URI> existingURISessions = new HashSet<URI>();
-
     public TransactionManager getTransactionManager()
     {
         return transactionManager;
@@ -166,27 +167,11 @@ public class Connections
         return hasStarted;
     }
 
-    public Connection connection(String relevantURI)
-    {
-        return null;
-    }
-
     public void setTransactionManager(TransactionManager transactionManager)
     {
         this.transactionManager = transactionManager;
     }
 
-    /**
-     * SingletonHolder is loaded on the first execution of
-     * Singleton.getInstance() or the first access to SingletonHolder.instance ,
-     * not before. private static class SingletonHolder { private final static
-     * Connections INSTANCE = new Connections();
-     * 
-     * }
-     * 
-     * public static Connections getInstance() { return
-     * SingletonHolder.INSTANCE; }
-     */
     public Thread getAssociatedThread()
     {
         return associatedThread;
@@ -206,8 +191,8 @@ public class Connections
                     new Connection(serverSocketChannel.accept());
                 stack.addConnection(connection);
                 Thread newConnThread = new Thread(connection);
-                newConnThread.setName("connection: " + connection.getLocalURI()
-                    + " by connections newConnThread");
+                newConnThread.setName("Connection: " + connection.getLocalURI() +
+                					" by Connections.newConnThread");
                 newConnThread.start();
 
             }
@@ -230,7 +215,6 @@ public class Connections
             		"Absurd error, Connections doesn't have the needed socket info");
 
         URI newURI = newUri();
-
         int i = 0;
         while (existingURISessions.contains(newURI))
         {
@@ -266,15 +250,13 @@ public class Connections
      * identify
      * 
      * @param uri of the session to be identified
-     * @return the associated session to the given uri, taken from the list of
-     *         sessions negotiated but yet to identify
+     * @return the associated session for the given uri, taken from the list of
+     *         still to identify sessions negotiated but not yet identified.
      */
     public Session sessionToIdentify(URI uri)
     {
         return urisSessionsToIdentify.get(uri);
     }
-
-    private Stack stack = Stack.getInstance();
 
     protected void identifiedSession(Session session)
     {
@@ -286,16 +268,12 @@ public class Connections
         // TODO disable the alarm
     }
 
-    private ThreadGroup connectionsGroup =
-        new ThreadGroup("MSRP Stack connections");
-
     protected void startConnectionThread(Runnable connection,
-        ThreadGroup ioOperationGroup)
+        ThreadGroup ioGroup)
     {
-        Thread newConnectionThread = new Thread(ioOperationGroup, connection);
-        newConnectionThread.setName("Connections: " + localURI
-            + " newConnectionThread");
-        newConnectionThread.start();
+        Thread newThread = new Thread(ioGroup, connection);
+        newThread.setName("Connections: " + localURI + " newThread");
+        newThread.start();
     }
 
     /**

@@ -58,9 +58,9 @@ public class FailureReport
                 "Constructing a failure report for a message"
                     + " that explicitly didn't want them?");
 
-        if (responseCode < 400 || responseCode > 599)
-            throw new IllegalUseException("Wrong response code! Must be "
-            		+ "a valid code as defined in RFC 4975");
+        if (ResponseCode.isError(responseCode))
+            throw new IllegalUseException("Wrong response code! Must be " +
+            		"a valid code as defined in RFC 4975");
 
         makeReportHeader(transaction, namespace, responseCode, comment);
      }

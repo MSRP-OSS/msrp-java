@@ -55,6 +55,6 @@ public class SuccessReport
             throw new IllegalUseException(
                 "Constructing a success report for a message that didn't want one?");
 
-        makeReportHeader(transaction, "000", 200, comment);
+        makeReportHeader(transaction, "000", ResponseCode.RC200, comment);
     }
 }

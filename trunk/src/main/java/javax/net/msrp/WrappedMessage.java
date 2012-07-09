@@ -7,7 +7,6 @@ import java.nio.ByteBuffer;
 
 /** Interface for the wrapping and unwrapping of messages.
  * @author tuijldert
- *
  */
 public interface WrappedMessage {
 
@@ -34,7 +33,7 @@ public interface WrappedMessage {
 	 */
 	public String getContentHeader(String name);
 
-	/** Retrun content of the wrapped message.
+	/** Return content of the wrapped message.
 	 * @return	the content.
 	 */
 	public String getMessageContent();

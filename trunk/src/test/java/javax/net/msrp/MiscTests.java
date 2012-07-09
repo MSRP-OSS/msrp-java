@@ -660,7 +660,7 @@ public class MiscTests
                     catch (IllegalArgumentException argExcptn)
                     {
                         // Then we have ourselves an unsupported method
-                        // create an unsupported transaction and sinalize it
+                        // create an unsupported transaction and finalise it
                         newTransactionType =
                             TransactionType
                                 .valueOf("Unsupported".toUpperCase());
