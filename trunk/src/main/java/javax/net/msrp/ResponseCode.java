@@ -46,6 +46,10 @@ public class ResponseCode {
 		new Code(RC506, "506 Wrong session"),
 	};
 
+	static final int abortCode[] = {
+		RC400, RC403, RC413, RC415, RC481
+	};
+
 	/** Is given response code a valid MSRP code?
 	 * @param code the response code to check
 	 * @return true is valid
@@ -71,7 +75,7 @@ public class ResponseCode {
 	 * @return true is (known) error
 	 */
 	public static boolean isError(int code) {
-		return isValid(code) && code > 200;
+		return isValid(code) && code > 299;
 	}
 
 	public static String toString(int code) {
@@ -80,5 +84,17 @@ public class ResponseCode {
 				return rc.description;
 		}
 		return "Unknown (non-MSRP) response code";
+	}
+
+	/** Is response code an indication to abort sending?
+	 * @param code the response code
+	 * @return true if the code indicates sender should abort sending.
+	 */
+	public static boolean isAbortCode(int code) {
+		for (int ac : abortCode) {
+			if (ac == code)
+				return true;
+		}
+		return false;
 	}
 }

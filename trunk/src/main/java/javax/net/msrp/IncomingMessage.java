@@ -16,7 +16,6 @@
  */
 package javax.net.msrp;
 
-import javax.net.msrp.events.MessageAbortedEvent;
 import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.exceptions.ImplementationException;
 import javax.net.msrp.exceptions.InternalErrorException;
@@ -124,7 +123,7 @@ public class IncomingMessage
     }
 
     /** Response code of the accept hook call. */
-    private int result = 413;
+    private int result = ResponseCode.RC413;
 
 	/**
 	 * @return the result
@@ -167,7 +166,7 @@ public class IncomingMessage
     {
         try
         {
-            abort(MessageAbortedEvent.RESPONSE413, null);
+            abort(ResponseCode.RC413, null);
         }
         catch (IllegalUseException e)
         {
@@ -199,31 +198,22 @@ public class IncomingMessage
             throw new InternalErrorException(
                 "abort was called on an incoming message without "
                     + "an assigned Transaction!");
-        if (reason != MessageAbortedEvent.RESPONSE400
-            && reason != MessageAbortedEvent.RESPONSE403
-            && reason != MessageAbortedEvent.RESPONSE413
-            && reason != MessageAbortedEvent.RESPONSE415
-            && reason != MessageAbortedEvent.RESPONSE481)
+        if (!ResponseCode.isAbortCode(reason))
             throw new IllegalUseException(
-                "The reason must be one of the"
-                    + " response codes on MessageAbortedEvent excluding the continuation flag reason");
-        // let's check to see if we already responded to the transaction being
+                "The reason must be one of the abort response codes");
+        // Check to see if we already responded to the transaction being
         // received/last transaction known
         if (!lastSendTransaction.hasResponse())
             lastSendTransaction.getTransactionManager().generateResponse(
                 lastSendTransaction, reason, reasonExtraInfo);
         else
-        // let's generate the REPORT
-        {
-            FailureReport failureReport =
+        {								// Generate REPORT
+            FailureReport report =
                 new FailureReport(this, session, lastSendTransaction, "000",
-                    reason, reasonExtraInfo);
-            // send it
-            TransactionManager transactionManager =
-                session.getTransactionManager();
-            transactionManager.addPriorityTransaction(failureReport);
+            					reason, reasonExtraInfo);
+            							// & send it
+            session.getTransactionManager().addPriorityTransaction(report);
         }
-        // mark this message as aborted
-        aborted = true;
+        aborted = true;					// mark message as aborted
     }
 }

@@ -229,7 +229,7 @@ public class FirstMilestoneFunctionalities
                  */
                 try
                 {
-                    message.abort(MessageAbortedEvent.RESPONSE413, null);
+                    message.abort(ResponseCode.RC413, null);
                     // we also have a convenience method that is equivalent to
                     // the above call
                     message.reject();
