@@ -210,7 +210,7 @@ public class TestAbortMechanism extends TestFrame
             }
             /* abort the message */
             receivingSessionListener.getAcceptHookMessage().abort(
-                MessageAbortedEvent.RESPONSE413, null);
+                ResponseCode.RC413, null);
             /*
              * wait for the sending part to be notified by the library of the
              * abortion of the message
@@ -277,7 +277,7 @@ public class TestAbortMechanism extends TestFrame
                 sendingSessionListener.messageAbortEvents.get(0);
             assertTrue("Error, reason code different from 413, got: " +
                 abortEvent.getReason(),
-                abortEvent.getReason() == MessageAbortedEvent.RESPONSE413);
+                abortEvent.getReason() == ResponseCode.RC413);
         }
         catch (Exception e)
         {

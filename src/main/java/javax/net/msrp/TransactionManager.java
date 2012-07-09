@@ -126,26 +126,22 @@ public class TransactionManager
     public void generateResponse(Transaction transaction, int responseCode,
         String comment) throws IllegalUseException
     {
-        logger.trace("Response being sent for Transaction tId: "
-            + transaction.tID + " response code: " + responseCode);
+        logger.trace("Response being sent for Transaction tId: " +
+        		transaction.tID + " response code: " + responseCode);
         String reportFlag = transaction.getFailureReport();
 
-        if (responseCode != 200 && responseCode != 400 && responseCode != 403
-            && responseCode != 408 && responseCode != 413
-            && responseCode != 415 && responseCode != 423
-            && responseCode != 481 && responseCode != 501
-            && responseCode != 506)
+        if (!ResponseCode.isValid(responseCode))
             throw new IllegalUseException("Invalid response code");
         // TODO FIXME validate the comment based on the utf8text regex pattern
         // that will be defined in RegEx
         // TODO generate the responses based on the success report field
 
         // generate response based on failure report field
-        if (reportFlag == null || reportFlag.equalsIgnoreCase("yes")
-            || reportFlag.equalsIgnoreCase("partial"))
+        if (reportFlag == null || reportFlag.equalsIgnoreCase("yes") ||
+    		reportFlag.equalsIgnoreCase("partial"))
         {
-            if (reportFlag != null && reportFlag.equalsIgnoreCase("partial")
-                && responseCode == 200)
+            if (reportFlag != null && reportFlag.equalsIgnoreCase("partial") &&
+                !ResponseCode.isError(responseCode))
             {
                 return;
             }
@@ -230,7 +226,7 @@ public class TransactionManager
         {
             try
             {
-                generateResponse(transaction, 200, null);
+                generateResponse(transaction, ResponseCode.RC200, null);
             }
             catch (IllegalUseException e1)
             {
@@ -269,7 +265,7 @@ public class TransactionManager
                 {
 					try {
 						FailureReport fr = new FailureReport(message, session, transaction,
-								"000", MessageAbortedEvent.RESPONSE400, e.getMessage());
+								"000", ResponseCode.RC400, e.getMessage());
 	                	addPriorityTransaction(fr);
 					} catch (Exception e1) { /*empty */ }
                 }
@@ -421,36 +417,32 @@ public class TransactionManager
     /**
      * This method generates the appropriate actions inside the stack
      * 
-     * @param transactionResponse the transaction that contains the response
+     * @param response the transaction that contains the response
      *            being processed
      */
-    private void processResponse(TransactionResponse transactionResponse)
+    private void processResponse(TransactionResponse response)
     {
         // let's see if this response is worthy of a abort event
-        if (transactionResponse.responseCode == MessageAbortedEvent.RESPONSE400
-            || transactionResponse.responseCode == MessageAbortedEvent.RESPONSE403
-            || transactionResponse.responseCode == MessageAbortedEvent.RESPONSE413
-            || transactionResponse.responseCode == MessageAbortedEvent.RESPONSE415
-            || transactionResponse.responseCode == MessageAbortedEvent.RESPONSE481)
+        if (ResponseCode.isAbortCode(response.responseCode))
         {
             try
             {
-                transactionResponse.getMessage().abort(
+                response.getMessage().abort(
                     MessageAbortedEvent.CONTINUATIONFLAG, null);
             }
             catch (InternalErrorException e)
             {
                 logger.error("Exception caught aborting the message: "
-                    + transactionResponse.getMessage(), e);
+                    + response.getMessage(), e);
             }
             catch (IllegalUseException e)
             {
                 logger.error("Exception caught aborting the message: "
-                    + transactionResponse.getMessage(), e);
+                    + response.getMessage(), e);
             }
             // TODO support the comment Issue #29
-            transactionResponse.getMessage().fireMessageAbortedEvent(
-                transactionResponse.responseCode, null, transactionResponse);
+            response.getMessage().fireMessageAbortedEvent(
+                response.responseCode, null, response);
         }
     }
 

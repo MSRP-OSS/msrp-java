@@ -600,7 +600,7 @@ public class Transaction
                 		+ tID + "], generating 400 response", e);
                 try
                 {
-                    transactionManager.generateResponse(this, 400,
+                    transactionManager.generateResponse(this, ResponseCode.RC400,
                 			"Parsing exception: " + e.getMessage());
                 }
                 catch (IllegalUseException e2)
@@ -1286,7 +1286,7 @@ public class Transaction
         {
             try
             {
-                transactionManager.generateResponse(this, 400,
+                transactionManager.generateResponse(this, ResponseCode.RC400,
                 							"Transaction found invalid");
             }
             catch (IllegalUseException e)
@@ -1317,16 +1317,17 @@ public class Transaction
                  */
             	int rspCode;
                 if (stack.isActive((getToPath())[0]))
-                	rspCode = 506;
+                	rspCode = ResponseCode.RC506;
             	else
-            		rspCode = 481;
+            		rspCode = ResponseCode.RC481;
                 try
                 {
                     transactionManager.generateResponse(this, rspCode, null);
                 }
                 catch (IllegalUseException e)
                 {
-                    logger.error("Generating " + rspCode + " response", e);
+                    logger.error("Generating response: " +
+                    			ResponseCode.toString(rspCode), e);
                 }
             }
             else
@@ -1339,11 +1340,12 @@ public class Transaction
                      */
                     try
                     {
-                        transactionManager.generateResponse(this, 506, null);
+                        transactionManager.generateResponse(this, ResponseCode.RC506, null);
                     }
                     catch (IllegalUseException e)
                     {
-                        logger.error("Generating 506 response", e);
+                        logger.error("Generating response: " +
+                    			ResponseCode.toString(ResponseCode.RC506), e);
 
                     }
                     logger.error("Error! received a request that is yet to " +
@@ -1423,9 +1425,9 @@ public class Transaction
                 }
 
                 boolean result = session.triggerAcceptHook(incomingMessage);
-                if (result && incomingMessage.getResult() != 200)
+                if (result && incomingMessage.getResult() != ResponseCode.RC200)
                 {
-                    incomingMessage.setResult(200);
+                    incomingMessage.setResult(ResponseCode.RC200);
                     /*
                      * if the user didn't assigned a data container to the
                      * message then we discard the message and log the
@@ -1463,11 +1465,10 @@ public class Transaction
                     {
                         // the user set an invalid result, let's log it and
                         // resend it with the 413 default
-                        logger
-                            .warn("Tried to use an invalid response code as a response, gone with the default 413");
+                        logger.warn("Attempt to use invalid response code, forcing to default.");
                         try
                         {
-                            transactionManager.generateResponse(this, 413,
+                            transactionManager.generateResponse(this, ResponseCode.RC413,
                                 "Message rejected by user");
                         }
                         catch (IllegalUseException e1)
