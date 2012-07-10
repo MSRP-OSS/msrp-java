@@ -58,7 +58,7 @@ public class FailureReport
                 "Constructing a failure report for a message"
                     + " that explicitly didn't want them?");
 
-        if (ResponseCode.isError(responseCode))
+        if (!ResponseCode.isError(responseCode))
             throw new IllegalUseException("Wrong response code! Must be " +
             		"a valid code as defined in RFC 4975");
 
