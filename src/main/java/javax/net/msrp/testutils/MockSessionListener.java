@@ -22,6 +22,7 @@ import javax.net.msrp.DataContainer;
 import javax.net.msrp.IncomingMessage;
 import javax.net.msrp.Message;
 import javax.net.msrp.OutgoingMessage;
+import javax.net.msrp.ResponseCode;
 import javax.net.msrp.SessionListener;
 import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Session;
@@ -172,7 +173,7 @@ public class MockSessionListener
     @Override
     public void receivedReport(Session session, Transaction tReport)
     {
-        if (tReport.getStatusHeader().getStatusCode() != 200)
+        if (tReport.getStatusHeader().getStatusCode() != ResponseCode.RC200)
         {
             logger.debug("Received report with code different from 200"
                 + ", with code: " + tReport.getStatusHeader().getStatusCode()

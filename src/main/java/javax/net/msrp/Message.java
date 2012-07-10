@@ -359,6 +359,9 @@ public abstract class Message
         return contentType;
     }
 
+    /**
+     * @return content of message, unwrapped, into string.
+     */
     public String getContent() {
     	if (getDirection() == OUT || (getDirection() == IN && isComplete())) {
     		if (wrappedMessage == null)
@@ -369,6 +372,9 @@ public abstract class Message
     	return null;
     }
 
+    /**
+     * @return content of message, not unwrapped, into string.
+     */
     public String getRawContent() {
     	if (getDirection() == OUT || (getDirection() == IN && isComplete())) {
     		try {
