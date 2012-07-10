@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
+	<TITLE></TITLE>
+	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (Windows)">
+	<META NAME="CREATED" CONTENT="20120710;8305183">
+	<META NAME="CHANGED" CONTENT="20120710;16002734">
+	<STYLE TYPE="text/css">
+	<!--
+		H2.cjk { font-family: "SimSun" }
+		H2.ctl { font-family: "Mangal" }
+		PRE.cjk { font-family: "NSimSun", monospace }
+		CODE.cjk { font-family: "NSimSun", monospace }
+	-->
+	</STYLE>
+</HEAD>
+<BODY LANG="en-GB" DIR="LTR">
+<H1>MSRP Library tutorial</H1>
+<P>Here a brief introduction into the MSRP protocol and how you can
+use this Java library to incorporate that protocol into your own
+programs.</P>
+<P>MSRP (or <A HREF="http://en.wikipedia.org/wiki/Message_Session_Relay_Protocol"><B>M</B>essage
+<B>S</B>ession <B>R</B>elay <B>P</B>rotocol</A>) is an <A HREF="http://en.wikipedia.org/wiki/Instant_messaging">instant
+messaging</A> or <A HREF="http://en.wikipedia.org/wiki/Chat">chat</A>
+protocol, defined by the IETF in <A HREF="http://tools.ietf.org/html/rfc4975">RFC4975</A>.
+Basically, (instant-) messages are sent to and fro using SEND or
+REPORT requests and responses on those requests. These messages are
+sent over an MSRP session. One or more MSRP sessions can share a
+TCP/IP-link from one node to another (this can be any transport
+protocol provided it is connection-oriented and reliable, MSRP makes
+no assumptions about that. Here, only TCP/IP is used).</P>
+<P>The protocol is text based, much like HTTP and SIP. Using chunking
+and <A HREF="http://tools.ietf.org/html/rfc2045">MIME</A>-conforming
+message content (payload), MSRP messages can transfer any content of
+any size and thus support -for instance- file transfer. 
+</P>
+<H2 CLASS="western">Establishing a session</H2>
+<P>MSRP assumes that some other rendez-vous method will be used to
+establish how a new session will be negotiated between two systems.
+In the RFC, the SIP protocol with its SDP <A HREF="http://tools.ietf.org/html/rfc3264">offer-answer</A>
+model is used as an example.</P>
+<P>This negotiation will lead to MSRP URI's, defining the endpoints
+of the session. Such a URI contains a <I>scheme</I>, <I>authority</I>
+(domain, port), <I>session identifier</I>, <I>transport</I>- and
+other parameters.</P>
+<P>You can now use the library to establish a session.</P>
+<PRE CLASS="western" STYLE="margin-left: 1cm">import java.net.InetAddress;
+import javax.net.msrp.Session;
+import java.net.URI;
+
+InetAddress myAddress = InetAddress.getByName(&quot;myHostnameThatDoesMsrp&quot;);
+Session activeSession = Session.create(false, false, myAddress)
+URI myMsrpUri = activeSession.getURI();</PRE><P>
+You have a session now with a local MSRP URI. The session you just
+created is an <EM>active</EM> session. It means that as soon as you
+feed it the target URI, a connection will be established (if not
+already present) and a first request sent, as in:</P>
+<PRE CLASS="western" STYLE="margin-left: 1cm">import java.util.ArrayList;
+
+ArrayList&lt;URI&gt; toList = new ArrayList&lt;URI&gt;();
+URI targetURI = new URI('TheNegotiatedTargetNodeMsrpUri');
+toList.add(targetURI);
+activeSession.addToPath(toList);</PRE><P>
+The target can be a list of URI's to support <A HREF="http://tools.ietf.org/html/rfc4976">relaying</A>
+of MSRP. There is no explicit support for relaying (yet) in the
+library, but using the library; one could build an MSRP proxy.</P>
+<P>At the other end, there is a passive session, one that knows what
+node will contact it. A network socket is put in place to listen for
+the connect-request.</P>
+<PRE CLASS="western" STYLE="margin-left: 1cm">URI hisMsrpUri = &lt;MSRP URI negotiated with active node...&gt;;
+Session passiveSession = Session.create(false, false, hisMsrpUri, myAddress);</PRE><P>
+The booleans <CODE CLASS="western">isSecure</CODE> and <CODE CLASS="western">isRelay</CODE>
+are not implemented yet and for future extension.</P>
+<H2 CLASS="western">Sending and receiving messages</H2>
+<P>Using a session, one is now able to send and receive messages
+using MSRP. Sending is easy, using the <CODE CLASS="western">sendMessage()</CODE>
+methods:</P>
+<PRE CLASS="western" STYLE="margin-left: 1cm">import javax.net.msrp.Message;
+
+Message sendMsg = activeSession.sendMessage(&quot;text/plain&quot;, &quot;Hello world\n&quot;.getBytes());</PRE><P>
+The message will be sent as soon as a connection is established.</P>
+<P>Receiving a message is somewhat more involved and requires the
+creation of a <CODE CLASS="western">SessionListener</CODE>. This
+listener will be triggered when messages are received or status
+updates are relevant. The first to be called on receiving a message
+is <CODE CLASS="western">acceptHook()</CODE>. This tells the (your)
+application that an incoming message has been received. Two things
+should be done here: A <CODE CLASS="western">DataContainer</CODE>
+should be attached to the message-object to be able to store any
+content and the application (you) should decide whether you want this
+message in the first place. If so, return <CODE CLASS="western">true</CODE>,
+otherwise return <CODE CLASS="western">false</CODE>. In that case, an
+error-response is automatically returned.</P>
+<PRE CLASS="western" STYLE="margin-left: 1cm">import javax.net.msrp.SessionListener;
+import javax.net.msrp.IncomingMessage;
+import javax.net.msrp.MemoryDataContainer;
+
+public class MyListener implements SessionListener {
+  public boolean acceptHook(Session session, IncomingMessage message) {
+    MemoryDataContainer mdc = new MemoryDataContainer((int) message.getSize());
+    message.setDataContainer(mdc);
+    return true;
+  }
+}</PRE><P>
+When accepted, the <CODE CLASS="western">receivedMessage()</CODE>
+callback is triggered, containing the entire message and content.</P>
+<PRE CLASS="western" STYLE="margin-left: 1cm">  public void receivedMessage(Session session, IncomingMessage message) {
+    System.out.print(message.getContent());
+  }</PRE><P>
+If the message had text-content, this would make sense. This also
+unwraps any &quot;<CODE CLASS="western">message/cpim</CODE>&quot;
+content that might have been sent.</P>
+<H2 CLASS="western">Reports</H2>
+<P>In the same listener interface, trigger <CODE CLASS="western">receivedReport()</CODE>
+is defined to handle any received reports as a result of
+send-actions:</P>
+<PRE CLASS="western" STYLE="margin-left: 1cm">import javax.net.msrp.ResponseCode;
+...
+
+  public void receivedReport(Session session, Transaction report) {
+    int rc = report.getStatusHeader().getStatusCode();
+    if (rc == ResponseCode.RC200)
+      System.out.println(&quot;Success report&quot;);
+    else
+      System.out.println(&quot;Failure report: &quot; + ResponseCode.toString(rc));
+  }</PRE><P>
+If you want to more thoroughly control the reporting mechanism,
+implement the abstract class <CODE CLASS="western">ReportMechanism</CODE>
+and install it in the session:</P>
+<PRE CLASS="western" STYLE="margin-left: 1cm">  import javax.net.mypackage.MyReportMechanism;
+
+  MyReportMechanism mrm = new MyReportMechanism(&lt;whatever&gt;);
+  mySession.setReportMechanism(mrm);</PRE><P>
+Refer to Javadoc for more details on how this should work.</P>
+<H1>Getting started</H1>
+<P>Access to sources and documentation can be found here in the
+repository of the MSRP project. Build versions are stored in the
+Maven <A HREF="http://search.maven.org/">central repository</A> and
+can be included in any Maven build by specifying the dependency in a
+<CODE CLASS="western">pom.xml</CODE>. Check the website to find the
+latest version or search for &ldquo;msrp&rdquo; on the central
+repository site:</P>
+<PRE CLASS="western" STYLE="margin-left: 1cm">...
+&lt;dependencies&gt;
+  &lt;dependency&gt;
+    &lt;artifactId&gt;<STRONG>msrp</STRONG>&lt;/artifactId&gt;
+    &lt;groupId&gt;<STRONG>net.java.msrp</STRONG>&lt;/groupId&gt;
+    &lt;version&gt;<STRONG>1.0.1.BETA</STRONG>&lt;/version&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;
+...</PRE>
+</BODY>
+</HTML>
