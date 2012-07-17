@@ -24,20 +24,18 @@ programs.</P>
 <B>S</B>ession <B>R</B>elay <B>P</B>rotocol</A>) is an <A HREF="http://en.wikipedia.org/wiki/Instant_messaging">instant
 messaging</A> or <A HREF="http://en.wikipedia.org/wiki/Chat">chat</A>
 protocol, defined by the IETF in <A HREF="http://tools.ietf.org/html/rfc4975">RFC4975</A>.
-Basically, (instant-) messages are sent to and fro using SEND or
-REPORT requests and responses on those requests. These messages are
+Basically, (instant-) messages are sent to and from MSRP peers, using SEND and REPORT requests. These messages are
 sent over an MSRP session. One or more MSRP sessions can share a
-TCP/IP-link from one node to another (this can be any transport
-protocol provided it is connection-oriented and reliable, MSRP makes
-no assumptions about that. Here, only TCP/IP is used).</P>
+TCP/IP-link from one node [AKA peer] to another (this can be achieved by any transport
+protocol, provided it is connection-oriented and reliable, in the sense of not changing the content. MSRP can be used with protocols that provide no assurance on data delivery,as MSRP has its own mechanisms to ensure that the data has been delivered. Here, only TCP/IP is used).</P>
 <P>The protocol is text based, much like HTTP and SIP. Using chunking
 and <A HREF="http://tools.ietf.org/html/rfc2045">MIME</A>-conforming
-message content (payload), MSRP messages can transfer any content of
-any size and thus support -for instance- file transfer. 
+message content (payload), thus, MSRP messages can transfer any content of
+any size, supporting -for instance- file transfer. 
 </P>
 <H2 CLASS="western">Establishing a session</H2>
-<P>MSRP assumes that some other rendez-vous method will be used to
-establish how a new session will be negotiated between two systems.
+<P>MSRP assumes that some other rendezvous method will be used to
+negotiate the establishment of a new MSRP session between peers.
 In the RFC, the SIP protocol with its SDP <A HREF="http://tools.ietf.org/html/rfc3264">offer-answer</A>
 model is used as an example.</P>
 <P>This negotiation will lead to MSRP URI's, defining the endpoints
@@ -52,10 +50,9 @@ import java.net.URI;
 InetAddress myAddress = InetAddress.getByName(&quot;myHostnameThatDoesMsrp&quot;);
 Session activeSession = Session.create(false, false, myAddress)
 URI myMsrpUri = activeSession.getURI();</PRE><P>
-You have a session now with a local MSRP URI. The session you just
-created is an <EM>active</EM> session. It means that as soon as you
-feed it the target URI, a connection will be established (if not
-already present) and a first request sent, as in:</P>
+You have a session now with a local MSRP URI, which has to be transmitted to the other peer through a rendezvous mechanism. This session is an <EM>active</EM> session. It means that as soon as you
+feed it the target URI, which should be transmitted to you using the rendezvous protocol, a connection will be established (if not
+already present, as MSRP allows connection re-utilization), and a first request is immediately sent (to bound the session):</P>
 <PRE CLASS="western" STYLE="margin-left: 1cm">import java.util.ArrayList;
 
 ArrayList&lt;URI&gt; toList = new ArrayList&lt;URI&gt;();
@@ -71,7 +68,7 @@ the connect-request.</P>
 <PRE CLASS="western" STYLE="margin-left: 1cm">URI hisMsrpUri = &lt;MSRP URI negotiated with active node...&gt;;
 Session passiveSession = Session.create(false, false, hisMsrpUri, myAddress);</PRE><P>
 The booleans <CODE CLASS="western">isSecure</CODE> and <CODE CLASS="western">isRelay</CODE>
-are not implemented yet and for future extension.</P>
+are not implemented <a href="http://java.net/jira/browse/MSRP-44" target="_blank">yet</a>.</P>
 <H2 CLASS="western">Sending and receiving messages</H2>
 <P>Using a session, one is now able to send and receive messages
 using MSRP. Sending is easy, using the <CODE CLASS="western">sendMessage()</CODE>
@@ -82,14 +79,14 @@ Message sendMsg = activeSession.sendMessage(&quot;text/plain&quot;, &quot;Hello 
 The message will be sent as soon as a connection is established.</P>
 <P>Receiving a message is somewhat more involved and requires the
 creation of a <CODE CLASS="western">SessionListener</CODE>. This
-listener will be triggered when messages are received or status
-updates are relevant. The first to be called on receiving a message
-is <CODE CLASS="western">acceptHook()</CODE>. This tells the (your)
+listener will be triggered when messages are received, or status
+updates are relevant. The first method to be called on receiving a message
+is <CODE CLASS="western">acceptHook()</CODE>. This tells your
 application that an incoming message has been received. Two things
 should be done here: A <CODE CLASS="western">DataContainer</CODE>
 should be attached to the message-object to be able to store any
-content and the application (you) should decide whether you want this
-message in the first place. If so, return <CODE CLASS="western">true</CODE>,
+content, and the application should decide whether you want this
+message in the first place. If so, one should return <CODE CLASS="western">true</CODE>,
 otherwise return <CODE CLASS="western">false</CODE>. In that case, an
 error-response is automatically returned.</P>
 <PRE CLASS="western" STYLE="margin-left: 1cm">import javax.net.msrp.SessionListener;
@@ -108,7 +105,7 @@ callback is triggered, containing the entire message and content.</P>
 <PRE CLASS="western" STYLE="margin-left: 1cm">  public void receivedMessage(Session session, IncomingMessage message) {
     System.out.print(message.getContent());
   }</PRE><P>
-If the message had text-content, this would make sense. This also
+The above code would make sense to any message that had text-content. The above call also
 unwraps any &quot;<CODE CLASS="western">message/cpim</CODE>&quot;
 content that might have been sent.</P>
 <H2 CLASS="western">Reports</H2>
