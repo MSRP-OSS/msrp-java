@@ -1507,7 +1507,7 @@ public class Transaction
                     Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     private static Pattern contentTypePattern = Pattern.compile(
-                    "(.*)(Content-Type:) ([^/]{1,30}/[^;]{1,30})(;.*)?\r\n(.*)",
+                    "(.*)(Content-Type:) ([^/]{1,30}/[^;\r\n]{1,30})(;.*)?\r\n(.*)",
                     Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     private static Pattern fReportPattern = Pattern.compile(

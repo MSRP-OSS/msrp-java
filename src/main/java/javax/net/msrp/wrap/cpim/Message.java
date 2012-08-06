@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import javax.net.msrp.WrappedMessage;
 import javax.net.msrp.utils.TextUtils;
 
-
 /**
  * CPIM message
  * 
@@ -19,7 +18,7 @@ public class Message implements WrappedMessage {
 	/**
 	 * Message content
 	 */
-	private String msgContent = null;
+	private byte[] msgContent = null;
 
 	/**
 	 * MIME headers
@@ -73,7 +72,7 @@ public class Message implements WrappedMessage {
      * @return Content
      */
     public String getMessageContent() {
-		return msgContent;
+		return new String(msgContent);
 	}
 
 	private static final String CRLF = "\r\n";
@@ -116,6 +115,29 @@ public class Message implements WrappedMessage {
 		}
 		// Create the CPIM message
 		start = end + EMPTY_LINE.length();
-		msgContent = data.substring(start);
+		msgContent = new byte[data.length()-start];		 //data.substring(start);
+		buffer.position(start);
+		buffer.get(msgContent);
+	}
+
+	public byte[] wrap(String from, String to, String contentType, byte[] content) {
+		headers.add(new Header(Header.FROM, from));
+		headers.add(new Header(Header.TO, to));
+//		headers.add(new Header(Header.DATETIME, <SomeFormOfTimestamp>));
+		contentHeaders.add(new Header(Header.CONTENT_TYPE, contentType));
+		msgContent = content;
+		return this.toString().getBytes();
+	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder(msgContent.length + (headers.size() + contentHeaders.size()) * 20);
+		for (Header h : headers) {
+			sb.append(h).append(CRLF);
+		}
+		sb.append(CRLF);
+		for (Header h : contentHeaders) {
+			sb.append(h).append(CRLF);		}
+		sb.append(CRLF).append(new String(msgContent));
+		return sb.toString();
 	}
 }

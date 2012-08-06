@@ -21,7 +21,7 @@ public class Wrap {
 	 * 
 	 */
 	protected Wrap() {
-		wrappers.put(Message.WRAP_TYPE, Message.class.getName());
+		registerWrapper(Message.WRAP_TYPE, Message.class.getName());
 	}
 
 	private static class SingletonHolder {
