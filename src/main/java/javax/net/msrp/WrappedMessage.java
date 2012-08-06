@@ -16,6 +16,15 @@ public interface WrappedMessage {
 	 */
 	public void parse(ByteBuffer buffer) throws Exception;
 
+	/** Wrap a message in the wrapper-type.
+	 * @param from a from-header
+	 * @param to a to-header
+	 * @param contentType the content-type of the wrapped message
+	 * @param content the content to wrap
+	 * @return the wrapped message as a byte-array.
+	 */
+	public byte[] wrap(String from, String to, String contentType, byte[] content);
+
 	/** Return the content-type of the wrapped message.
 	 * @return	the content-type.
 	 */

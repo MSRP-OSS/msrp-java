@@ -26,6 +26,7 @@ import java.util.HashMap;
 
 import javax.net.msrp.events.*;
 import javax.net.msrp.exceptions.*;
+import javax.net.msrp.wrap.Wrap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -293,6 +294,26 @@ public class Session
 	public Message sendMessage(String contentType, byte[] content)
 	{
 		return new OutgoingMessage(this, contentType, content);
+	}
+
+	/** Wrap the given content in another type and send over this session.
+	 * @param wrapType		the (mime-)type to wrap it in.
+	 * @param from			from-field
+	 * @param to			to-field
+	 * @param contentType	the (mime-)type to wrap.
+	 * @param content		actual content
+	 * @return 				the message-object that will be send, can be used
+	 * 						to abort large content.
+	 */
+	public Message sendWrappedMessage(String wrapType, String from, String to,
+									String contentType, byte[] content) {
+		Wrap wrap = Wrap.getInstance();
+		if (wrap.isWrapperType(wrapType)) {
+			WrappedMessage wm = wrap.getWrapper(wrapType);
+			return new OutgoingMessage(this, wrapType,
+										wm.wrap(from, to, contentType, content));
+		}
+		return null;
 	}
 
 	/** send the given file over this session.

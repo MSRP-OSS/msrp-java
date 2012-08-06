@@ -134,4 +134,40 @@ public class TestSendingSmallMessages extends TestFrame
             fail(e.getMessage());
         }
     }
+    @Test
+    public void testWrappedSending()
+    {
+        try
+        {
+            byte[] smallData = "Hello world".getBytes();
+
+            ArrayList<URI> toPathSendSession = new ArrayList<URI>();
+            toPathSendSession.add(receivingSession.getURI());
+            Message m = sendingSession.sendWrappedMessage(
+            		"message/cpim", "from", "to", "text/plain", smallData);
+            sendingSession.addToPath(toPathSendSession);
+
+            synchronized (receivingSessionListener)
+            {
+                DataContainer dc = new MemoryDataContainer((int) m.size);
+                receivingSessionListener.setDataContainer(dc);
+                receivingSessionListener.setAcceptHookResult(new Boolean(true));
+                receivingSessionListener.notify();
+                receivingSessionListener.wait();
+            	receivingSessionListener.wait(500);
+            }
+    		if (receivingSessionListener.getAcceptHookMessage() == null ||
+			    receivingSessionListener.getAcceptHookSession() == null)
+    			    fail("The Mock didn't work, message not accepted");
+
+    		m = receivingSessionListener.getReceiveMessage();
+
+            assertArrayEquals(smallData, m.getContent().getBytes());
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+    }
 }
