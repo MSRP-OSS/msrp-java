@@ -90,4 +90,11 @@ public class Header {
 		return (obj != null && obj.getClass().equals(this.getClass()) &&
 				((Header) obj).getName().equalsIgnoreCase(this.name));
 	}	
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	public String toString() {
+		return name + ": " + value;
+	}
 }

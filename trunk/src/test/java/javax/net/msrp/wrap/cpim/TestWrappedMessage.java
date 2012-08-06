@@ -46,4 +46,15 @@ public class TestWrappedMessage {
 		assertNotNull(msg.getContentHeader("content-id"));
 		assertNotNull(msg.getMessageContent());
 	}
+
+	@Test
+	public void testWrap() {
+		WrappedMessage msg = Wrap.getInstance().getWrapper("message/cpim");
+
+		byte[] content = msg.wrap("from", "to", "text/plain", "hello world".getBytes());
+
+		String test = msg.toString();
+		assertTrue(test.contains("hello"));
+		assertEquals(msg.getHeader("From"), "from");
+	}
 }
