@@ -24,7 +24,6 @@
 package javax.net.msrp.utils;
 
 import java.net.*;
-import java.util.*;
 
 /**
  * Utility methods and fields to use when working with network addresses.
@@ -39,23 +38,6 @@ public class NetworkUtils
      * A string containing the "any" local address.
      */
     public static final String IN_ADDR_ANY = "0.0.0.0";
-
-    /**
-     * The maximum int value that could correspond to a port nubmer.
-     */
-    public static final int    MAX_PORT_NUMBER = 65535;
-
-    /**
-     * The minimum int value that could correspond to a port nubmer bindable
-     * by the SIP Communicator.
-     */
-    public static final int    MIN_PORT_NUMBER = 1024;
-
-
-    /**
-     * The random port number generator that we use in getRandomPortNumer()
-     */
-    private static Random portNumberGenerator = new Random();
 
     /**
      * Determines whether the address is the result of windows auto configuration.
@@ -96,57 +78,6 @@ public class NetworkUtils
             return false;
         }
         return false;
-    }
-
-    /**
-     * Returns a random local port number that user applications could bind to.
-     * (i.e. above 1024).
-     * @return a random int located between 1024 and 65 535.
-     */
-    public static int getRandomPortNumber()
-    {
-        return getRandomPortNumber(MIN_PORT_NUMBER, MAX_PORT_NUMBER);
-    }
-
-    /**
-     * Returns a random local port number, greater than min and lower than max.
-     *
-     * @param min the minimum allowed value for the returned port number.
-     * @param max the maximum allowed value for the returned port number.
-     *
-     * @return a random int located between greater than min and lower than max.
-     */
-    public static int getRandomPortNumber(int min, int max)
-    {
-        return portNumberGenerator.nextInt(max - min) + min;
-    }
-
-    /**
-     * Returns a random local port number, greater than min and lower than max.
-     * If the pair flag is set to true, then the returned port number is
-     * guaranteed to be pair. This is useful for protocols that require this
-     * such as RTP
-     *
-     * @param min the minimum allowed value for the returned port number.
-     * @param max the maximum allowed value for the returned port number.
-     * @param pair specifies whether the caller would like the returned port to
-     * be pair.
-     *
-     * @return a random int located between greater than min and lower than max.
-     */
-    public static int getRandomPortNumber(int min, int max, boolean pair)
-    {
-        if(pair)
-        {
-            int delta = max - min;
-            delta /= 2;
-            int port = getRandomPortNumber(min, min + delta);
-            return port * 2;
-        }
-        else
-        {
-            return getRandomPortNumber(min, max);
-        }
     }
 
     /**
