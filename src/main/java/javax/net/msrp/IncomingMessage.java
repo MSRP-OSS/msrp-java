@@ -88,6 +88,12 @@ public class IncomingMessage
         constructorAssociateReport(reportMechanism);
     }
 
+    public IncomingMessage(Session session, String nickname)
+    {
+    	super();
+    	this.session = session;
+    	this.nickname = nickname;
+    }
     /**
      * Constructor used internally
      */

@@ -16,8 +16,7 @@
  */
 package javax.net.msrp;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.net.*;
 import java.nio.ByteBuffer;
@@ -134,6 +133,7 @@ public class TestSendingSmallMessages extends TestFrame
             fail(e.getMessage());
         }
     }
+
     @Test
     public void testWrappedSending()
     {
@@ -163,6 +163,29 @@ public class TestSendingSmallMessages extends TestFrame
     		m = receivingSessionListener.getReceiveMessage();
 
             assertArrayEquals(smallData, m.getContent().getBytes());
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+    }
+
+    @Test
+    public void testNicknameSending()
+    {
+        try
+        {
+            ArrayList<URI> toPathSendSession = new ArrayList<URI>();
+            toPathSendSession.add(receivingSession.getURI());
+            Message m = sendingSession.requestNickname("Hairy Scary");
+            sendingSession.addToPath(toPathSendSession);
+
+            synchronized (receivingSessionListener)
+            {
+                receivingSessionListener.wait();
+            }
+    		assertEquals(receivingSessionListener.getNickname(), "Hairy Scary");
         }
         catch (Exception e)
         {

@@ -360,11 +360,7 @@ public class FirstMilestoneFunctionalities
                 + " of Message with id: " + message.getMessageID());
         }
 
-        public void abortedMessage(Session session, IncomingMessage message)
-        {
-            // Deprecated, use abortedMessageEvent
-        }
-
+		@Override
         public void abortedMessageEvent(MessageAbortedEvent abortEvent)
         {
             // TODO Auto-generated method stub
@@ -374,6 +370,15 @@ public class FirstMilestoneFunctionalities
 		public void connectionLost(Session session, Throwable cause) {
 			session.tearDown();
 			cause.printStackTrace();
+		}
+
+		@Override
+		public boolean acceptNickname(Session session, IncomingMessage message) {
+			return true;
+		}
+
+		@Override
+		public void receivedNickResult(Session session, Transaction result) {
 		}
     }
 }

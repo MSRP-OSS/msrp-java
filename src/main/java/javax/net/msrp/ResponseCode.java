@@ -15,10 +15,14 @@ public class ResponseCode {
 	public static final int RC200 = 200;
 	public static final int RC400 = 400;
 	public static final int RC403 = 403;
+	public static final int RC404 = 404;
 	public static final int RC408 = 408;
 	public static final int RC413 = 413;
 	public static final int RC415 = 415;
 	public static final int RC423 = 423;
+	public static final int RC424 = 424;
+	public static final int RC425 = 425;
+	public static final int RC428 = 428;
 	public static final int RC481 = 481;
 	public static final int RC501 = 501;
 	public static final int RC506 = 506;
@@ -37,10 +41,14 @@ public class ResponseCode {
 		new Code(RC200, "200 Ok, successful transaction"),
 		new Code(RC400, "400 Request unintelligible"),
 		new Code(RC403, "403 Not allowed"),
+		new Code(RC404, "404 Failure to resolve recipient's URI"),
 		new Code(RC408, "408 Downstream transaction timeout"),
 		new Code(RC413, "413 Stop sending immediately"),
 		new Code(RC415, "415 Media type not supported"),
 		new Code(RC423, "423 Parameter out of bounds"),
+		new Code(RC424, "424 Malformed nickname"),
+		new Code(RC425, "425 Nickname reserved or already in use"),
+		new Code(RC428, "428 Private messages not supported"),
 		new Code(RC481, "481 Session not found"),
 		new Code(RC501, "501 Unknown request"),
 		new Code(RC506, "506 Wrong session"),

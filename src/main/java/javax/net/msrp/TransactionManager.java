@@ -210,7 +210,7 @@ public class TransactionManager
      * this is when a received transaction will give a 200 response code this
      * function is called independently of the (Failure/Success)-Report field
      * 
-     * basicly this function is called whenever any request is error free and
+     * Basically this function is called whenever any request is error free and
      * awaiting to be processed (although the misleading name of the function
      * this function may not generate any kind of response)
      * 
@@ -377,7 +377,7 @@ public class TransactionManager
         /*
          * If the transaction is an incoming response, atm do nothing. TODO(?!)
          */
-        if (transaction.getTransactionType() == TransactionType.SENDRESPONSE)
+        if (transaction.getTransactionType() == TransactionType.RESPONSE)
         {
             TransactionResponse transactionResponse =
                 (TransactionResponse) transaction;
@@ -391,7 +391,7 @@ public class TransactionManager
         if (transaction.getTransactionType() == TransactionType.UNSUPPORTED)
         {
             /*
-             * "important" question: does this 501 response precedes the 506 or
+             * "important" question: does this 501 response precede the 506 or
              * not?! should the to-path also be checked before?!
              */
             logger.trace(transaction + " is not supported and has been " +
@@ -422,8 +422,12 @@ public class TransactionManager
      */
     private void processResponse(TransactionResponse response)
     {
+    	if (response.response2Type == TransactionType.NICKNAME)
+    	{
+			response.getMessage().getSession().triggerReceivedNickResult(response);
+    	}
         // let's see if this response is worthy of a abort event
-        if (ResponseCode.isAbortCode(response.responseCode))
+    	else if (ResponseCode.isAbortCode(response.responseCode))
         {
             try
             {
@@ -487,10 +491,10 @@ public class TransactionManager
     }
 
     /**
-     * initializes the given session by sending an existent message of the
+     * Initialises the given session by sending an existent message of the
      * message queue or sending a new empty send without body
      * 
-     * @param session the session to initialize
+     * @param session the session to initialise
      */
     protected void initialize(Session session)
     {
@@ -920,7 +924,7 @@ public class TransactionManager
         throws IllegalUseException
     {
         // sanity check, shouldn't be needed:
-        if (transaction.getTransactionType() != TransactionType.SENDRESPONSE &&
+        if (transaction.getTransactionType() != TransactionType.RESPONSE &&
             transaction.getTransactionType() != TransactionType.REPORT)
             throw new IllegalUseException("the addPriorityTransaction was" +
             		" called with a transaction that isn't a response/REPORT");

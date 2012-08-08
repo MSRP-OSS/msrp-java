@@ -222,6 +222,8 @@ public class Transaction
 
     private String messageID = null;
 
+    private String nickname = null;
+
     private StringBuffer headerBuffer = new StringBuffer();
 
     /**
@@ -295,7 +297,6 @@ public class Transaction
      */
     public Transaction(OutgoingMessage messageToSend, TransactionManager manager)
     {
-        transactionType = TransactionType.SEND;
         transactionManager = manager;
         tID = manager.generateNewTID();
         message = messageToSend;
@@ -303,11 +304,45 @@ public class Transaction
         if (messageToSend.size > 0 && messageToSend.isComplete())
             throw new IllegalArgumentException(
         		"Transaction constructor called with an already sent message");
-        Session session = messageToSend.getSession();
+    	if (messageToSend.getNickname() != null)
+            makeNickHeader(messageToSend, manager);
+    	else
+    		makeSendHeader(messageToSend, manager);
+
+        /* by default have the continuation flag to be the end of message */
+        continuation_flag = FLAG_END;
+        initializeDataStructures();
+        logger.info("Created " + toString() + " associated Message-ID: " +
+    				messageToSend);
+    }
+
+    private void makeNickHeader(OutgoingMessage toSend, TransactionManager manager)
+    {
+        transactionType = TransactionType.NICKNAME;
+
+        Session session = toSend.getSession();
         ArrayList<URI> uris = session.getToPath();
         URI toPathUri = uris.get(0);
         URI fromPathUri = session.getURI();
-        String messageID = messageToSend.getMessageID();
+
+        StringBuilder header = new StringBuilder(256);
+        header	.append("MSRP ").append(tID).append(" NICKNAME\r\nTo-Path: ")
+        		.append(toPathUri.toASCIIString()).append("\r\nFrom-Path: ")
+        		.append(fromPathUri.toASCIIString()).append("\r\nUse-Nickname: \"")
+        		.append(toSend.getNickname()).append("\"\r\n");
+
+        headerBytes = header.toString().getBytes(TextUtils.utf8);
+    }
+
+    private void makeSendHeader(OutgoingMessage toSend, TransactionManager manager)
+    {
+		transactionType = TransactionType.SEND;
+
+		Session session = toSend.getSession();
+        ArrayList<URI> uris = session.getToPath();
+        URI toPathUri = uris.get(0);
+        URI fromPathUri = session.getURI();
+        String messageID = toSend.getMessageID();
 
         StringBuilder header = new StringBuilder(256);
         header	.append("MSRP ").append(tID).append(" SEND\r\nTo-Path: ")
@@ -315,13 +350,13 @@ public class Transaction
         		.append(fromPathUri.toASCIIString()).append("\r\nMessage-ID: ")
         		.append(messageID).append("\r\n");
 
-        if (messageToSend.wantSuccessReport())
+        if (toSend.wantSuccessReport())
             header.append("Success-Report: yes\r\n");
 
-        if (!messageToSend.getFailureReport().equalsIgnoreCase("yes"))
+        if (!toSend.getFailureReport().equalsIgnoreCase("yes"))
             /* note: if omitted, failure report is assumed to be yes */
         	header	.append("Failure-Report: ")
-        			.append(messageToSend.getFailureReport()).append("\r\n");
+        			.append(toSend.getFailureReport()).append("\r\n");
 
         /*
          * first value of the Byte-Range header field is the
@@ -329,7 +364,7 @@ public class Transaction
          * bytes + 1 because the first field is the number of the first byte
          * being sent:
          */
-        long firstByteChunk = messageToSend.getSentBytes() + 1;
+        long firstByteChunk = toSend.getSentBytes() + 1;
         /*
          * Currently all transactions are interruptible, solving Issue #25
          * if ((message.getSize() - ((OutgoingMessage)message).getSize()) >
@@ -337,9 +372,9 @@ public class Transaction
          */
         interruptible = true;
         header	.append("Byte-Range: ").append(firstByteChunk).append("-*/")
-        		.append(messageToSend.getStringTotalSize()).append("\r\n");
+        		.append(toSend.getStringTotalSize()).append("\r\n");
         header.append("Content-Type: ");
-        String ct = messageToSend.getContentType();
+        String ct = toSend.getContentType();
         if ((ct == null) || (ct.length() == 0))
         	header.append("text/plain");
         else
@@ -347,13 +382,6 @@ public class Transaction
         header.append("\r\n\r\n");
 
         headerBytes = header.toString().getBytes(TextUtils.utf8);
-
-        /* by default have the continuation flag to be the end of message */
-        continuation_flag = FLAG_END;
-        initializeDataStructures();
-
-        logger.info("Created Tx-SEND[" + tID + "], associated Message-ID: " +
-        			messageToSend);
     }
 
     /**
@@ -768,6 +796,13 @@ public class Transaction
     }
 
     /**
+     * @return the nickname
+     */
+    public String getNickname()
+    {
+    	return nickname;
+    }
+    /**
      * 
      * @return true = all data has been read, except the end-line.
      * @note Returns false for responses because they have
@@ -938,7 +973,8 @@ public class Transaction
     protected boolean isRequest()
     {
         return (transactionType == TransactionType.REPORT ||
-        		transactionType == TransactionType.SEND);
+        		transactionType == TransactionType.SEND ||
+        		transactionType != TransactionType.NICKNAME);
     }
 
     /**
@@ -1157,7 +1193,8 @@ public class Transaction
      */
     private void initializeDataStructures()
     {
-        if (transactionType != TransactionType.SEND)
+        if (transactionType != TransactionType.SEND &&
+    		transactionType != TransactionType.NICKNAME)
         {
             bodyBytes = new byte[Stack.MAX_NONSEND_BODYSIZE];
             bodyByteBuffer = ByteBuffer.wrap(bodyBytes);
@@ -1374,7 +1411,7 @@ public class Transaction
      * If this is a report request if a message can't be found the transaction
      * is rendered invalid and it gets logged, the message is set to null It
      * also updates the reference to the last transaction in the associated
-     * message
+    * message
      * 
      * @param messageID the message-ID of the Message to associate
      */
@@ -1400,12 +1437,33 @@ public class Transaction
         }
         if (message == null)
         {
+        	if (this.transactionType == TransactionType.NICKNAME)
+        	{
+            	IncomingMessage in =
+                        new IncomingMessage(session, nickname);
+        		boolean result = session.triggerAcceptNickname(in);
+        		if (!ResponseCode.isValid(in.getResult())) {
+        			if (result)
+        				in.setResult(ResponseCode.RC200);
+        			else
+        				in.setResult(ResponseCode.RC425);
+        		}
+                try
+                {
+                    transactionManager.generateResponse(this, in.getResult(), null);
+                }
+                catch (IllegalUseException e)
+                {
+                    logger.error("Error generating response for transaction: " +
+                    			this, e);
+                }
+        	}
             if (this.transactionType == TransactionType.SEND)
             {
-            	IncomingMessage incomingMessage =
+            	IncomingMessage in =
                     new IncomingMessage(session, messageID, this.contentType,
                     					totalMessageBytes);
-                message = incomingMessage;
+                message = in;
                 message.setSuccessReport(successReport);
                 try
                 {
@@ -1418,19 +1476,19 @@ public class Transaction
                     e1.printStackTrace();
                 }
 
-                boolean result = session.triggerAcceptHook(incomingMessage);
-                if (result && incomingMessage.getResult() != ResponseCode.RC200)
+                boolean result = session.triggerAcceptHook(in);
+                if (result && in.getResult() != ResponseCode.RC200)
                 {
-                    incomingMessage.setResult(ResponseCode.RC200);
+                    in.setResult(ResponseCode.RC200);
                     /*
                      * if the user didn't assign a data container to the
                      * message we discard it and log the occurrence
                      */
-                    if (incomingMessage.getDataContainer() == null)
+                    if (in.getDataContainer() == null)
                     {
                     	logger.error(
                 			"No datacontainer given to store incoming data, " +
-            				"discarding incoming message " + incomingMessage);
+            				"discarding incoming message " + in);
                         result = false;
                     }
                     else
@@ -1439,7 +1497,7 @@ public class Transaction
                          * otherwise, put it on the receiving
                          * message "list" of the Session
                          */
-                        session.putReceivingMessage(incomingMessage);
+                        session.putReceivingMessage(in);
                     }
                 }
                 if (!result)
@@ -1450,7 +1508,7 @@ public class Transaction
                     try
                     {
                         transactionManager.generateResponse(this,
-                            incomingMessage.getResult(), "Message rejected by user");
+                            in.getResult(), "Message rejected by user");
                     }
                     catch (IllegalUseException e)
                     {
@@ -1516,6 +1574,10 @@ public class Transaction
 
     private static Pattern sReportPattern = Pattern.compile(
 		    		"(.*)(Success-Report:) ([^\r\n]*)(\r\n)(.*)",
+		            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+
+    private static Pattern nicknamePattern = Pattern.compile(
+		            "(.*)(Use-Nickname:) +\"([^\"]+)\"[^\r\n]*\r\n(.*)",
 		            Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
 
     private static Pattern statusPattern = Pattern.compile(
@@ -1585,6 +1647,18 @@ public class Transaction
         switch (transactionType)		// Method specific headers
         {
         case REPORT:
+            /* Report request specific headers: */
+            /* 'Status:' processing */
+            matcher = statusPattern.matcher(headerBuffer);
+            if (matcher.matches())
+            {
+                String namespace = matcher.group(3);
+                String statusCode = matcher.group(4);
+                String comment = matcher.group(5);
+                statusHeader =
+                    new StatusHeader(namespace, statusCode, comment);
+            }
+            /* $FALL_THROUGH */
         case SEND:
             /* Message-ID processing: */
             matcher = messageIDPattern.matcher(headerBuffer);
@@ -1634,21 +1708,20 @@ public class Transaction
             	else
 	                logger.warn("Success-Report invalid value found: " + value);
             }
-            /* Report request specific headers: */
-            if (transactionType == TransactionType.REPORT)
-            {
-                /* 'Status:' processing */
-                matcher = statusPattern.matcher(headerBuffer);
-                if (matcher.matches())
-                {
-                    String namespace = matcher.group(3);
-                    String statusCode = matcher.group(4);
-                    String comment = matcher.group(5);
-                    statusHeader =
-                        new StatusHeader(namespace, statusCode, comment);
-                }
-            }
             break;
+        case NICKNAME:
+            matcher = nicknamePattern.matcher(headerBuffer);
+            if (matcher.matches())
+                nickname = matcher.group(3);
+            else
+                throw new InvalidHeaderException("Nickname not found");
+            matcher = fReportPattern.matcher(headerBuffer);
+            if (matcher.matches())
+            	logger.warn("Failure report included in NICKNAME request, ignoring...");
+            matcher = sReportPattern.matcher(headerBuffer);
+            if (matcher.matches())
+            	logger.warn("Success report included in NICKNAME request, ignoring...");
+        	break;
         case UNSUPPORTED:
         	/* nothing to do (yet) */
             break;
