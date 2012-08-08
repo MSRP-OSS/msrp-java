@@ -296,6 +296,11 @@ public class Session
 		return new OutgoingMessage(this, contentType, content);
 	}
 
+	public Message requestNickname(String nickname)
+	{
+		return new OutgoingMessage(this, nickname);
+	}
+
 	/** Wrap the given content in another type and send over this session.
 	 * @param wrapType		the (mime-)type to wrap it in.
 	 * @param from			from-field
@@ -620,6 +625,12 @@ public class Session
         myListener.receivedReport(this, report);
     }
 
+    protected void triggerReceivedNickResult(Transaction response)
+    {
+        logger.trace("Called the triggerReceivedNickResult hook");
+        myListener.receivedNickResult(this, response);
+    }
+
     /**
      * trigger for the registered
      * {@link SessionListener#receivedMessage(Session, Message)} callback.
@@ -647,6 +658,12 @@ public class Session
     {
         logger.trace("Called the triggerAcceptHook hook");
         return myListener.acceptHook(this, message);
+    }
+
+    protected boolean triggerAcceptNickname(IncomingMessage message)
+    {
+        logger.trace("Called the triggerAcceptNickname hook");
+        return myListener.acceptNickname(this, message);
     }
 
     /**

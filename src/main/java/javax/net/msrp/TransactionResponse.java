@@ -20,6 +20,7 @@ public class TransactionResponse
 
     protected String comment;
 
+    protected TransactionType response2Type;
     /**
      * Creates the outgoing transaction response
      * 
@@ -38,12 +39,13 @@ public class TransactionResponse
         throws IllegalUseException
     {
         // original transaction must be a SEND transaction
-        if (transaction.transactionType != TransactionType.SEND)
+        if (transaction.transactionType != TransactionType.SEND &&
+    		transaction.transactionType != TransactionType.NICKNAME)
             throw new IllegalUseException(
-                "Constructing a SENDRESPONSE with an original transaction " +
-        		"that isn't a SEND: " + transaction);
+                "Creating a Response with an original transaction " +
+        		"that isn't a SEND or NICKNAME: " + transaction);
 
-        this.transactionType = TransactionType.SENDRESPONSE;
+        this.transactionType = TransactionType.RESPONSE;
         this.direction = direction;
         this.responseCode = responseCode;
         this.comment = comment;
@@ -66,11 +68,11 @@ public class TransactionResponse
     {
         if (!ResponseCode.isValid(responseCode))
             throw new IllegalUseException("Creating a transaction response " +
-                "with an invalid response code of: " + responseCode);
+                "with invalid response code: " + responseCode);
 
         StringBuilder response = new StringBuilder(256);
         response.append("MSRP ").append(transaction.tID).append(" ").append(responseCode);
-        if (comment != null)
+        if (comment != null && comment.length() > 0)
         	response.append(" ").append(comment);
 
         response.append("\r\nTo-Path: ").append(
@@ -99,7 +101,7 @@ public class TransactionResponse
         int responseCode, String comment, int direction)
         throws IllegalUseException
     {
-    	;
+    	response2Type = transaction.transactionType;
     }
 
     /**

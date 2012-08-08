@@ -69,6 +69,8 @@ public class MockSessionListener
 
     private Boolean acceptHookResult;
 
+    private String nickname;
+
     /**
      * The external to be set, or not data container object that is going to be
      * used on the acceptHook if it exists upon the calling of the trigger
@@ -346,5 +348,32 @@ public class MockSessionListener
 	public void connectionLost(Session session, Throwable cause) {
 		logger.warn("Connection broke, reason: " + cause.getMessage());
 		session.tearDown();
+	}
+
+	@Override
+	public boolean acceptNickname(Session session, IncomingMessage message) {
+		nickname = message.getNickname();
+		message.setResult(ResponseCode.RC200);
+        synchronized (this)
+        {
+            this.notifyAll();
+        }
+		return true;
+	}
+
+	@Override
+	public void receivedNickResult(Session session, Transaction result) {
+		int code = result.getStatusHeader().getStatusCode(); 
+		if (code != ResponseCode.RC200)
+		{
+			logger.warn("Bad nickname result: " + ResponseCode.toString(code));
+		}
+	}
+
+	/**
+	 * @return the nickname
+	 */
+	public String getNickname() {
+		return nickname;
 	}
 }

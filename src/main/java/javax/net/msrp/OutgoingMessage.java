@@ -39,6 +39,11 @@ public class OutgoingMessage
         super(sendingSession, contentType, someData);
     }
 
+    protected OutgoingMessage(Session sendingSession, String nickname)
+    {
+        super(sendingSession, nickname);
+    }
+
     /**
      * Constructor used internally
      */
