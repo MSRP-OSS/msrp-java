@@ -124,6 +124,8 @@ public abstract class Message
 
     protected WrappedMessage wrappedMessage = null;
 
+    protected String nickname = null;
+
     /**
      * This field keeps a reference to the last SEND transaction associated with
      * this message
@@ -137,7 +139,7 @@ public abstract class Message
 
     /** Create new MSRP message and queue in session for sending.
      * @param session the session associated with the message
-     * @param contentType the content type associated withe this byteArarray
+     * @param contentType the content type associated with this byteArarray
      * @param data the content of the message to be sent
      * @param reportMechanism the report mechanism to be used for this message
      * @return the newly created message
@@ -160,6 +162,14 @@ public abstract class Message
         dataContainer = new MemoryDataContainer(data);
         size = data.length;
         constructorAssociateReport(reportMechanism);
+        this.session.addMessageToSend(this);
+    }
+
+    protected Message(Session session, String nickname) {
+        this.session = session;
+        this.nickname = nickname;
+        dataContainer = new MemoryDataContainer(0);
+        size = 0;
         this.session.addMessageToSend(this);
     }
 
@@ -448,7 +458,21 @@ public abstract class Message
         return messageId;
     }
 
-    /**
+	/**
+	 * @return the nickname
+	 */
+	public String getNickname() {
+		return nickname;
+	}
+
+	/**
+	 * @param nickname the nickname to set
+	 */
+	public void setNickname(String nickname) {
+		this.nickname = nickname;
+	}
+
+	/**
      * returns the message id of this string
      */
     @Override

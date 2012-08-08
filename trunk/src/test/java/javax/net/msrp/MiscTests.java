@@ -51,7 +51,6 @@ import javax.net.msrp.exceptions.ImplementationException;
 import javax.net.msrp.exceptions.InvalidHeaderException;
 import javax.net.msrp.utils.TextUtils;
 
-
 public class MiscTests
     implements SessionListener, Runnable
 {
@@ -358,60 +357,6 @@ public class MiscTests
             e.printStackTrace();
         }
     }
-
-//    private static void testRegexEndChars()
-//    {
-//        byte[] tid = new byte[8];
-//        TextUtils.generateRandom(tid);
-//        String tID = new String(tid, TextUtils.usascii);
-//
-//        String emptySend = ("garbage" + "\r\n-------" + tID);
-//
-//        int i;
-//        int j;
-//        int trim = 12;
-//        // Generate the pattern for the trim:
-//        char[] toSave;
-//        for (j = 0, i = emptySend.lastIndexOf('\r'), toSave =
-//            new char[emptySend.length() - i - trim]; i < emptySend.length()
-//            - trim; i++, j++)
-//        {
-//            if (i == -1 || i == emptySend.length())
-//            {
-//                break;
-//            }
-//
-//            toSave[j] = emptySend.charAt(i);
-//        }
-//        String patternStringEndT =
-//            new String(
-//                "((\r\n)|(\r\n-)|(\r\n--)|(\r\n---)|(\r\n----)|(\r\n-----)|(\r\n------)|"
-//                    + "(\r\n-------)");
-//        CharBuffer tidBuffer = CharBuffer.wrap(tID);
-//        for (i = 0; i < tID.length(); i++)
-//        {
-//            patternStringEndT =
-//                patternStringEndT.concat("|(\r\n-------"
-//                    + tidBuffer.subSequence(0, i) + ")");
-//        }
-//        patternStringEndT = patternStringEndT.concat(")?$");
-//
-//        Pattern endTransactionTrim =
-//            Pattern.compile(patternStringEndT, Pattern.DOTALL);
-//        String toSaveString = new String(toSave);
-//
-//        // toSaveString = "\n--r";
-//
-//        Matcher matchEndTransaction = endTransactionTrim.matcher(toSaveString);
-//        System.out.println("looking at endTransaction:"
-//            + matchEndTransaction.matches());
-//        System.out.println("group 1:" + matchEndTransaction.group(1)
-//            + ":end group1");
-//        System.out.println("group 2:" + matchEndTransaction.group(2).toString()
-//            + ":end group2");
-//        System.out.println("group 3:" + matchEndTransaction.group(3).toString()
-//            + ":end group3");
-//    }
 
     public static void main(String[] args)
     {
@@ -864,5 +809,14 @@ public class MiscTests
 		session.tearDown();
 		System.err.println("Connection lost, reason: " + cause.getMessage());
 	}
-}// end of class
+
+	@Override
+	public boolean acceptNickname(Session session, IncomingMessage message) {
+		return true;
+	}
+
+	@Override
+	public void receivedNickResult(Session session, Transaction result) {
+	}
+}
 

@@ -72,14 +72,14 @@ public class TestTransaction
     public static void setUpValues()
     {
         emptyCompleteSendTransaction =
-            ("To-Path: javax.net.msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
-                + "From-Path: javax.net.msrp://192.168.2.3:1324/123asd;tcp\r\n"
+            ("To-Path: msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
+                + "From-Path: msrp://192.168.2.3:1324/123asd;tcp\r\n"
                 + "Message-ID: 12345\r\n" + "Byte-Range: 1-0/0\r\n"
                 + "Failure-report: yEs\r\n" + "Success-report: no\r\n");
 
         emptyInvalidHeaderCompleteSendTransaction =
-            ("To-Path: javax.net.msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
-                + "From-Path: javax.net.msrp://192.168.2.3:1324/123asd;tcp javax.net.msrp://from.a.logn.way.away/haha;tcp\r\n"
+            ("To-Path: msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
+                + "From-Path: msrp://192.168.2.3:1324/123asd;tcp msrp://from.a.logn.way.away/haha;tcp\r\n"
                 + "Message-ID: 12345\r\n" + "Byte-Range: 1-0/0\r\n"
                 + "Failure-report: ygs\r\n" + "Success-report: no\r\n");
         instanceMT = new MiscTests();
@@ -103,8 +103,8 @@ public class TestTransaction
         randomData = new byte[30];
         TextUtils.generateRandom(randomData);
         completeSendTransaction1 =
-            ("To-Path: javax.net.msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
-                + "From-Path: javax.net.msrp://192.168.2.3:1324/123asd;tcp\r\n"
+            ("To-Path: msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
+                + "From-Path: msrp://192.168.2.3:1324/123asd;tcp\r\n"
                 + "Message-ID: 12346\r\n" + "Byte-Range: 1-30/30\r\n"
                 + "Content-Type: somethingTODO/notimportantATM\r\n" + "\r\n");
         completeSendTransaction2 = new String(randomData, TextUtils.utf8);
@@ -193,12 +193,12 @@ public class TestTransaction
         tx.signalizeEnd('$');
 
         URI[] toPathExpected = new URI[1];
-        toPathExpected[0] = URI.create("javax.net.msrp://192.168.2.3:1234/asd23asd;tcp");
+        toPathExpected[0] = URI.create("msrp://192.168.2.3:1234/asd23asd;tcp");
         assertArrayEquals("Problem encountered parsing the To-Path",
             toPathExpected, tx.getToPath());
 
         URI[] fromPathExpected = new URI[1];
-        fromPathExpected[0] = URI.create("javax.net.msrp://192.168.2.3:1324/123asd;tcp");
+        fromPathExpected[0] = URI.create("msrp://192.168.2.3:1324/123asd;tcp");
         assertArrayEquals("Problem encountered parsing the From-Path",
             fromPathExpected, tx.getFromPath());
 
@@ -227,5 +227,38 @@ public class TestTransaction
          */
         assertEquals("Error parsing the failure report", failureReportExpected,
             tx.getFailureReport().toLowerCase());
+    }
+
+    static final String nickbody =
+            "To-Path: msrp://192.168.2.3:1234/asd23asd;tcp\r\n" +
+            "From-Path: msrp://192.168.2.3:1324/123asd;tcp\r\n" +
+    		"Use-Nickname: \"Hairy Scary\"\r\n";
+    static final String plusFReport = "Failure-report: no\r\n";
+
+    @Test
+    public void testParsingNicknameMessage() throws IllegalUseException,
+    					InvalidHeaderException, ImplementationException
+    {
+        Transaction tx =
+                new Transaction(tID, TransactionType.NICKNAME,
+                    dummyTransactionManager, Transaction.IN);
+        tx.parse(nickbody.getBytes(TextUtils.utf8), 0,
+        					nickbody.length(), false);
+        tx.signalizeEnd('$');
+        assertEquals(tx.getNickname(), "Hairy Scary");
+    }
+
+    @Test
+    public void testParsingWrongNicknameMessage() throws IllegalUseException,
+    					InvalidHeaderException, ImplementationException
+    {
+        Transaction tx =
+                new Transaction(tID, TransactionType.NICKNAME,
+                    dummyTransactionManager, Transaction.IN);
+        tx.parse((nickbody + plusFReport).getBytes(TextUtils.utf8), 0,
+        					(nickbody + plusFReport).length(), false);
+        tx.signalizeEnd('$');
+        assertEquals(tx.getNickname(), "Hairy Scary");
+        assertEquals(tx.getFailureReport(), "yes");
     }
 }

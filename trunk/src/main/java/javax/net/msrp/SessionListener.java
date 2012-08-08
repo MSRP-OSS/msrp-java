@@ -47,6 +47,8 @@ public interface SessionListener
      */
     public boolean acceptHook(Session session, IncomingMessage message);
 
+    public boolean acceptNickname(Session session, IncomingMessage message);
+
     /**
      * Signal a received message
      * 
@@ -63,6 +65,8 @@ public interface SessionListener
      * @see Transaction#getStatusHeader()
      */
     public void receivedReport(Session session, Transaction report);
+
+    public void receivedNickResult(Session session, Transaction result);
 
     /**
      * Signal an aborted message
