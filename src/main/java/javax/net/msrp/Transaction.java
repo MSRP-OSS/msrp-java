@@ -1437,31 +1437,13 @@ public class Transaction
         }
         if (message == null)
         {
-        	if (this.transactionType == TransactionType.NICKNAME)
-        	{
-            	IncomingMessage in =
-                        new IncomingMessage(session, nickname);
-        		boolean result = session.triggerAcceptNickname(in);
-        		if (!ResponseCode.isValid(in.getResult())) {
-        			if (result)
-        				in.setResult(ResponseCode.RC200);
-        			else
-        				in.setResult(ResponseCode.RC425);
-        		}
-                try
-                {
-                    transactionManager.generateResponse(this, in.getResult(), null);
-                }
-                catch (IllegalUseException e)
-                {
-                    logger.error("Error generating response for transaction: " +
-                    			this, e);
-                }
-        	}
-            if (this.transactionType == TransactionType.SEND)
-            {
-            	IncomingMessage in =
-                    new IncomingMessage(session, messageID, this.contentType,
+        	IncomingMessage in;
+        	switch (transactionType) {
+        	case NICKNAME:
+        		session.triggerReceivedNickname(this);
+        		break;
+        	case SEND:
+            	in = new IncomingMessage(session, messageID, this.contentType,
                     					totalMessageBytes);
                 message = in;
                 message.setSuccessReport(successReport);
@@ -1470,9 +1452,7 @@ public class Transaction
                     message.setFailureReport(failureReport);
                 }
                 catch (IllegalUseException e1)
-                {
-                    // TODO invalidate this transaction and
-                    // trigger appropriate response
+                {		// TODO invalidate Tx & trigger appropriate response.
                     e1.printStackTrace();
                 }
 
@@ -1481,8 +1461,7 @@ public class Transaction
                 {
                     in.setResult(ResponseCode.RC200);
                     /*
-                     * if the user didn't assign a data container to the
-                     * message we discard it and log the occurrence
+                     * if user didn't assign DataContainer to message; discard & log.
                      */
                     if (in.getDataContainer() == null)
                     {
@@ -1492,59 +1471,49 @@ public class Transaction
                         result = false;
                     }
                     else
-                    {
-                        /*
-                         * otherwise, put it on the receiving
-                         * message "list" of the Session
-                         */
+                    {	// put on receiving message "list" of the Session
                         session.putReceivingMessage(in);
                     }
                 }
                 if (!result)
-                {
-                    /* The message is to be discarded! */
+                {						/* The message is to be discarded! */
                     this.validTransaction = false;
                     this.completeTransaction = true;
                     try
                     {
-                        transactionManager.generateResponse(this,
-                            in.getResult(), "Message rejected by user");
+                        transactionManager.generateResponse(this, in.getResult(),
+                        					"Message rejected by user");
                     }
                     catch (IllegalUseException e)
-                    {
-                        // the user set an invalid result, let's log it and
-                        // re-send it with the 413 default
+                    { // user set an invalid result; log it & re-send with 413 default
                         logger.warn("Attempt to use invalid response code, forcing to default.");
                         try
                         {
-                            transactionManager.generateResponse(this, ResponseCode.RC413,
-                                "Message rejected by user");
+                            transactionManager.generateResponse(this,
+                            		ResponseCode.RC413, "Message rejected by user");
                         }
                         catch (IllegalUseException e1)
                         {
-                            logger.error(
-                                "Exception caught generating 413 response for transaction: "
-                                    + this, e1);
+                            logger.error("Error generating 413 response for: " +
+                            			this, e1);
                         }
                     }
                 }
-            }
-            if (transactionType == TransactionType.REPORT)
-            {
+                break;
+        	case REPORT:
                 validTransaction = false;
                 /*
-                 * the RFC tells us to silently ignore the request if no message
-                 * can be associated with it so we'll just log it
+                 * RFC tells us to silently ignore request if no message
+                 * can be associated with it. We'll just log it
                  */
-                logger.warn("Warning! incoming report request"
-                    + " for an unknown message to the stack. " + "Message-ID: "
-                    + getMessageID());
-            }
+                logger.warn("Incoming report request for unknown message. ID: " +
+                			getMessageID());
+                break;
+        	}
         }
         // lets update the reference in the Message to this transaction if this
         // is a SEND transaction and an associated message has been found
-        if (message != null &&
-            transactionType == TransactionType.SEND)
+        if (message != null && transactionType == TransactionType.SEND)
         {
             message.setLastSendTransaction(this);
         }

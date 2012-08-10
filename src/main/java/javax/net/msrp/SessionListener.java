@@ -47,8 +47,6 @@ public interface SessionListener
      */
     public boolean acceptHook(Session session, IncomingMessage message);
 
-    public boolean acceptNickname(Session session, IncomingMessage message);
-
     /**
      * Signal a received message
      * 
@@ -56,6 +54,8 @@ public interface SessionListener
      * @param message the message received
      */
     public void receivedMessage(Session session, IncomingMessage message);
+
+    public void receivedNickname(Session session, Transaction request);
 
     /**
      * Signal a received REPORT

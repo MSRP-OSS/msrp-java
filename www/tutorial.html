@@ -5,7 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (Windows)">
 	<META NAME="CREATED" CONTENT="20120710;8305183">
-	<META NAME="CHANGED" CONTENT="20120808;12485544">
+	<META NAME="CHANGED" CONTENT="20120810;11231446">
 	<STYLE TYPE="text/css">
 	<!--
 		H2.cjk { font-family: "SimSun" }
@@ -148,22 +148,24 @@ will retrieve the wrapped content of the message, whereas
 <CODE CLASS="western">message.getRawContent();</CODE> will retrieve
 the complete content, including the wrapping.</P>
 <P>Likewise, there is a</P>
-<PRE CLASS="western">Session.sendWrappedMessage(&lt;wrapType&gt;, &lt;from&gt;, &lt;to&gt;, &lt;contentType&gt;, &lt;content&gt;);</PRE><P>
+<PRE CLASS="western" STYLE="margin-bottom: 0.5cm">Session.sendWrappedMessage(&lt;wrapType&gt;, &lt;from&gt;, &lt;to&gt;, &lt;contentType&gt;, &lt;content&gt;);</PRE><P>
 that will activate the <CODE CLASS="western">wrapType</CODE> wrapper
 mechanism for wrapping the given content in a message to
 send.<BR>Currently, the <CODE CLASS="western">wrapType</CODE>
 <CODE CLASS="western">message/cpim</CODE> is supported.</P>
 <P>Rolling your own wrapper mechanism and installing can be done with</P>
-<PRE CLASS="western">javax.net.msrp.wrap.Wrap.getInstance().registerWrapper(&lt;contentType, &lt;wrapImplementor&gt;);</PRE><P>
+<PRE CLASS="western" STYLE="margin-bottom: 0.5cm">javax.net.msrp.wrap.Wrap.getInstance().registerWrapper(&lt;contentType, &lt;wrapImplementor&gt;);</PRE><P>
 Refer to the source code for more details.</P>
 <H2 CLASS="western">Nickname support</H2>
 <P>Support for the <CODE CLASS="western">NICKNAME</CODE> request as
 specified in <A HREF="http://tools.ietf.org/html/draft-ietf-simple-chat-15">draft-ietf-simple-chat</A>
 is also built in. See:</P>
-<PRE CLASS="western">Session.requestNickname();</PRE><P>
+<PRE CLASS="western" STYLE="margin-bottom: 0.5cm">Session.requestNickname();<BR>SessionListener.receivedNickResult();</PRE><P>
 and</P>
-<PRE CLASS="western">SessionListener.acceptNickname();<BR>SessionListener.receivedNickResult();</PRE><H1>
-Getting started</H1>
+<PRE CLASS="western">SessionListener.receivedNickname();
+Session.sendNickResult();
+</PRE>
+<H1>Getting started</H1>
 <P>Access to sources and documentation can be found here in the
 repository of the MSRP project. Build versions are stored in the
 Maven <A HREF="http://search.maven.org/">central repository</A> and

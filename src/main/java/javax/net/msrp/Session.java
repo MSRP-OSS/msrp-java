@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -311,7 +312,8 @@ public class Session
 	 * 						to abort large content.
 	 */
 	public Message sendWrappedMessage(String wrapType, String from, String to,
-									String contentType, byte[] content) {
+									String contentType, byte[] content)
+	{
 		Wrap wrap = Wrap.getInstance();
 		if (wrap.isWrapperType(wrapType)) {
 			WrappedMessage wm = wrap.getWrapper(wrapType);
@@ -336,7 +338,23 @@ public class Session
 		return new OutgoingFileMessage(this, contentType, content);
 	}
 
-    /**
+	public void sendNickResult(Transaction request) throws IllegalUseException
+	{
+		sendNickResult(request, ResponseCode.RC200, null);
+	}
+
+	public void sendNickResult(Transaction request, int responseCode,
+								String comment) throws IllegalUseException
+	{
+		if (request == null)
+			throw new InvalidParameterException("Null transaction specified");
+		if (request instanceof TransactionResponse)
+			request.transactionManager.addPriorityTransaction(request);
+		else
+			request.transactionManager.generateResponse(request, responseCode, comment);
+	}
+
+	/**
      * Release all of the resources associated with this session.
      * It could eventually, but not necessarily, close connections conforming to
      * RFC 4975.
@@ -376,50 +394,6 @@ public class Session
     {
         return toUris;
     }
-
-//    /**
-//     * Getter of the property <tt>_failureReport</tt>
-//     * 
-//     * @return Returns the failureReport.
-//     * @uml.property name="_failureReport"
-//     */
-//    public boolean isFailureReport()
-//    {
-//        return failureReport;
-//    }
-//
-//    /**
-//     * Setter of the property <tt>_failureReport</tt>
-//     * 
-//     * @param _failureReport The failureReport to set.
-//     * @uml.property name="_failureReport"
-//     */
-//    public void setFailureReport(boolean report)
-//    {
-//        this.failureReport = report;
-//    }
-//
-//    /**
-//     * Getter of the property <tt>_successReport</tt>
-//     * 
-//     * @return Returns the successReport.
-//     * @uml.property name="_successReport"
-//     */
-//    public boolean isSuccessReport()
-//    {
-//        return successReport;
-//    }
-//
-//    /**
-//     * Setter of the property <tt>_successReport</tt>
-//     * 
-//     * @param _successReport The successReport to set.
-//     * @uml.property name="_successReport"
-//     */
-//    public void setSuccessReport(boolean report)
-//    {
-//        successReport = report;
-//    }
 
     /**
      * Get messages being received.
@@ -660,10 +634,10 @@ public class Session
         return myListener.acceptHook(this, message);
     }
 
-    protected boolean triggerAcceptNickname(IncomingMessage message)
+    protected void triggerReceivedNickname(Transaction request)
     {
-        logger.trace("Called the triggerAcceptNickname hook");
-        return myListener.acceptNickname(this, message);
+        logger.trace("Called the triggerReceivedNickname hook");
+        myListener.receivedNickname(this, request);
     }
 
     /**

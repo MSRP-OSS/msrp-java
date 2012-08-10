@@ -17,6 +17,7 @@
 package javax.net.msrp;
 
 import java.net.*;
+import java.security.InvalidParameterException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Observable;
@@ -103,8 +104,7 @@ public class TransactionManager
      */
     private void generateAndQueueResponse(Transaction originalTransaction,
         int responseCode, String optionalComment)
-        throws InternalErrorException,
-        IllegalUseException
+        throws InternalErrorException, IllegalUseException
     {
         TransactionResponse trResponse =
             new TransactionResponse(originalTransaction, responseCode,
@@ -126,15 +126,16 @@ public class TransactionManager
     public void generateResponse(Transaction transaction, int responseCode,
         String comment) throws IllegalUseException
     {
+    	if (transaction == null)
+    		throw new InvalidParameterException("null tranaction specified");
+        if (!ResponseCode.isValid(responseCode))
+            throw new InvalidParameterException("Invalid response code");
+        // TODO validate comment based on utf8text
         logger.trace("Response being sent for Transaction tId: " +
         		transaction.tID + " response code: " + responseCode);
         String reportFlag = transaction.getFailureReport();
 
-        if (!ResponseCode.isValid(responseCode))
-            throw new IllegalUseException("Invalid response code");
-        // TODO FIXME validate the comment based on the utf8text regex pattern
-        // that will be defined in RegEx
-        // TODO generate the responses based on the success report field
+        // TODO generate responses based on success report field
 
         // generate response based on failure report field
         if (reportFlag == null || reportFlag.equalsIgnoreCase("yes") ||

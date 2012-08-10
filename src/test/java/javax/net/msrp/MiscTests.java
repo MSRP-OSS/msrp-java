@@ -811,8 +811,7 @@ public class MiscTests
 	}
 
 	@Override
-	public boolean acceptNickname(Session session, IncomingMessage message) {
-		return true;
+	public void receivedNickname(Session session, Transaction request) {
 	}
 
 	@Override
