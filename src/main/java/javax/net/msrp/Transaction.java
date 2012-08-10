@@ -301,26 +301,26 @@ public class Transaction
         tID = manager.generateNewTID();
         message = messageToSend;
 
-        if (messageToSend.size > 0 && messageToSend.isComplete())
+        if (message.size > 0 && messageToSend.isComplete())
             throw new IllegalArgumentException(
         		"Transaction constructor called with an already sent message");
-    	if (messageToSend.getNickname() != null)
-            makeNickHeader(messageToSend, manager);
+    	if (message.getNickname() != null)
+            makeNickHeader();
     	else
-    		makeSendHeader(messageToSend, manager);
+    		makeSendHeader();
 
         /* by default have the continuation flag to be the end of message */
         continuation_flag = FLAG_END;
         initializeDataStructures();
         logger.info("Created " + toString() + " associated Message-ID: " +
-    				messageToSend);
+    				message);
     }
 
-    private void makeNickHeader(OutgoingMessage toSend, TransactionManager manager)
+    private void makeNickHeader()
     {
         transactionType = TransactionType.NICKNAME;
 
-        Session session = toSend.getSession();
+        Session session = message.getSession();
         ArrayList<URI> uris = session.getToPath();
         URI toPathUri = uris.get(0);
         URI fromPathUri = session.getURI();
@@ -329,20 +329,20 @@ public class Transaction
         header	.append("MSRP ").append(tID).append(" NICKNAME\r\nTo-Path: ")
         		.append(toPathUri.toASCIIString()).append("\r\nFrom-Path: ")
         		.append(fromPathUri.toASCIIString()).append("\r\nUse-Nickname: \"")
-        		.append(toSend.getNickname()).append("\"\r\n");
+        		.append(message.getNickname()).append("\"\r\n");
 
         headerBytes = header.toString().getBytes(TextUtils.utf8);
     }
 
-    private void makeSendHeader(OutgoingMessage toSend, TransactionManager manager)
+    private void makeSendHeader()
     {
 		transactionType = TransactionType.SEND;
 
-		Session session = toSend.getSession();
+		Session session = message.getSession();
         ArrayList<URI> uris = session.getToPath();
         URI toPathUri = uris.get(0);
         URI fromPathUri = session.getURI();
-        String messageID = toSend.getMessageID();
+        String messageID = message.getMessageID();
 
         StringBuilder header = new StringBuilder(256);
         header	.append("MSRP ").append(tID).append(" SEND\r\nTo-Path: ")
@@ -350,13 +350,13 @@ public class Transaction
         		.append(fromPathUri.toASCIIString()).append("\r\nMessage-ID: ")
         		.append(messageID).append("\r\n");
 
-        if (toSend.wantSuccessReport())
+        if (message.wantSuccessReport())
             header.append("Success-Report: yes\r\n");
 
-        if (!toSend.getFailureReport().equalsIgnoreCase("yes"))
+        if (!message.getFailureReport().equalsIgnoreCase("yes"))
             /* note: if omitted, failure report is assumed to be yes */
         	header	.append("Failure-Report: ")
-        			.append(toSend.getFailureReport()).append("\r\n");
+        			.append(message.getFailureReport()).append("\r\n");
 
         /*
          * first value of the Byte-Range header field is the
@@ -364,7 +364,7 @@ public class Transaction
          * bytes + 1 because the first field is the number of the first byte
          * being sent:
          */
-        long firstByteChunk = toSend.getSentBytes() + 1;
+        long firstByteChunk = ((OutgoingMessage) message).getSentBytes() + 1;
         /*
          * Currently all transactions are interruptible, solving Issue #25
          * if ((message.getSize() - ((OutgoingMessage)message).getSize()) >
@@ -372,14 +372,11 @@ public class Transaction
          */
         interruptible = true;
         header	.append("Byte-Range: ").append(firstByteChunk).append("-*/")
-        		.append(toSend.getStringTotalSize()).append("\r\n");
-        header.append("Content-Type: ");
-        String ct = toSend.getContentType();
+        		.append(message.getStringTotalSize()).append("\r\n");
+        String ct = message.getContentType();
         if ((ct == null) || (ct.length() == 0))
-        	header.append("text/plain");
-        else
-        	header.append(ct);
-        header.append("\r\n\r\n");
+        	ct = "text/plain";
+        header.append("Content-Type: ").append(ct).append("\r\n\r\n");
 
         headerBytes = header.toString().getBytes(TextUtils.utf8);
     }
@@ -974,7 +971,7 @@ public class Transaction
     {
         return (transactionType == TransactionType.REPORT ||
         		transactionType == TransactionType.SEND ||
-        		transactionType != TransactionType.NICKNAME);
+        		transactionType == TransactionType.NICKNAME);
     }
 
     /**
