@@ -186,6 +186,8 @@ public class TestSendingSmallMessages extends TestFrame
                 receivingSessionListener.wait();
             }
     		assertEquals(receivingSessionListener.getNickname(), "Hairy Scary");
+    		receivingSession.sendNickResult(
+    				receivingSessionListener.getReceivedNicknameTransaction());
         }
         catch (Exception e)
         {

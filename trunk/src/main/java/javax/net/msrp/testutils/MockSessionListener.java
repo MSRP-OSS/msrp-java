@@ -59,6 +59,8 @@ public class MockSessionListener
 
     private Transaction receivedReportTransaction;
 
+    private Transaction receivedNicknameTransaction;
+
     private Session updateSendStatusSession;
 
     private Message updateSendStatusMessage;
@@ -300,6 +302,14 @@ public class MockSessionListener
     }
 
     /**
+     * @return the receivedNicknameTransaction
+     */
+    public Transaction getReceivedNicknameTransaction()
+    {
+        return receivedNicknameTransaction;
+    }
+
+    /**
      * @return the updateSendStatusSession
      */
     public Session getUpdateSendStatusSession()
@@ -351,14 +361,13 @@ public class MockSessionListener
 	}
 
 	@Override
-	public boolean acceptNickname(Session session, IncomingMessage message) {
-		nickname = message.getNickname();
-		message.setResult(ResponseCode.RC200);
+	public void receivedNickname(Session session, Transaction request) {
+		receivedNicknameTransaction = request;
+		nickname = request.getNickname();
         synchronized (this)
         {
             this.notifyAll();
         }
-		return true;
 	}
 
 	@Override
