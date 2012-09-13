@@ -377,7 +377,7 @@ public class FirstMilestoneFunctionalities
 		}
 
 		@Override
-		public void receivedNickResult(Session session, Transaction result) {
+		public void receivedNickNameResult(Session session, TransactionResponse result) {
 		}
     }
 }

@@ -146,9 +146,9 @@ public class IncomingMessage
 	}
 
 	@Override
-    public int getDirection()
+    public Direction getDirection()
     {
-        return IN;
+        return Direction.IN;
     }
 
     public void validate() throws Exception {

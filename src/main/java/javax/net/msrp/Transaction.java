@@ -48,7 +48,7 @@ public class Transaction
      * Field that defines the type of transaction it is, regarding the
      * direction, incoming or outgoing
      */
-    protected int direction;
+    protected Direction direction;
 
     /**
      * this variable is used to denote if this transaction has "content-stuff"
@@ -270,14 +270,11 @@ public class Transaction
      * @param method
      */
     protected Transaction(String tid, TransactionType method,
-        TransactionManager manager, int direction)
+        TransactionManager manager, Direction direction)
         throws IllegalUseException
     {
         logger.info("Transaction created Tx-" + method + "[" + tid
         			+ "], handled by " + manager);
-        // sanity check:
-        if (direction != IN && direction != OUT)
-            throw new IllegalUseException("Invalid direction: " + direction);
 
         this.direction = direction;
         transactionManager = manager;
@@ -395,7 +392,7 @@ public class Transaction
      * 
      * @return IN if it's incoming, OUT if outgoing
      */
-    public int getDirection()
+    public Direction getDirection()
     {
         return direction;
     }
@@ -648,7 +645,7 @@ public class Transaction
      */
     public void signalizeEnd(char flag)
     {
-        if (direction == OUT)
+        if (direction == Direction.OUT)
             throw new InternalError("Wrong use of signalizeEnd()");
 
         this.continuation_flag = (byte) flag;
@@ -984,7 +981,7 @@ public class Transaction
      */
     public void interrupt() throws IllegalUseException
     {
-        if (!isInterruptible() || message.getDirection() != Message.OUT)
+        if (!isInterruptible() || message.getDirection() != Direction.OUT)
             throw new IllegalUseException("Transaction.interrupt(" +
             					tID + ") was called but is non interruptible");
 
@@ -1624,7 +1621,7 @@ public class Transaction
                 statusHeader =
                     new StatusHeader(namespace, statusCode, comment);
             }
-            /* $FALL_THROUGH */
+            /* $FALL-THROUGH$: to shared headers */
         case SEND:
             /* Message-ID processing: */
             matcher = messageIDPattern.matcher(headerBuffer);

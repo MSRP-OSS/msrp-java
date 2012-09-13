@@ -19,6 +19,7 @@ package javax.net.msrp.testutils;
 import java.util.ArrayList;
 
 import javax.net.msrp.DataContainer;
+import javax.net.msrp.Direction;
 import javax.net.msrp.IncomingMessage;
 import javax.net.msrp.Message;
 import javax.net.msrp.OutgoingMessage;
@@ -27,6 +28,7 @@ import javax.net.msrp.SessionListener;
 import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Session;
 import javax.net.msrp.Transaction;
+import javax.net.msrp.TransactionResponse;
 import javax.net.msrp.events.MessageAbortedEvent;
 
 import org.slf4j.Logger;
@@ -221,7 +223,7 @@ public class MockSessionListener
     	final long size;
         messageAbortEvents.add(abortEvent);
         boolean incoming = false;
-        if (abortEvent.getMessage().getDirection() == Message.IN)
+        if (abortEvent.getMessage().getDirection() == Direction.IN)
         {
             incoming = true;
 
@@ -231,7 +233,7 @@ public class MockSessionListener
                 + message.getReceivedBytes() + " == "
                 + (size == 0 ? 100 : (message.getReceivedBytes() * 100) / size) + "%");
         }
-        else if (abortEvent.getMessage().getDirection() == Message.OUT)
+        else if (abortEvent.getMessage().getDirection() == Direction.OUT)
         {
             OutgoingMessage message = (OutgoingMessage) abortEvent.getMessage();
         	size = message.getSize();
@@ -371,7 +373,7 @@ public class MockSessionListener
 	}
 
 	@Override
-	public void receivedNickResult(Session session, Transaction result) {
+	public void receivedNickNameResult(Session session, TransactionResponse result) {
 		int code = result.getStatusHeader().getStatusCode(); 
 		if (code != ResponseCode.RC200)
 		{
