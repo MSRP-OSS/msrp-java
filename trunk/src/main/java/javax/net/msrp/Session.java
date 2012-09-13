@@ -599,10 +599,10 @@ public class Session
         myListener.receivedReport(this, report);
     }
 
-    protected void triggerReceivedNickResult(Transaction response)
+    protected void triggerReceivedNickResult(TransactionResponse response)
     {
         logger.trace("Called the triggerReceivedNickResult hook");
-        myListener.receivedNickResult(this, response);
+        myListener.receivedNickNameResult(this, response);
     }
 
     /**

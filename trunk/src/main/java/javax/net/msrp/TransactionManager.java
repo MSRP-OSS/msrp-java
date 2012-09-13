@@ -108,7 +108,7 @@ public class TransactionManager
     {
         TransactionResponse trResponse =
             new TransactionResponse(originalTransaction, responseCode,
-                optionalComment, Transaction.OUT);
+                optionalComment, Direction.OUT);
         originalTransaction.setResponse(trResponse);
         addPriorityTransaction(trResponse);
     }
@@ -356,14 +356,13 @@ public class TransactionManager
         // session
         // Sanity check, check if this is the right type of object
 
-        if (connectionObservable.getClass().getName() != "javax.net.msrp.Connection")
+        if (!(connectionObservable instanceof Connection))
         {
             logger.error("Error! TransactionManager was notified with the wrong type of object associated");
             return;
         }
         // Sanity check, check if this is the right type of Observable
-        if (transactionObject.getClass().getName() != "javax.net.msrp.Transaction" &&
-            transactionObject.getClass().getName() != "javax.net.msrp.TransactionResponse")
+        if (!(transactionObject instanceof Transaction))
         {
             logger.error("Error! TransactionManager was notified with the wrong observable type");
             return;
@@ -519,7 +518,7 @@ public class TransactionManager
     protected void generateTransactionsToSend(Message messageToSend)
     {
         if (messageToSend == null ||
-            messageToSend.getDirection() != Message.OUT)
+            messageToSend.getDirection() != Direction.OUT)
             return;
 
         Transaction newTransaction =
@@ -929,7 +928,7 @@ public class TransactionManager
             transaction.getTransactionType() != TransactionType.REPORT)
             throw new IllegalUseException("the addPriorityTransaction was" +
             		" called with a transaction that isn't a response/REPORT");
-        if (transaction.getDirection() != Transaction.OUT)
+        if (transaction.getDirection() != Direction.OUT)
             throw new IllegalUseException(" the addPriorityTransaction was" +
 	                " called with an invalid direction transaction, " +
 	                "direction: " + transaction.getDirection());

@@ -613,7 +613,7 @@ class Connection extends Observable implements Runnable
                         try
                         {
                             incomingTransaction = new Transaction(tID, tType,
-                            				transactionManager, Transaction.IN);
+                            				transactionManager, Direction.IN);
                         }
                         catch (IllegalUseException e)
                         {
@@ -652,7 +652,7 @@ class Connection extends Observable implements Runnable
                         {
                             Transaction trResponse =
                                 new TransactionResponse(incomingTransaction,
-                                			status, comment, Transaction.IN);
+                                			status, comment, Direction.IN);
                             incomingTransaction = trResponse;
                         }
                         catch (IllegalUseException e)

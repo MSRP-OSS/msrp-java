@@ -35,7 +35,7 @@ public class TransactionResponse
      *             incompatible
      */
     protected TransactionResponse(Transaction transaction, int responseCode,
-        String comment, int direction)
+        String comment, Direction direction)
         throws IllegalUseException
     {
         // original transaction must be a SEND transaction
@@ -56,14 +56,14 @@ public class TransactionResponse
         this.transactionManager = transaction.transactionManager;
         transaction.setResponse(this);
 
-        if (direction == IN)
-    		CreateIncomingResponse(transaction, responseCode, comment, direction);
+        if (direction == Direction.IN)
+    		CreateIncomingResponse(transaction, responseCode, comment);
     	else
-    		CreateOutgoingResponse(transaction, responseCode, comment, direction);
+    		CreateOutgoingResponse(transaction, responseCode, comment);
     }
 
     private void CreateOutgoingResponse(Transaction transaction, int responseCode,
-            String comment, int direction)
+            String comment)
             throws IllegalUseException
     {
         if (!ResponseCode.isValid(responseCode))
@@ -94,11 +94,10 @@ public class TransactionResponse
      * @param transaction the transaction related with this
      * @param responseCode one of the response codes defined on RFC 4975
      * @param comment status commment field
-     * @param direction IN or OUT
      * @throws IllegalUseException when constructing for outgoing non-original SEND.
      */
     private void CreateIncomingResponse(Transaction transaction,
-        int responseCode, String comment, int direction)
+        int responseCode, String comment)
         throws IllegalUseException
     {
     	response2Type = transaction.transactionType;
@@ -163,8 +162,30 @@ public class TransactionResponse
     @Override
     protected boolean isIncomingResponse()
     {
-        if (direction == IN)
-            return true;
-        return false;
+         return direction == Direction.IN;
+    }
+
+    /**
+     * @return	the returned result.
+     */
+    public int getResponseCode()
+    {
+    	return responseCode;
+    }
+
+    /**
+     * @return any given comment on this status.
+     */
+    public String getComment()
+    {
+    	return comment;
+    }
+
+    /**
+     * @return was response ok?
+     */
+    public boolean isOk()
+    {
+    	return !ResponseCode.isError(responseCode);
     }
 }

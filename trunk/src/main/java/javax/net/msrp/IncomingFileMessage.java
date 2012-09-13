@@ -83,8 +83,8 @@ public class IncomingFileMessage
     }
 
     @Override
-    public int getDirection()
+    public Direction getDirection()
     {
-        return IN;
+        return Direction.IN;
     }
 }

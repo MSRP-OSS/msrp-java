@@ -115,9 +115,9 @@ public class OutgoingMessage
      * @see javax.net.msrp.Message#getDirection()
      */
     @Override
-    public int getDirection()
+    public Direction getDirection()
     {
-        return OUT;
+        return Direction.OUT;
     }
 
     public void validate() throws Exception
