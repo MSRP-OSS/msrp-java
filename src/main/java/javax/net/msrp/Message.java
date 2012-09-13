@@ -183,7 +183,7 @@ public abstract class Message
     /**
      * @return the direction of the transfer: {@link #IN} or {@link #OUT}.
      */
-    public abstract int getDirection();
+    public abstract Direction getDirection();
 
     /**
      * This method must be used by the listener acceptHook() to
@@ -373,7 +373,7 @@ public abstract class Message
      * @return content of message, unwrapped, into string.
      */
     public String getContent() {
-    	if (getDirection() == OUT || (getDirection() == IN && isComplete())) {
+    	if (getDirection() == Direction.OUT || (getDirection() == Direction.IN && isComplete())) {
     		if (wrappedMessage == null)
     			return getRawContent();
     		else
@@ -386,7 +386,7 @@ public abstract class Message
      * @return content of message, not unwrapped, into string.
      */
     public String getRawContent() {
-    	if (getDirection() == OUT || (getDirection() == IN && isComplete())) {
+    	if (getDirection() == Direction.OUT || (getDirection() == Direction.IN && isComplete())) {
     		try {
 				return new String(getDataContainer().get(0, getSize()).array(), TextUtils.utf8);
 			} catch (Exception e) {

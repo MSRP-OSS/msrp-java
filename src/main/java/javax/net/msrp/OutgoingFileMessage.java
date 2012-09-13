@@ -82,8 +82,8 @@ public class OutgoingFileMessage
      * @see javax.net.msrp.OutgoingMessage#getDirection()
      */
     @Override
-    public int getDirection()
+    public Direction getDirection()
     {
-        return OUT;
+        return Direction.OUT;
     }
 }

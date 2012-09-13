@@ -42,7 +42,7 @@ public class ReportTransaction
 							throws InternalErrorException, IllegalUseException
 	{
         super(	transaction.getTransactionManager().generateNewTID(),
-        		TransactionType.REPORT, transaction.getTransactionManager(), OUT);
+        		TransactionType.REPORT, transaction.getTransactionManager(), Direction.OUT);
         /* 
          * "Must check to see if session is valid" as specified in RFC4975 valid
          * being for now if it exists or not

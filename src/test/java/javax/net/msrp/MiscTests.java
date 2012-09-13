@@ -613,7 +613,7 @@ public class MiscTests
                     TransactionManager dummyManager = new TransactionManager();
                     incomingTransaction =
                         new Transaction(tID, newTransactionType, dummyManager,
-                            Transaction.IN);
+                        		Direction.IN);
                     if (newTransactionType == TransactionType.UNSUPPORTED)
                         incomingTransaction.signalizeEnd('$');
 
@@ -815,7 +815,7 @@ public class MiscTests
 	}
 
 	@Override
-	public void receivedNickResult(Session session, Transaction result) {
+	public void receivedNickNameResult(Session session, TransactionResponse result) {
 	}
 }
 

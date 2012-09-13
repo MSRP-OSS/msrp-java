@@ -66,7 +66,7 @@ public interface SessionListener
      */
     public void receivedReport(Session session, Transaction report);
 
-    public void receivedNickResult(Session session, Transaction result);
+    public void receivedNickNameResult(Session session, TransactionResponse result);
 
     /**
      * Signal an aborted message

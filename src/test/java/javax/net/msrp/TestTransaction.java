@@ -121,7 +121,7 @@ public class TestTransaction
 
         Transaction newTransaction =
             new Transaction(tID, TransactionType.REPORT,
-                dummyTransactionManager, Transaction.IN);
+                dummyTransactionManager, Direction.IN);
         newTransaction.parse(completeSendTransaction1.getBytes(TextUtils.utf8), 0,
             completeSendTransaction1.length(), false);
         newTransaction.parse(completeSendTransaction2.getBytes(TextUtils.utf8), 0,
@@ -147,7 +147,7 @@ public class TestTransaction
     {
         Transaction newTransaction =
             new Transaction(tID, TransactionType.REPORT,
-                dummyTransactionManager, Transaction.IN);
+                dummyTransactionManager, Direction.IN);
         newTransaction.parse(completeSendTransaction.getBytes(TextUtils.utf8), 0,
             completeSendTransaction.length(), false);
         newTransaction.signalizeEnd('$');
@@ -172,7 +172,7 @@ public class TestTransaction
     {
         Transaction tx =
                 new Transaction(tID, TransactionType.SEND,
-                    dummyTransactionManager, Transaction.IN);
+                    dummyTransactionManager, Direction.IN);
     	tx.parse(emptyInvalidHeaderCompleteSendTransaction.getBytes(TextUtils.utf8), 0,
     			emptyInvalidHeaderCompleteSendTransaction.length(), false);
 		tx.signalizeEnd('$');
@@ -187,7 +187,7 @@ public class TestTransaction
     {
         Transaction tx =
             new Transaction(tID, TransactionType.REPORT,
-                dummyTransactionManager, Transaction.IN);
+                dummyTransactionManager, Direction.IN);
         tx.parse(emptyCompleteSendTransaction.getBytes(TextUtils.utf8), 0,
             emptyCompleteSendTransaction.length(), false);
         tx.signalizeEnd('$');
@@ -241,7 +241,7 @@ public class TestTransaction
     {
         Transaction tx =
                 new Transaction(tID, TransactionType.NICKNAME,
-                    dummyTransactionManager, Transaction.IN);
+                    dummyTransactionManager, Direction.IN);
         tx.parse(nickbody.getBytes(TextUtils.utf8), 0,
         					nickbody.length(), false);
         tx.signalizeEnd('$');
@@ -254,7 +254,7 @@ public class TestTransaction
     {
         Transaction tx =
                 new Transaction(tID, TransactionType.NICKNAME,
-                    dummyTransactionManager, Transaction.IN);
+                    dummyTransactionManager, Direction.IN);
         tx.parse((nickbody + plusFReport).getBytes(TextUtils.utf8), 0,
         					(nickbody + plusFReport).length(), false);
         tx.signalizeEnd('$');
