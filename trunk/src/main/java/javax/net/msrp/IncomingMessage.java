@@ -157,7 +157,7 @@ public class IncomingMessage
     			throw new InvalidHeaderException("no content type.");
 	    	if (Wrap.getInstance().isWrapperType(this.getContentType())) {
 	    		wrappedMessage = Wrap.getInstance().getWrapper(this.getContentType());
-	    		wrappedMessage.parse(this.getDataContainer().get(0, 0));
+	    		wrappedMessage.parse(this.getDataContainer().get(0, this.getSize()));
 	    	}
     	}
     }
