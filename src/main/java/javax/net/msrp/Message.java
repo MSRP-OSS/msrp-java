@@ -369,15 +369,25 @@ public abstract class Message
         return contentType;
     }
 
+    public boolean isWrapped()
+    {
+    	return wrappedMessage != null;
+    }
+
+    public WrappedMessage getWrappedMessage()
+    {
+    	return wrappedMessage;
+    }
+
     /**
      * @return content of message, unwrapped, into string.
      */
     public String getContent() {
     	if (getDirection() == Direction.OUT || (getDirection() == Direction.IN && isComplete())) {
-    		if (wrappedMessage == null)
-    			return getRawContent();
-    		else
+    		if (isWrapped())
     			return wrappedMessage.getMessageContent();
+    		else
+    			return getRawContent();
     	}
     	return null;
     }

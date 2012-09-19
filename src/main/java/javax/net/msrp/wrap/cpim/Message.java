@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 import javax.net.msrp.WrappedMessage;
 import javax.net.msrp.utils.TextUtils;
+import javax.net.msrp.wrap.Headers;
 
 /**
  * CPIM message
@@ -40,7 +41,7 @@ public class Message implements WrappedMessage {
      * 
      * @return Content type
      */
-	private static final Header ContentType = new Header(Header.CONTENT_TYPE, null);
+	private static final Header ContentType = new Header(Headers.CONTENT_TYPE, null);
 
 	public String getContentType() {
     	return contentHeaders.get(contentHeaders.indexOf(ContentType)).getValue();
@@ -121,10 +122,10 @@ public class Message implements WrappedMessage {
 	}
 
 	public byte[] wrap(String from, String to, String contentType, byte[] content) {
-		headers.add(new Header(Header.FROM, from));
-		headers.add(new Header(Header.TO, to));
+		headers.add(new Header(Headers.FROM, from));
+		headers.add(new Header(Headers.TO, to));
 //		headers.add(new Header(Header.DATETIME, <SomeFormOfTimestamp>));
-		contentHeaders.add(new Header(Header.CONTENT_TYPE, contentType));
+		contentHeaders.add(new Header(Headers.CONTENT_TYPE, contentType));
 		msgContent = content;
 		return this.toString().getBytes();
 	}
