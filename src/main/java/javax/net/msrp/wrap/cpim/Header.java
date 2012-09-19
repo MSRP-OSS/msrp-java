@@ -59,7 +59,7 @@ public class Header {
 		int index = data.indexOf(":");
 		String key = data.substring(0, index);
 		String value = data.substring(index+1);
-		return new Header(key.trim().toLowerCase(), value.trim());
+		return new Header(key.trim(), value.trim());
 	}
 
 	/* (non-Javadoc)
