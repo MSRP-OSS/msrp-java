@@ -1437,8 +1437,8 @@ public class Transaction
         		session.triggerReceivedNickname(this);
         		break;
         	case SEND:
-            	in = new IncomingMessage(session, messageID, this.contentType,
-                    					totalMessageBytes);
+            	in = IncomingMessageFactory.createMessage(
+            			session, messageID, this.contentType, totalMessageBytes);
                 message = in;
                 message.setSuccessReport(successReport);
                 try
