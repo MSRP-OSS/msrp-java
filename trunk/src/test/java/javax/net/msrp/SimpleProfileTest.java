@@ -81,7 +81,7 @@ public class SimpleProfileTest extends TestFrame
 	        FileDataContainer fdc = new FileDataContainer(receivingTempFile);
 	        receivingSessionListener.setDataContainer(fdc);
 	
-	        send(fdc);
+	        triggerSendReceive(fdc);
         }
         catch (Exception e)
         {

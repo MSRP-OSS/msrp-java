@@ -34,6 +34,10 @@ import org.junit.Before;
 import org.junit.internal.ArrayComparisonFailure;
 
 /**
+ * Base abstract class for send/receive tests.
+ * Basic connections are set-up/torn-down prior/after the actual tests.
+ * Convenience routines are also supplied to fill data buffers and do standard
+ * copy/send/receive operations.
  * @author tuijldert
  */
 public abstract class TestFrame {
@@ -187,7 +191,7 @@ public abstract class TestFrame {
             outMessage.setSuccessReport(wantSuccessReport);
 
             startTime = System.currentTimeMillis();
-            send(data);
+            triggerSendReceive(data);
 
             System.out.println(testName + "() took: " +
                     	(System.currentTimeMillis() - startTime) + " ms");
@@ -209,7 +213,14 @@ public abstract class TestFrame {
 	 * @throws IOException
 	 * @throws InterruptedException
 	 */
-	void send(byte[] data) throws IOException, InterruptedException {
+	void triggerSendReceive(byte[] data) throws IOException, InterruptedException {
+		DataContainer dc = null;
+		if (data != null)
+			dc = new MemoryDataContainer(data.length);
+		triggerSendReceive(dc);
+	}
+
+	void triggerSendReceive(DataContainer dc) throws IOException, InterruptedException {
 		/* connect the two sessions: */
 		ArrayList<URI> toPathSendSession = new ArrayList<URI>();
 		toPathSendSession.add(receivingSession.getURI());
@@ -221,35 +232,12 @@ public abstract class TestFrame {
 		/* make MockListener accept the message */
 		synchronized (receivingSessionListener)
 		{
-			if (data != null)
-				receivingSessionListener.setDataContainer(new MemoryDataContainer(data.length));
+			if (dc != null)
+				receivingSessionListener.setDataContainer(dc);
 		    receivingSessionListener.setAcceptHookResult(true);
 		    receivingSessionListener.notify();
 		    receivingSessionListener.wait();
 		    receivingSessionListener.wait(1200);
-		}
-		if (receivingSessionListener.getAcceptHookMessage() == null ||
-		    receivingSessionListener.getAcceptHookSession() == null)
-		    fail("The Mock didn't work, message not accepted");
-	}
-
-	void send(DataContainer dc) throws IOException, InterruptedException {
-		/* connect the two sessions: */
-		ArrayList<URI> toPathSendSession = new ArrayList<URI>();
-		toPathSendSession.add(receivingSession.getURI());
-
-		sendingSession.addToPath(toPathSendSession);
-
-		/* message should be transferred or in the process of... */
-
-		/* make MockListener accept the message */
-		synchronized (receivingSessionListener)
-		{
-		    receivingSessionListener.setDataContainer(dc);
-		    receivingSessionListener.setAcceptHookResult(true);
-		    receivingSessionListener.notify();
-		    receivingSessionListener.wait();
-		    receivingSessionListener.wait(1000);
 		}
 		if (receivingSessionListener.getAcceptHookMessage() == null ||
 		    receivingSessionListener.getAcceptHookSession() == null)
@@ -268,7 +256,7 @@ public abstract class TestFrame {
             outMessage.setSuccessReport(wantSuccessReport);
 
             startTime = System.currentTimeMillis();
-            send((byte[]) null);
+            triggerSendReceive((byte[]) null);
 
             System.out.println(testName + "() took: " +
                     	(System.currentTimeMillis() - startTime) + " ms");
@@ -311,7 +299,7 @@ public abstract class TestFrame {
             FileDataContainer fdc = new FileDataContainer(receivingTempFile);
 
             startTime = System.currentTimeMillis();
-            send(fdc);
+            triggerSendReceive(fdc);
 
             System.out.println(testName + "() took: " +
                     	(System.currentTimeMillis() - startTime) + " ms");

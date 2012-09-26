@@ -69,6 +69,17 @@ public class Session
      */
     private boolean isRelay;
 
+    /**
+     *  RFC 3994 support: indication of message composition.
+     */
+    private ImState isComposing = ImState.idle;
+	/** what am I composing?			*/
+    private String composeContentType;
+	/** timestamp last active compose	*/
+    private long lastActive;
+	/** After this time, a refresh may be sent */
+    private long refreshAllowed;
+
     /** URI identifying this session
      * @uml.property name="_URI"
      */
@@ -80,16 +91,6 @@ public class Session
      * @uml.associationEnd inverse="_session:javax.net.msrp.Connection"
      */
     private Connection connection = null;
-
-//    /**
-//     * @uml.property name="_failureReport"
-//     */
-//    private boolean failureReport = true;
-//
-//    /**
-//     * @uml.property name="_successReport"
-//     */
-//    private boolean successReport;
 
     /**
      * The queue of messages to send.
@@ -352,6 +353,62 @@ public class Session
 			request.transactionManager.addPriorityTransaction(request);
 		else
 			request.transactionManager.generateResponse(request, responseCode, comment);
+	}
+
+	public ImState getImState()
+	{
+		return isComposing;
+	}
+
+	public String getComposeContentType()
+	{
+		return composeContentType;
+	}
+
+	public long getLastActive()
+	{
+		return lastActive;
+	}
+
+	public void setActive(String contentType)
+	{
+		setActive(contentType, 120);
+	}
+
+	/**
+	 * Indicate on session that chatter is composing a message.
+	 * An active message indication will be sent when appropriate.
+	 * @param contentType the type of message being composed.
+	 * @param refresh interval before transitioning to idle.
+	 */
+	public void setActive(String contentType, int refresh)
+	{
+		long now = System.currentTimeMillis();
+
+		isComposing = ImState.active;
+		composeContentType = contentType;
+		lastActive = now;
+
+		if (refreshAllowed < now) {
+			if (refresh < 60)			/* SHOULD not be allowed	*/
+				refresh = 60;
+			refreshAllowed = lastActive + (refresh * 1000);
+			new OutgoingStatusMessage(this, refresh);
+		}
+	}
+
+	/**
+	 * Indicate on session that chatter is idle.
+	 * An idle message indication will be sent when appropriate.
+	 */
+	public void setIdle()
+	{
+		if (isComposing == ImState.active)
+		{
+			isComposing = ImState.idle;
+			refreshAllowed = 0;
+			new OutgoingStatusMessage(this, 0);
+		}
 	}
 
 	/**
