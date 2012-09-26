@@ -57,7 +57,7 @@ public class TestStatusMessage {
 	public final void testIncomingStatusMessage() {
 		dc = new MemoryDataContainer(STATUS_CONTENT.getBytes());
 		IncomingStatusMessage msg = new IncomingStatusMessage(session, "123",
-				StatusMessage.IMCOMPOSE_TYPE, dc.size());
+				Message.IMCOMPOSE_TYPE, dc.size());
 		msg.setDataContainer(dc);
 		try {
 			msg.validate();
