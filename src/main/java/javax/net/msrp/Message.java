@@ -59,6 +59,9 @@ public abstract class Message
      */
     private String failureReport = YES;
 
+	/** content-type of an isComposing message	*/
+	public static final String IMCOMPOSE_TYPE = "application/im-iscomposing+xml";
+
     /**
      * Abort-state of message
      */

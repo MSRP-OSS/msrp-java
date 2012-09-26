@@ -40,7 +40,7 @@ public class OutgoingStatusMessage extends OutgoingMessage implements StatusMess
 					composeContentType, includeRefresh(refresh));
 
         this.session = session;
-        this.contentType = StatusMessage.IMCOMPOSE_TYPE;
+        this.contentType = Message.IMCOMPOSE_TYPE;
 		messageId = Stack.generateMessageID();
         dataContainer = new MemoryDataContainer(content.getBytes());
         size = content.length();
