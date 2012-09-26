@@ -5,7 +5,7 @@
 	<TITLE></TITLE>
 	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (Windows)">
 	<META NAME="CREATED" CONTENT="20120710;8305183">
-	<META NAME="CHANGED" CONTENT="20120810;11231446">
+	<META NAME="CHANGED" CONTENT="20120925;17125738">
 	<STYLE TYPE="text/css">
 	<!--
 		H2.cjk { font-family: "SimSun" }
@@ -160,11 +160,31 @@ Refer to the source code for more details.</P>
 <P>Support for the <CODE CLASS="western">NICKNAME</CODE> request as
 specified in <A HREF="http://tools.ietf.org/html/draft-ietf-simple-chat-15">draft-ietf-simple-chat</A>
 is also built in. See:</P>
-<PRE CLASS="western" STYLE="margin-bottom: 0.5cm">Session.requestNickname();<BR>SessionListener.receivedNickResult();</PRE><P>
+<PRE CLASS="western" STYLE="margin-bottom: 0.5cm">Session.requestNickname();
+SessionListener.receivedNickResult();</PRE><P>
 and</P>
 <PRE CLASS="western">SessionListener.receivedNickname();
-Session.sendNickResult();
-</PRE>
+Session.sendNickResult();</PRE>
+<H1>Indication of message composition</H1>
+<P>Within the MSRP message stream, it is possible to send a status to
+the other chatter, indicating that a message is actively being
+composed. This is specified in <A HREF="http://tools.ietf.org/html/rfc3994">RFC3994</A>.
+Indicating that you are in the middle of composing a message and what
+type you are actually composing can be done by calling:</P>
+<PRE CLASS="western">Session.setActive(contentType);</PRE>
+<P>and the couterpart:</P>
+<PRE CLASS="western">Session.setIdle();</PRE>
+<P>The library will send a status message containing the
+application/im-iscomposing+xml document over the session. Beware that
+it will do this only once within a refresh period.</P>
+<P>A received status message can be detected by testing for:</P>
+<PRE CLASS="western">if (message instanceof StatusMessage)</PRE>
+<P>or</P>
+<PRE CLASS="western">if (message instanceof IncomingStatusMessage)</PRE>
+<P>when true, further information on the composing can be obtained
+through:</P>
+<PRE CLASS="western">StatusMessage.getState();<BR>StatusMessage.getComposeContentType();</PRE>
+<P>etc.</P>
 <H1>Getting started</H1>
 <P>Access to sources and documentation can be found here in the
 repository of the MSRP project. Build versions are stored in the

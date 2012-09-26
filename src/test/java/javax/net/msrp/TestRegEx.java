@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 import org.junit.*;
 
 /**
- * Class that tests thorougly the RegEx class
+ * Class that tests the RegEx class thoroughly
  * 
  * @see RegEx
  * @author João André Pereira Antunes
