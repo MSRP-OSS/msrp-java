@@ -46,7 +46,7 @@ public class TestStatusMessage {
 
 	@Test
 	public final void testOutgoingStatusMessage() {
-		OutgoingStatusMessage msg = new OutgoingStatusMessage(session, 50);
+		OutgoingStatusMessage msg = new OutgoingStatusMessage(session, ImState.idle, null, 50);
 		assertTrue(msg.getState() == ImState.idle);
 		assertNull(msg.getComposeContentType());
 		assertTrue(msg.getRefresh() == 50);

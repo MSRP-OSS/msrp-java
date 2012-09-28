@@ -31,10 +31,10 @@ public class OutgoingStatusMessage extends OutgoingMessage implements StatusMess
 			return "";
 	}
 
-	protected OutgoingStatusMessage(Session session, int refresh)
+	protected OutgoingStatusMessage(Session session, ImState state, String contentType, int refresh)
 	{
-		state = session.getImState();
-		composeContentType = session.getComposeContentType();
+		this.state = state;
+		composeContentType = contentType;
 		this.refresh = refresh;
 		String content = String.format(ISCOMPOSING, state.name(),
 					composeContentType, includeRefresh(refresh));
