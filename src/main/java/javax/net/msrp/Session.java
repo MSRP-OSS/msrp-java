@@ -77,8 +77,10 @@ public class Session
     private String composeContentType;
 	/** timestamp last active compose	*/
     private long lastActive;
-	/** After this time, a refresh may be sent */
-    private long refreshAllowed;
+	/** After this time, active transitions to idle */
+    private long activeEnd;
+    /** the refresh period currently in effect	*/
+    private int refresh;
 
     /** URI identifying this session
      * @uml.property name="_URI"
@@ -295,6 +297,7 @@ public class Session
 	 */
 	public Message sendMessage(String contentType, byte[] content)
 	{
+		endComposing();
 		return new OutgoingMessage(this, contentType, content);
 	}
 
@@ -317,6 +320,7 @@ public class Session
 	{
 		Wrap wrap = Wrap.getInstance();
 		if (wrap.isWrapperType(wrapType)) {
+			endComposing();
 			WrappedMessage wm = wrap.getWrapper(wrapType);
 			return new OutgoingMessage(this, wrapType,
 										wm.wrap(from, to, contentType, content));
@@ -336,6 +340,7 @@ public class Session
 	public Message sendMessage(String contentType, File content)
 			throws FileNotFoundException, SecurityException
 	{
+		endComposing();
 		return new OutgoingFileMessage(this, contentType, content);
 	}
 
@@ -355,21 +360,45 @@ public class Session
 			request.transactionManager.generateResponse(request, responseCode, comment);
 	}
 
+	/**
+	 * Is the user of this session actively copmposing a message?
+	 * @return active or idle
+	 */
 	public ImState getImState()
 	{
+		long now = System.currentTimeMillis();
+
+		if ((isComposing == ImState.active) && (activeEnd < now))
+			endComposing();
 		return isComposing;
 	}
 
+	private void endComposing() {
+		isComposing = ImState.idle;
+		activeEnd = 0;
+	}
+
+	/**
+	 * What media is the user actively composing?
+	 * @return the Content-Type being composed 
+	 */
 	public String getComposeContentType()
 	{
 		return composeContentType;
 	}
 
+	/**
+	 * Last time activity has been signalled.
+	 * @return timestamp
+	 */
 	public long getLastActive()
 	{
 		return lastActive;
 	}
 
+	/**
+	 *  Same as {@link Session#setActive(String, int)} but with default refresh period.
+	 */
 	public void setActive(String contentType)
 	{
 		setActive(contentType, 120);
@@ -384,16 +413,19 @@ public class Session
 	public void setActive(String contentType, int refresh)
 	{
 		long now = System.currentTimeMillis();
+		if (contentType == null || contentType.length() == 0)
+			throw new IllegalArgumentException("Content-Type must be a valid string");
 
 		isComposing = ImState.active;
 		composeContentType = contentType;
 		lastActive = now;
 
-		if (refreshAllowed < now) {
+		if ((activeEnd < now) || (this.refresh > 0 && (activeEnd - (this.refresh / 2) < now))) {
 			if (refresh < 60)			/* SHOULD not be allowed	*/
 				refresh = 60;
-			refreshAllowed = lastActive + (refresh * 1000);
-			new OutgoingStatusMessage(this, refresh);
+			this.refresh = refresh;
+			activeEnd = lastActive + (refresh * 1000);
+			new OutgoingStatusMessage(this, isComposing, composeContentType, refresh);
 		}
 	}
 
@@ -405,9 +437,8 @@ public class Session
 	{
 		if (isComposing == ImState.active)
 		{
-			isComposing = ImState.idle;
-			refreshAllowed = 0;
-			new OutgoingStatusMessage(this, 0);
+			endComposing();
+			new OutgoingStatusMessage(this, isComposing, composeContentType, 0);
 		}
 	}
 
@@ -505,7 +536,8 @@ public class Session
      */
     protected void addMessageOnTop(Message message)
     {
-        sendQueue.add(0, message);
+        if (sendQueue != null)
+        	sendQueue.add(0, message);
     }
 
     /**
@@ -516,8 +548,10 @@ public class Session
      */
     protected void addMessageToSend(Message message)
     {
-        sendQueue.add(message);
-        triggerSending();
+        if (sendQueue != null) {
+            sendQueue.add(message);
+            triggerSending();
+        }
     }
 
 	/**
@@ -533,7 +567,7 @@ public class Session
      */
     public boolean hasMessagesToSend()
     {
-        return !sendQueue.isEmpty();
+        return (sendQueue != null) && (!sendQueue.isEmpty());
     }
 
     /**
@@ -576,7 +610,8 @@ public class Session
      */
     protected void delMessageToSend(Message message)
     {
-        sendQueue.remove(message);
+        if (sendQueue != null)
+        	sendQueue.remove(message);
     }
 
     /**
