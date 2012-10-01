@@ -344,11 +344,23 @@ public class Session
 		return new OutgoingFileMessage(this, contentType, content);
 	}
 
+	/**
+	 * Reply ok to a NICKNAME request.
+	 * @param request the originating request (transaction)
+	 * @throws IllegalUseException arguments or state invalid
+	 */
 	public void sendNickResult(Transaction request) throws IllegalUseException
 	{
 		sendNickResult(request, ResponseCode.RC200, null);
 	}
 
+	/**
+	 * Reply to a NICKNAME request.
+	 * @param request the originating request (transaction)
+	 * @param responseCode the result to send
+	 * @param comment clarifying status comment to add
+	 * @throws IllegalUseException arguments or state invalid
+	 */
 	public void sendNickResult(Transaction request, int responseCode,
 								String comment) throws IllegalUseException
 	{
@@ -361,7 +373,7 @@ public class Session
 	}
 
 	/**
-	 * Is the user of this session actively copmposing a message?
+	 * Is the user of this session actively composing a message?
 	 * @return active or idle
 	 */
 	public ImState getImState()
