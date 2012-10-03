@@ -131,8 +131,8 @@ public class TransactionManager
         if (!ResponseCode.isValid(responseCode))
             throw new InvalidParameterException("Invalid response code");
         // TODO validate comment based on utf8text
-        logger.trace("Response being sent for Transaction tId: " +
-        		transaction.tID + " response code: " + responseCode);
+        logger.trace(this + " response being sent for " +
+        		transaction + " response code " + responseCode);
         String reportFlag = transaction.getFailureReport();
 
         // TODO generate responses based on success report field
@@ -155,7 +155,7 @@ public class TransactionManager
                 }
                 catch (InternalErrorException e)
                 {
-                    logger.error("Generating a " + responseCode +
+                    logger.error(this + " generating a " + responseCode +
                         " response for " + transaction, e);
                 }
             }
@@ -219,7 +219,7 @@ public class TransactionManager
      */
     protected void r200ProcessRequest(Transaction transaction)
     {
-        logger.trace("called r200 with " + transaction +
+        logger.trace(this + " called r200 with " + transaction +
             ", message-id[" + transaction.getMessageID() +
             "], associated connection (localURI): " + connection.getLocalURI());
 
@@ -231,13 +231,14 @@ public class TransactionManager
             }
             catch (IllegalUseException e1)
             {
-                logger.error("Generating success report for " + transaction);
+                logger.error(this + " generating success report for " + transaction);
             }
             IncomingMessage message = (IncomingMessage) transaction.getMessage();
             if (message != null && message.isComplete())
             {
-                logger.trace(transaction + " has an associated message-id[" +
-	                    transaction.getMessageID() + "] that is complete.");
+                logger.trace(String.format(
+                		"%s %s has an associated message-id[%s] that is complete.",
+                		this, transaction, transaction.getMessageID()));
                 /*
                  * if we have a complete message
                  */
@@ -278,8 +279,9 @@ public class TransactionManager
                 transaction.getStatusHeader();
             String statusCodeString =
                 Integer.toString(transactionStatusHeader.getStatusCode());
-            logger.trace(transaction + " is a report! Status code: " +
-            			statusCodeString);
+            logger.trace(String.format(
+            			"%s %s is a report! Status code %s.",
+            			this, transaction, statusCodeString));
 
             /*
              * at the moment just trigger the report, doesn't save it or send
@@ -294,9 +296,15 @@ public class TransactionManager
             }
             catch (ImplementationException e)
             {
-                logger.error("Calling triggerReceivedReport", e);
+                logger.error(this + " error calling triggerReceivedReport", e);
             }
         }
+    }
+
+    @Override
+    public String toString()
+    {
+    	return "[TxManager@" + Integer.toHexString(hashCode()) + "]";
     }
 
     /**
@@ -358,20 +366,20 @@ public class TransactionManager
 
         if (!(connectionObservable instanceof Connection))
         {
-            logger.error("Error! TransactionManager was notified with the wrong type of object associated");
+            logger.error(this + " notified with wrong type of object associated");
             return;
         }
         // Sanity check, check if this is the right type of Observable
         if (!(transactionObject instanceof Transaction))
         {
-            logger.error("Error! TransactionManager was notified with the wrong observable type");
+            logger.error(this + " notified with the wrong observable type");
             return;
         }
 
         Connection connection = (Connection) connectionObservable;
         Transaction transaction = (Transaction) transactionObject;
 
-        logger.trace("UPDATE of TransactionManager called. Received " +
+        logger.trace(this + "- UPDATE called. Received " +
 	            transaction + ", associated connection (localURI): " +
 	            connection.getLocalURI());
         /*
@@ -381,10 +389,10 @@ public class TransactionManager
         {
             TransactionResponse transactionResponse =
                 (TransactionResponse) transaction;
-            logger.trace(transaction +
-                    " is an incoming response and has been processed" +
-            		" by the transactionManager for connection (localURI): " +
-                    connection.getLocalURI());
+            logger.trace(String.format(
+                    "%s %s is an incoming response and has been processed" +
+            		" by the transactionManager for connection (localURI): ",
+                    this, transaction, connection.getLocalURI()));
             processResponse(transactionResponse);
             return;
         }
@@ -394,9 +402,9 @@ public class TransactionManager
              * "important" question: does this 501 response precede the 506 or
              * not?! should the to-path also be checked before?!
              */
-            logger.trace(transaction + " is not supported and has been " +
-		             "processed by the transactionManager for connection (localURI): " +
-		            connection.getLocalURI());
+            logger.trace(String.format(
+            		"%s %s is not supported. Processed for connection (localURI): %s",
+		            this, transaction, connection.getLocalURI()));
             // TODO r501();
             return;
         }
@@ -407,11 +415,9 @@ public class TransactionManager
          */
         if (transaction.isValid() && transaction.isRequest())
             r200ProcessRequest(transaction);
-        logger
-            .trace("Transaction tID: "
-                + transaction.getTID()
-                + " has been processed by the transactionManager for connection localURI: "
-                + this.connection.getLocalURI());
+        logger.trace(String.format(
+        		"%s %s has been processed for connection (localURI): %s",
+	            this, transaction, this.connection.getLocalURI()));
     }
 
     /**
@@ -436,15 +442,14 @@ public class TransactionManager
             }
             catch (InternalErrorException e)
             {
-                logger.error("Exception caught aborting the message: "
+                logger.error(this + " exception caught aborting message "
                     + response.getMessage(), e);
             }
             catch (IllegalUseException e)
             {
-                logger.error("Exception caught aborting the message: "
+                logger.error(this + " exception caught aborting message "
                     + response.getMessage(), e);
             }
-            // TODO support the comment Issue #29
             response.getMessage().fireMessageAbortedEvent(
                 response.responseCode, null, response);
         }
@@ -505,7 +510,7 @@ public class TransactionManager
 				// TODO: should be empty message...
 				new OutgoingMessage(session, "text/plain", " ".getBytes());
 			} catch (Exception e) {
-				logger.warn(e.getMessage());
+				logger.warn(this + " " + e.getMessage());
 			}
     }
 
@@ -976,7 +981,7 @@ public class TransactionManager
 	            if (t.getTransactionType() == TransactionType.SEND &&
 	                t.getMessage().equals(message))
 	            {
-	            	logger.debug(t + " aborted");
+	            	logger.debug(String.format("%s %s aborted.", this, t));
 	            	if (first)
 	            	{
 	            		t.abort();

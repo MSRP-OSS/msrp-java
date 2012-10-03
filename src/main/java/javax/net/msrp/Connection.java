@@ -647,7 +647,7 @@ class Connection extends Observable implements Runnable
                             logger.error("Received response for unknown transaction");
                             // TODO: cannot continue without a known transaction, proper abort here
                         }
-                        logger.debug("Found response to transaction: " + tID);
+                        logger.debug("Found response to " + incomingTransaction);
                         try
                         {
                             Transaction trResponse =
@@ -682,7 +682,7 @@ class Connection extends Observable implements Runnable
                     Matcher matcher = endTransaction.matcher(toParse);
                     if (matcher.matches())
                     {
-                        logger.trace("found end of Tx: " + tID);
+                        logger.trace("found end of " + incomingTransaction);
                         toParse = matcher.group(1) + matcher.group(2)
                                 + matcher.group(3) + matcher.group(4);
                         /*
@@ -704,8 +704,8 @@ class Connection extends Observable implements Runnable
                     matcher = contentStuff.matcher(toParse);
                     if (matcher.matches())
                     {
-                        logger.trace("Tx[" + tID
-                        			+ "] was found to have content-stuff");
+                        logger.trace(incomingTransaction +
+                        			" was found to have content-stuff");
                         incomingTransaction.hasContentStuff = true;
                     }
                     if (incomingTransaction.hasContentStuff) {
