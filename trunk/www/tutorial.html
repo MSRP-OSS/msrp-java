@@ -1,104 +1,274 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<HTML>
-<HEAD>
-	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=windows-1252">
-	<TITLE></TITLE>
-	<META NAME="GENERATOR" CONTENT="LibreOffice 3.5  (Windows)">
-	<META NAME="CREATED" CONTENT="20120710;8305183">
-	<META NAME="CHANGED" CONTENT="20120925;17125738">
-	<STYLE TYPE="text/css">
-	<!--
-		H2.cjk { font-family: "SimSun" }
-		H2.ctl { font-family: "Mangal" }
-		PRE.cjk { font-family: "NSimSun", monospace }
-		CODE.cjk { font-family: "NSimSun", monospace }
-	-->
-	</STYLE>
-</HEAD>
-<BODY LANG="en-GB" DIR="LTR">
-<H1>MSRP Library tutorial</H1>
-<P>Here a brief introduction into the MSRP protocol and how you can
-use this Java library to incorporate that protocol into your own
-programs.</P>
-<P>MSRP (or <A HREF="http://en.wikipedia.org/wiki/Message_Session_Relay_Protocol"><B>M</B>essage
-<B>S</B>ession <B>R</B>elay <B>P</B>rotocol</A>) is an <A HREF="http://en.wikipedia.org/wiki/Instant_messaging">instant
-messaging</A> or <A HREF="http://en.wikipedia.org/wiki/Chat">chat</A>
-protocol, defined by the IETF in <A HREF="http://tools.ietf.org/html/rfc4975">RFC4975</A>.
-Basically, (instant-) messages are sent to and from MSRP peers, using
-SEND and REPORT requests. These messages are sent over an MSRP
-session. One or more MSRP sessions can share a TCP/IP-link from one
-node [AKA peer] to another (this can be achieved by any transport
-protocol, provided it is connection-oriented and reliable, in the
-sense of not changing the content. MSRP can be used with protocols
-that provide no assurance on data delivery,as MSRP has its own
-mechanisms to ensure that the data has been delivered. Here, only
-TCP/IP is used).</P>
-<P>The protocol is text based, much like HTTP and SIP. Using chunking
-and <A HREF="http://tools.ietf.org/html/rfc2045">MIME</A>-conforming
-message content (payload), thus, MSRP messages can transfer any
-content of any size, supporting -for instance- file transfer. 
-</P>
-<H2 CLASS="western">Establishing a session</H2>
-<P>MSRP assumes that some other rendezvous method will be used to
-negotiate the establishment of a new MSRP session between peers. In
-the RFC, the SIP protocol with its SDP <A HREF="http://tools.ietf.org/html/rfc3264">offer-answer</A>
-model is used as an example.</P>
-<P>This negotiation will lead to MSRP URI's, defining the endpoints
-of the session. Such a URI contains a <I>scheme</I>, <I>authority</I>
-(domain, port), <I>session identifier</I>, <I>transport</I>- and
-other parameters.</P>
-<P>You can now use the library to establish a session.</P>
-<PRE CLASS="western" STYLE="margin-left: 1cm">import java.net.InetAddress;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MSRP - tutorial</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<!-- Le styles -->
+<link href="css/bootstrap.css" rel="stylesheet">
+<style type="text/css">
+body {
+	padding-top: 60px;
+	padding-bottom: 40px;
+}
+
+.sidebar-nav {
+	padding: 9px 0;
+}
+
+.navbar-static-top .navbar-inner,
+.navbar-fixed-bottom .navbar-inner {
+  padding-right: 0;
+  padding-left: 0;
+  -webkit-border-radius: 0;
+     -moz-border-radius: 0;
+          border-radius: 0;
+}
+</style>
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/docs.css" rel="stylesheet">
+<link href="css/prettify.css" rel="stylesheet">
+
+<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+<!--[if lt IE 9]>
+        <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+
+<!-- Le fav and touch icons -->
+<link rel="shortcut icon" href="ico/favicon.ico">
+<link rel="apple-touch-icon-precomposed" sizes="144x144"
+	href="ico/apple-touch-icon-144-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="114x114"
+	href="ico/apple-touch-icon-114-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="72x72"
+	href="ico/apple-touch-icon-72-precomposed.png">
+<link rel="apple-touch-icon-precomposed"
+	href="ico/apple-touch-icon-57-precomposed.png">
+</head>
+
+<body onload="prettyPrint()" data-spy="scroll"
+	data-target=".bs-docs-sidebar">
+
+	<div class="navbar navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container-fluid">
+				<a class="btn btn-navbar" data-toggle="collapse"
+					data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+					class="icon-bar"></span> <span class="icon-bar"></span>
+				</a> <a class="brand" href="index.html">MSRP (Java)</a>
+				<div class="nav-collapse collapse">
+					<!-- <p class="navbar-text pull-right">
+                        Logged in as <a href="#" class="navbar-link">Username</a>
+                        </p> -->
+					<ul class="nav">
+						<li><a href="index.html">Home</a></li>
+						<li class="active"><a href="tutorial.html">Tutorial</a></li>
+						<li><a href="issues.html">Issues</a></li>
+						<li><a href="source.html">Source Code</a></li>
+						<li><a href="mailinglists.html">Mailing lists</a></li>
+					</ul>
+				</div>
+				<!--/.nav-collapse -->
+			</div>
+		</div>
+	</div>
+
+	<div class="container-fluid">
+		<div class="row-fluid">
+			<div class="span3 bs-docs-sidebar">
+				<ul class="nav nav-list bs-docs-sidenav" data-spy="affix">
+					<li><a href="#gettingstarted">Getting started <i
+							class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#introduction">Introduction <i
+							class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#sessionestablishment">Establishing a
+							session <i class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#sendingandreceivingmessages">Sending and
+							receiving messages <i class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#reports">Reports <i
+							class="icon-chevron-right"></i></a></li>
+					<li><a href="#wrappingmessages">Wrapping messages <i
+							class="icon-chevron-right"></i></a></li>
+					<li><a href="#nicknamesupport">Nickname support <i
+							class="icon-chevron-right"></i></a></li>
+				</ul>
+			</div>
+			<!--/span-->
+			<div class="span9">
+				<div class="row-fluid">
+					<section id="gettingstarted">
+						<H1>Getting started</H1>
+						<P>
+							Access to sources and documentation can be found <a href="sources.html">here</a> in the
+							repository of the MSRP project. Build versions are stored in the
+							Maven <A target="_blank" HREF="http://search.maven.org/">central repository</A>
+							and can be included in any Maven build by specifying the
+							dependency in a
+							<code class="prettyprint">pom.xml</CODE>
+							. Check the website to find the latest version or search for
+							&ldquo;msrp&rdquo; on the central repository site:
+						</P>
+						<pre class="prettyprint" STYLE="margin-left: 1cm">...
+&lt;dependencies&gt;
+  &lt;dependency&gt;
+    &lt;artifactId&gt;<STRONG>msrp</STRONG>&lt;/artifactId&gt;
+    &lt;groupId&gt;<STRONG>net.java.msrp</STRONG>&lt;/groupId&gt;
+    &lt;version&gt;<STRONG>1.0.1.BETA</STRONG>&lt;/version&gt;
+  &lt;/dependency&gt;
+&lt;/dependencies&gt;
+...</PRE>
+					</section>
+				</div>
+				<!-- gettingstarted -->
+				<div class="row-fluid">
+					<section id="introduction">
+						<h1>Introduction</h1>
+						<p>Here is a brief introduction into the MSRP protocol and how
+							you can use this Java library to incorporate that protocol into
+							your own programs.</p>
+						<P>
+							MSRP (or <A
+								HREF="http://en.wikipedia.org/wiki/Message_Session_Relay_Protocol"><B>M</B>essage
+								<B>S</B>ession <B>R</B>elay <B>P</B>rotocol</A>) is an <A
+								HREF="http://en.wikipedia.org/wiki/Instant_messaging">instant
+								messaging</A> or <A HREF="http://en.wikipedia.org/wiki/Chat">chat</A>
+							protocol, defined by the IETF in <A
+								HREF="http://tools.ietf.org/html/rfc4975">RFC4975</A>.
+							Basically, (instant-) messages are sent to and from MSRP peers,
+							using SEND and REPORT requests. These messages are sent over an
+							MSRP session. One or more MSRP sessions can share a TCP/IP-link
+							from one node [AKA peer] to another (this can be achieved by any
+							transport protocol, provided it is connection-oriented and
+							reliable, in the sense of not changing the content. MSRP can be
+							used with protocols that provide no assurance on data delivery,
+							as MSRP has its own mechanisms to ensure that the data has been
+							delivered. Here, only TCP/IP is used).
+						</P>
+						<P>
+							The protocol is text based, much like HTTP and SIP. Using
+							chunking and <A HREF="http://tools.ietf.org/html/rfc2045">MIME</A>-conforming
+							message content (payload), thus, MSRP messages can transfer any
+							content of any size, supporting -for instance- file transfer.
+						</P>
+					</section>
+				</div>
+				<!-- Introduction-->
+
+				<div class="row-fluid">
+					<section id="sessionestablishment">
+						<h1>Establishing a session</h1>
+						<P>
+							To established the afore-mentioned sessions between peers, which
+							are the basis of communication with the MSRP protocol, the MSRP
+							session must be negotiated by some 'rendezvous method', external
+							to the MSRP protocol itself (e.g. SIP + SDP). An example of such
+							a negotiation can be seen in MSRP's RFC, on <a target="_blank"
+								href="http://tools.ietf.org/html/rfc4975#section-4">section
+								4</a>, and a more detailed explanation of how to conduct such a
+							negotiation in <a
+								href="http://tools.ietf.org/html/rfc4975#section-8"
+								target="_blank">section 8</a>. For more details on SDP's <A
+								HREF="http://tools.ietf.org/html/rfc3264" target="_blank">offer-answer
+								mode, click here.</A>
+						</p>
+						<P>
+							The end result of the negotiation are the MSRP URI's, that define
+							the endpoints of the session. Such a URI contains a <I>scheme</I>,
+							<I>authority</I> (domain, port), <I>session identifier</I>, <I>transport</I>-
+							and other parameters.
+						</P>
+						<P>You can now use the library to establish a session, like
+							this:</P>
+						<pre class="prettyprint">import java.net.InetAddress;
 import javax.net.msrp.Session;
 import java.net.URI;
 
-InetAddress myAddress = InetAddress.getByName(&quot;myHostnameThatDoesMsrp&quot;);
+InetAddress myAddress = InetAddress.getByName("myHostnameThatDoesMsrp");
 Session activeSession = Session.create(false, false, myAddress)
-URI myMsrpUri = activeSession.getURI();</PRE><P>
-You have a session now with a local MSRP URI, which has to be
-transmitted to the other peer through a rendezvous mechanism. This
-session is an <EM>active</EM> session. It means that as soon as you
-feed it the target URI, which should be transmitted to you using the
-rendezvous protocol, a connection will be established (if not already
-present, as MSRP allows connection re-utilization), and a first
-request is immediately sent (to bound the session):</P>
-<PRE CLASS="western" STYLE="margin-left: 1cm">import java.util.ArrayList;
+URI myMsrpUri = activeSession.getURI();</pre>
+						<p>You have a session now with a local MSRP URI, which has to
+							be transmitted to the other peer through a rendezvous mechanism.
+							This session is an active session. It means that as soon as you
+							feed it the target URI, which should be transmitted to you using
+							the rendezvous protocol, a connection will be established (if not
+							already present, as MSRP allows connection re-utilization), and a
+							first request is immediately sent (to bound the session):</p>
+						<pre class="prettyprint">
+import java.util.ArrayList;
 
-ArrayList&lt;URI&gt; toList = new ArrayList&lt;URI&gt;();
+ArrayList<URI> toList = new ArrayList<URI>();
 URI targetURI = new URI('TheNegotiatedTargetNodeMsrpUri');
 toList.add(targetURI);
-activeSession.addToPath(toList);</PRE><P>
-The target can be a list of URI's to support <A HREF="http://tools.ietf.org/html/rfc4976">relaying</A>
-of MSRP. There is no explicit support for relaying (yet) in the
-library, but using the library; one could build an MSRP proxy.</P>
-<P>At the other end, there is a passive session, one that knows what
-node will contact it. A network socket is put in place to listen for
-the connect-request.</P>
-<PRE CLASS="western" STYLE="margin-left: 1cm">URI hisMsrpUri = &lt;MSRP URI negotiated with active node...&gt;;
-Session passiveSession = Session.create(false, false, hisMsrpUri, myAddress);</PRE><P>
-The booleans <CODE CLASS="western">isSecure</CODE> and <CODE CLASS="western">isRelay</CODE>
-are not implemented <A HREF="http://java.net/jira/browse/MSRP-44" TARGET="_blank">yet</A>.</P>
-<H2 CLASS="western">Sending and receiving messages</H2>
-<P>Using a session, one is now able to send and receive messages
-using MSRP. Sending is easy, using the <CODE CLASS="western">sendMessage()</CODE>
-methods:</P>
-<PRE CLASS="western" STYLE="margin-left: 1cm">import javax.net.msrp.Message;
+activeSession.addToPath(toList);
+						
+						
+						
+						
+						</pre>
+						<p>
+							The target can be a list of URI's to support <A target="_blank"
+								HREF="http://tools.ietf.org/html/rfc4976">relaying</A>
+						</p>
+						<P>At the other end, there is a passive session, one that
+							knows what node will contact it. A network socket is put in place
+							to listen for the connect-request.</P>
+						<PRE CLASS="prettyprint">URI hisMsrpUri = &lt;MSRP URI negotiated with active node...&gt;;
+Session passiveSession = Session.create(false, false, hisMsrpUri, myAddress);</PRE>
+						<P>
+							The booleans
+							<code CLASS="prettyprint">isSecure</code>
+							and
+							<code CLASS="prettyprint">isRelay</code>
+							are not implemented <A HREF="http://java.net/jira/browse/MSRP-44"
+								TARGET="_blank">yet</A>.
+						</P>
+					</section>
+				</div>
+				<!--sessionestablishment -->
+				<div class="row-fluid">
+					<section id="sendingandreceivingmessages">
+						<h1>Sending and receiving messages</h1>
+						<p>
+							Using a session, one is now able to send and receive messages
+							using MSRP. Sending is easy, using the
+							<code class="prettyprint">sendMessage()</code>
+							methods:
+						</p>
+						<pre class="prettyprint">
+import javax.net.msrp.Message;
 
-Message sendMsg = activeSession.sendMessage(&quot;text/plain&quot;, &quot;Hello world\n&quot;.getBytes());</PRE><P>
-The message will be sent as soon as a connection is established.</P>
-<P>Receiving a message is somewhat more involved and requires the
-creation of a <CODE CLASS="western">SessionListener</CODE>. This
-listener will be triggered when messages are received, or status
-updates are relevant. The first method to be called on receiving a
-message is <CODE CLASS="western">acceptHook()</CODE>. This tells your
-application that an incoming message has been received. Two things
-should be done here: A <CODE CLASS="western">DataContainer</CODE>
-should be attached to the message-object to be able to store any
-content, and the application should decide whether you want this
-message in the first place. If so, one should return <CODE CLASS="western">true</CODE>,
-otherwise return <CODE CLASS="western">false</CODE>. In that case, an
-error-response is automatically returned.</P>
-<PRE CLASS="western" STYLE="margin-left: 1cm">import javax.net.msrp.SessionListener;
+Message sendMsg = activeSession.sendMessage("text/plain", "Hello world\n".getBytes());
+						</pre>
+						<p>The message will be sent as soon as a connection is
+							established.</p>
+
+						<p>
+							Receiving a message is somewhat more involved and requires the
+							creation of a SessionListener. This listener will be triggered
+							when messages are received, or status updates are relevant. The
+							first method to be called on receiving a message is
+							<code class="prettyprint"> acceptHook()</code>
+							. This tells your application that an incoming message has been
+							received. Two things should be done here: A
+							<code class="prettyprint">DataContainer</code>
+							should be attached to the message-object to be able to store any
+							content, and the application should decide whether you want this
+							message in the first place. If so, one should return
+							<code class="prettyprint">true</code>
+							, otherwise return
+							<code class="prettyprint">false</code>
+							. In that case, an error-response is automatically returned.
+						</p>
+
+						<pre class="prettyprint">
+import javax.net.msrp.SessionListener;
 import javax.net.msrp.IncomingMessage;
 import javax.net.msrp.MemoryDataContainer;
 
@@ -108,99 +278,154 @@ public class MyListener implements SessionListener {
     message.setDataContainer(mdc);
     return true;
   }
-}</PRE><P>
-When accepted, the <CODE CLASS="western">receivedMessage()</CODE>
-callback is triggered, containing the entire message and content.</P>
-<PRE CLASS="western" STYLE="margin-left: 1cm">  public void receivedMessage(Session session, IncomingMessage message) {
-    System.out.print(message.getContent());
-  }</PRE><P>
-The above code would make sense to any message that had text-content.
-The above call also unwraps any &quot;<CODE CLASS="western">message/cpim</CODE>&quot;
-content that might have been sent.</P>
-<H2 CLASS="western">Reports</H2>
-<P>In the same listener interface, trigger <CODE CLASS="western">receivedReport()</CODE>
-is defined to handle any received reports as a result of
-send-actions:</P>
-<PRE CLASS="western" STYLE="margin-left: 1cm">import javax.net.msrp.ResponseCode;
+}
+						</pre>
+						<p>
+							When accepted, the
+							<code class="prettyprint">receivedMessage()</code>
+							callback is triggered, containing the entire message and content.
+						</p>
+						<pre class="prettyprint">
+public void receivedMessage(Session session, IncomingMessage message) {
+  System.out.print(message.getContent());
+}						</pre>
+						<p>
+							The above code would make sense to any message that had
+							text-content. The above call also unwraps any
+							<code class="prettyprint">"message/cpim"</code>
+							content that might have been sent.
+						</p>
+					</section>
+				</div>
+				<!-- sendingandreceivingmessages -->
+				<div class="row-fluid">
+					<section id="reports">
+						<h1>Reports</h1>
+						<p>
+							In the same listener interface, trigger
+							<code class="prettyprint">receivedReport()</code>
+							is defined to handle any received reports as a result of
+							send-actions:
+						</p>
+						<pre class="prettyprint">
+import javax.net.msrp.ResponseCode;
 ...
 
   public void receivedReport(Session session, Transaction report) {
     int rc = report.getStatusHeader().getStatusCode();
     if (rc == ResponseCode.RC200)
-      System.out.println(&quot;Success report&quot;);
+      System.out.println("Success report");
     else
-      System.out.println(&quot;Failure report: &quot; + ResponseCode.toString(rc));
-  }</PRE><P>
-If you want to more thoroughly control the reporting mechanism,
-implement the abstract class <CODE CLASS="western">ReportMechanism</CODE>
-and install it in the session:</P>
-<PRE CLASS="western" STYLE="margin-left: 1cm">  import javax.net.mypackage.MyReportMechanism;
+      System.out.println("Failure report: " + ResponseCode.toString(rc));
+}	</pre>
+						<p>
+							If you want to more thoroughly control the reporting mechanism,
+							implement the abstract class
+							<code class="prettyprint">ReportMechanism</code>
+							and install it in the session:
+						</p>
+						<pre class="prettyprint">
+  import javax.net.mypackage.MyReportMechanism;
 
   MyReportMechanism mrm = new MyReportMechanism(&lt;whatever&gt;);
-  mySession.setReportMechanism(mrm);</PRE><P>
-Refer to <CODE CLASS="western">Javadoc</CODE> for more details on how
-this should work.</P>
-<H2 CLASS="western">Wrapping messages</H2>
-<P>The library also supports a message-wrapping mechanism. By
-default, a wrapping mechanism for <CODE CLASS="western">message/CPIM</CODE>
-is installed. Thus <CODE CLASS="western">message.getContent();</CODE>
-will retrieve the wrapped content of the message, whereas
-<CODE CLASS="western">message.getRawContent();</CODE> will retrieve
-the complete content, including the wrapping.</P>
-<P>Likewise, there is a</P>
-<PRE CLASS="western" STYLE="margin-bottom: 0.5cm">Session.sendWrappedMessage(&lt;wrapType&gt;, &lt;from&gt;, &lt;to&gt;, &lt;contentType&gt;, &lt;content&gt;);</PRE><P>
-that will activate the <CODE CLASS="western">wrapType</CODE> wrapper
-mechanism for wrapping the given content in a message to
-send.<BR>Currently, the <CODE CLASS="western">wrapType</CODE>
-<CODE CLASS="western">message/cpim</CODE> is supported.</P>
-<P>Rolling your own wrapper mechanism and installing can be done with</P>
-<PRE CLASS="western" STYLE="margin-bottom: 0.5cm">javax.net.msrp.wrap.Wrap.getInstance().registerWrapper(&lt;contentType, &lt;wrapImplementor&gt;);</PRE><P>
-Refer to the source code for more details.</P>
-<H2 CLASS="western">Nickname support</H2>
-<P>Support for the <CODE CLASS="western">NICKNAME</CODE> request as
-specified in <A HREF="http://tools.ietf.org/html/draft-ietf-simple-chat-15">draft-ietf-simple-chat</A>
-is also built in. See:</P>
-<PRE CLASS="western" STYLE="margin-bottom: 0.5cm">Session.requestNickname();
-SessionListener.receivedNickResult();</PRE><P>
-and</P>
-<PRE CLASS="western">SessionListener.receivedNickname();
+  mySession.setReportMechanism(mrm);
+</pre>
+						Refer to
+						<code class="prettyprint">Javadoc</code>
+						for more details on how this should work.
+
+
+
+					</section>
+				</div>
+				<!-- reports -->
+				<div class="row-fluid">
+					<section id="wrappingmessages">
+						<H1 CLASS="western">Wrapping messages</H1>
+						<P>
+							The library also supports a message-wrapping mechanism. By
+							default, a wrapping mechanism for
+							<code class="prettyprint">message/CPIM</CODE>
+							is installed. Thus
+							<code class="prettyprint">message.getContent();</CODE>
+							will retrieve the wrapped content of the message, whereas
+							<code class="prettyprint">message.getRawContent();</CODE>
+							will retrieve the complete content, including the wrapping.
+						</P>
+						<P>Likewise, there is a</P>
+						<pre class="prettyprint" STYLE="margin-bottom: 0.5cm">Session.sendWrappedMessage(&lt;wrapType&gt;, &lt;from&gt;, &lt;to&gt;, &lt;contentType&gt;, &lt;content&gt;);</PRE>
+						<P>
+							that will activate the
+							<code class="prettyprint">wrapType</CODE>
+							wrapper mechanism for wrapping the given content in a message to
+							send.<BR>Currently, the
+							<code class="prettyprint">wrapType</CODE>
+							<code class="prettyprint">message/cpim</CODE>
+							is supported.
+						</P>
+						<P>Rolling your own wrapper mechanism and installing can be
+							done with</P>
+						<pre class="prettyprint" STYLE="margin-bottom: 0.5cm">javax.net.msrp.wrap.Wrap.getInstance().registerWrapper(&lt;contentType, &lt;wrapImplementor&gt;);</PRE>
+						<P>Refer to the source code for more details.</P>
+					</section>
+				</div>
+				<!-- wrappingmessages -->
+				<div class="row-fluid">
+					<section id="nicknamesupport">
+						<H1 CLASS="western">Nickname support</H1>
+						<P>
+							Support for the
+							<code class="prettyprint">NICKNAME</CODE>
+							request as specified in <A target="_blank"
+								HREF="http://tools.ietf.org/html/draft-ietf-simple-chat-15">draft-ietf-simple-chat</A>
+							is also built in. See:
+						</P>
+						<pre class="prettyprint" STYLE="margin-bottom: 0.5cm">Session.requestNickname();
+SessionListener.receivedNickResult();</PRE>
+						<P>and</P>
+						<pre class="prettyprint">SessionListener.receivedNickname();
 Session.sendNickResult();</PRE>
-<H1>Indication of message composition</H1>
-<P>Within the MSRP message stream, it is possible to send a status to
-the other chatter, indicating that a message is actively being
-composed. This is specified in <A HREF="http://tools.ietf.org/html/rfc3994">RFC3994</A>.
-Indicating that you are in the middle of composing a message and what
-type you are actually composing can be done by calling:</P>
-<PRE CLASS="western">Session.setActive(contentType);</PRE>
-<P>and the couterpart:</P>
-<PRE CLASS="western">Session.setIdle();</PRE>
-<P>The library will send a status message containing the
-application/im-iscomposing+xml document over the session. Beware that
-it will do this only once within a refresh period.</P>
-<P>A received status message can be detected by testing for:</P>
-<PRE CLASS="western">if (message instanceof StatusMessage)</PRE>
-<P>or</P>
-<PRE CLASS="western">if (message instanceof IncomingStatusMessage)</PRE>
-<P>when true, further information on the composing can be obtained
-through:</P>
-<PRE CLASS="western">StatusMessage.getState();<BR>StatusMessage.getComposeContentType();</PRE>
-<P>etc.</P>
-<H1>Getting started</H1>
-<P>Access to sources and documentation can be found here in the
-repository of the MSRP project. Build versions are stored in the
-Maven <A HREF="http://search.maven.org/">central repository</A> and
-can be included in any Maven build by specifying the dependency in a
-<CODE CLASS="western">pom.xml</CODE>. Check the website to find the
-latest version or search for &ldquo;msrp&rdquo; on the central
-repository site:</P>
-<PRE CLASS="western" STYLE="margin-left: 1cm">...
-&lt;dependencies&gt;
-  &lt;dependency&gt;
-    &lt;artifactId&gt;<STRONG>msrp</STRONG>&lt;/artifactId&gt;
-    &lt;groupId&gt;<STRONG>net.java.msrp</STRONG>&lt;/groupId&gt;
-    &lt;version&gt;<STRONG>1.0.1.BETA</STRONG>&lt;/version&gt;
-  &lt;/dependency&gt;
-&lt;/dependencies&gt;
-...</PRE>
-</BODY>
-</HTML>
+
+					</section>
+				</div>
+				<!-- nicknamesupport -->
+
+			</div>
+			<!-- span9 -->
+
+		</div>
+		<!--/row-->
+		<hr>
+
+		<footer class="offset3">
+			<p>
+				&copy; <a href="http://www.linkedin.com/pub/tom-uijldert/3/962/568"
+					target="_blank">Tom Uijldert 2012</a>
+			</p>
+		</footer>
+
+	</div>
+	<!--/.fluid-container-->
+
+	<!-- Le javascript
+        ================================================== -->
+	<!-- Placed at the end of the document so the pages load faster -->
+	<script src="js/jquery.js"></script>
+	<script src="js/bootstrap.js"></script>
+	<script src="js/prettify.js"></script>
+	<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-35236086-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+</body>
+</html>
