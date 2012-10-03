@@ -86,6 +86,7 @@ public class Session
      * @uml.property name="_URI"
      */
     private URI uri = null;
+    private String id;
 
     /**
      * @desc the {@link Connection} associated with this session
@@ -157,8 +158,9 @@ public class Session
             // Generate new URI and add to list of connection-URIs.
             uri = connection.generateNewURI();
             stack.addConnection(uri, connection);
-            logger.debug("MSRP Session created: secure?[" + isSecure + "], relay?["
-            			+ isRelay + "] InetAddress: " + address);
+            logger.debug(String.format(
+            		"%s MSRP session %s created: secure?[%b]], relay?[%b] InetAddress: %s",
+            		toString(), getId(), isSecure, isRelay, address));
         }
         catch (Exception e)				// wrap exceptions to InternalError
         {
@@ -166,7 +168,7 @@ public class Session
         }
     }
 
-    /** Create a passive session with the local address
+	/** Create a passive session with the local address
      * <br>
      * The associated connection will be a passive one
      * (will listen for a connection-request from the target).
@@ -207,14 +209,28 @@ public class Session
         ((Connections) connection).addUriToIdentify(uri, this);
         toUris.add(toURI);
 
-        logger.debug("MSRP Session created: secure?[" + isSecure + "], relay?[" + isRelay
-            + "], toURI=[" + toURI + "], InetAddress:" + address);
+        logger.debug(String.format(
+        		"%s MSRP session %s created: secure?[%b]], relay?[%b], toURI=[%s], InetAddress: %s",
+        		toString(), getId(), isSecure, isRelay, toURI, address));
     }
 
     public String toString()
     {
-        return this.getURI().toString();
+        return "[session:" + getId() + "]";
     }
+
+    /**
+     * @return the 'session-id' part of the sessions' msrp-uri.
+     */
+    public String getId()
+    {
+    	if (id == null)
+    	{
+        	String path = uri.getPath();
+    		id = path.substring(1, path.indexOf(';'));
+    	}
+    	return id;
+	}
 
     /** Add your own {@link ReportMechanism} class.
      * This'll enable you to define your own granularity.
@@ -246,10 +262,10 @@ public class Session
         if (listener != null && listener instanceof SessionListener)
         {
             myListener = listener;
-            logger.trace("Session Listener added to Session: " + this);
+            logger.trace(this + " - Listener added");
         } else {
-        	String reason = "Listener could not be added to Session[" + this +
-        					"] because it didn't match the criteria";
+        	String reason = this + " - Listener could not be added. " +
+        					"It didn't match the criteria";
 	        logger.error(reason);
 	        throw new IllegalArgumentException(reason);
         }
@@ -283,7 +299,7 @@ public class Session
 
         stack.addActiveSession(this);
 
-        logger.trace("Added "+ toUris.size() +" toPaths with URI[0]="
+        logger.trace(this + " added "+ toUris.size() +" toPaths with URI[0]="
         				+ uris.get(0).toString());
     }
 
@@ -699,13 +715,13 @@ public class Session
      */
     protected void triggerReceivedReport(Transaction report)
     {
-        logger.trace("Called the triggerReceivedReport hook");
+        traceCall("triggerReceivedReport");
         myListener.receivedReport(this, report);
     }
 
     protected void triggerReceivedNickResult(TransactionResponse response)
     {
-        logger.trace("Called the triggerReceivedNickResult hook");
+        traceCall("triggerReceivedNickResult");
         myListener.receivedNickNameResult(this, response);
     }
 
@@ -718,7 +734,7 @@ public class Session
      */
     protected void triggerReceiveMessage(IncomingMessage message)
     {
-        logger.trace("Called the triggerReceiveMessage hook");
+        traceCall("triggerReceiveMessage");
         myListener.receivedMessage(this, message);
         if (hasMessagesToSend())
         	triggerSending();
@@ -734,13 +750,13 @@ public class Session
      */
     protected boolean triggerAcceptHook(IncomingMessage message)
     {
-        logger.trace("Called the triggerAcceptHook hook");
+        traceCall("triggerAcceptHook");
         return myListener.acceptHook(this, message);
     }
 
     protected void triggerReceivedNickname(Transaction request)
     {
-        logger.trace("Called the triggerReceivedNickname hook");
+        traceCall("triggerReceivedNickname");
         myListener.receivedNickname(this, request);
     }
 
@@ -753,10 +769,18 @@ public class Session
     protected void triggerUpdateSendStatus(Session session,
         OutgoingMessage outgoingMessage)
     {
-        logger.trace("Called the triggerUpdateSendStatus hook");
+        traceCall("triggerUpdateSendStatus");
         myListener.updateSendStatus(session, outgoingMessage,
             outgoingMessage.getSentBytes());
     }
+
+	/**
+	 * 
+	 */
+	private void traceCall(String call) {
+		if (logger.isTraceEnabled())
+			logger.trace(String.format("%s %s() called", toString(), call));
+	}
 
     /**
      * trigger for the registered
@@ -773,7 +797,7 @@ public class Session
     protected void fireMessageAbortedEvent(Message message, int reason,
         String extraReasonInfo, Transaction transaction)
     {
-        logger.trace("Called the fireMessageAbortedEvent");
+        traceCall("fireMessageAbortedEvent");
         MessageAbortedEvent abortedEvent =
             new MessageAbortedEvent(message, this, reason, extraReasonInfo,
                 transaction);
@@ -791,7 +815,7 @@ public class Session
      * @param cause Cause of the connection loss.
      */
     protected void triggerConnectionLost(Throwable cause) {
-    	logger.trace("triggerConnectionLost() called");
+    	traceCall("triggerConnectionLost");
     	myListener.connectionLost(this, cause);
     }
     /*
@@ -821,8 +845,7 @@ public class Session
     {
         if (messagesReceive.remove(message.getMessageID()) == null)
         {
-        	logger.warn("Message to receive not found nor deleted, id="
-        				+ message.getMessageID());
+        	logger.warn(this + " receiving message to delete [" + message + "] not found");
         }
     }
 
