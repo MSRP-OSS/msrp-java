@@ -273,9 +273,6 @@ public class Transaction
         TransactionManager manager, Direction direction)
         throws IllegalUseException
     {
-        logger.info("Transaction created Tx-" + method + "[" + tid
-        			+ "], handled by " + manager);
-
         this.direction = direction;
         transactionManager = manager;
         readIndex[HEADER] = readIndex[ENDLINE] = readIndex[DATA] = 0;
@@ -283,6 +280,8 @@ public class Transaction
         transactionType = method;
         setTID(tid);
         initializeDataStructures();
+
+        logger.info(toString() + " transaction created, handled by " + manager);
     }
 
     /**
@@ -309,8 +308,7 @@ public class Transaction
         /* by default have the continuation flag to be the end of message */
         continuation_flag = FLAG_END;
         initializeDataStructures();
-        logger.info("Created " + toString() + " associated Message-ID: " +
-    				message);
+        logger.info(toString() + " transaction created for message " + message);
     }
 
     private void makeNickHeader()
@@ -383,7 +381,7 @@ public class Transaction
      */
     protected Transaction()
     {
-        logger.info("transaction created by empty constructor");
+        logger.info(this + " transaction created by empty constructor");
     }
 
     /**
@@ -450,9 +448,10 @@ public class Transaction
     public String toString()
     {
     	StringBuilder toReturn = new StringBuilder(40);
-    	toReturn.append("Tx-").append(transactionType).append("[").append(tID).append("]");
+    	toReturn.append("Tx-").append(transactionType).append("[").append(tID);
         if (hasResponse())
-            toReturn.append(", response code[").append(response.responseCode).append("]");
+            toReturn.append(" response code -").append(response.responseCode);
+        toReturn.append("]");
         return toReturn.toString();
     }
 
@@ -516,25 +515,25 @@ public class Transaction
                             recognizeHeader();
                             proccessHeader();
                             headerComplete = true;
-                            logger.trace("Parsed header of Tx[" + tID + "]");
+                            logger.trace(this + " parsed header");
                         }
                     }
                     catch (Exception e)
                     {
                         validTransaction = false;
-                        logger.warn("Exception parsing Tx-"
-                                    + transactionType + "["
-                                    + tID + "] returning without parsing");
+                        logger.warn(this +
+                        		" parse exception, returning without parsing");
                         return;
                     }
                 }						// if (!headercomplete)
                 if (headerComplete)
                 {
                     if (!isValid())
-                        logger.warn("parsed invalid Tx[" + tID + "].");
+                        logger.warn(this + " parsed invalid.");
                     int moreData = toParse.length() - i;
                     if (moreData > 0)
-                    	logger.warn("parsed header but more data to come, is preparser ok?");
+                    	logger.warn(this +
+                    			" parsed header but have more data, is preparser ok?");
                     break;
                 }
             } // while
@@ -546,12 +545,12 @@ public class Transaction
 
             if (!headerComplete)
             {
-            	logger.warn("parsing content-stuff without headers? - quit.");
+            	logger.warn(this + " parsing content-stuff without headers? - quit.");
             	return;
             }
             if (!isValid())			// no valid transaction? -> return
             {
-                logger.warn("parsing invalid Tx[" + tID + "]? - quit.");
+                logger.warn(this + " parsing invalid - quit.");
                 return;
             }
             try
@@ -565,8 +564,7 @@ public class Transaction
                      */
                     long startIndex =
                         (byteRange[CHUNKSTARTBYTEINDEX] - 1) + realChunkSize;
-                    logger.trace("parsingbody of " + "Tx-SEND[" + tID +
-                            "] start at " + startIndex +
+                    logger.trace(this + " parsing body, starting " + startIndex +
                             ", size " + incBuffer.remaining());
                     while (incBuffer.hasRemaining())
                     {
@@ -599,9 +597,9 @@ public class Transaction
                 }
                 else
                 {
-                    logger.trace(
-                    		"parsing body of non-send message from Tx-<?>[" +
-            				tID + "], nr of bytes=" + incBuffer.remaining());
+                    logger.trace(this +
+                    		" parsing body of non-send message. Nr of bytes=" +
+                    		incBuffer.remaining());
                     byteData = new byte[incBuffer.remaining()];
                     incBuffer.get(byteData);
                     if (byteData.length > 0)
@@ -618,8 +616,8 @@ public class Transaction
             }
             catch (Exception e)
             {
-                logger.error("caught an exception while parsing Tx["
-                		+ tID + "], generating 400 response", e);
+                logger.error(this +
+                		" exception while parsing, generating 400 response", e);
                 try
                 {
                     transactionManager.generateResponse(this, ResponseCode.RC400,
@@ -993,7 +991,7 @@ public class Transaction
              * sent due to possible concurrency.
              */
             continuation_flag = FLAG_IRQ;
-            logger.info("Interrupted transaction " + tID);
+            logger.info(this + " interrupted transaction");
             interrupted = true;
         }
     }
@@ -1004,7 +1002,7 @@ public class Transaction
      */
     public void abort()
     {
-        logger.info("Aborting transaction: " + this);
+        logger.info(this + " aborting transaction.");
         continuation_flag = FLAG_ABORT;
         interrupted = true;
         // let's wake up the write thread
@@ -1299,7 +1297,7 @@ public class Transaction
             }
             catch (IllegalUseException e)
             {
-                logger.error("Generating response: " +
+                logger.error(this + " generating response: " +
             			ResponseCode.toString(ResponseCode.RC501), e);
 
             }
@@ -1352,7 +1350,7 @@ public class Transaction
                 }
                 catch (IllegalUseException e)
                 {
-                    logger.error("Generating response: " +
+                    logger.error(this + " generating response: " +
                     			ResponseCode.toString(rspCode), e);
                 }
             }
@@ -1370,12 +1368,12 @@ public class Transaction
                     }
                     catch (IllegalUseException e)
                     {
-                        logger.error("Generating response: " +
+                        logger.error(this + " generating response: " +
                     			ResponseCode.toString(ResponseCode.RC506), e);
 
                     }
-                    logger.error("Error! received a request that is yet to " +
-            			"be identified but associated with another session!");
+                    logger.error(this + " error! received a request that is yet to " +
+            			"be identified but associated with other session!");
                     return;
                 }
                 /*
@@ -1459,8 +1457,8 @@ public class Transaction
                      */
                     if (in.getDataContainer() == null)
                     {
-                    	logger.error(
-                			"No datacontainer given to store incoming data, " +
+                    	logger.error(this + 
+                			" no datacontainer given to store incoming data, " +
             				"discarding incoming message " + in);
                         result = false;
                     }
@@ -1480,7 +1478,7 @@ public class Transaction
                     }
                     catch (IllegalUseException e)
                     { // user set an invalid result; log it & re-send with 413 default
-                        logger.warn("Attempt to use invalid response code, forcing to default.");
+                        logger.warn(this + " attempt to use invalid response code, forcing to default.");
                         try
                         {
                             transactionManager.generateResponse(this,
@@ -1488,8 +1486,7 @@ public class Transaction
                         }
                         catch (IllegalUseException e1)
                         {
-                            logger.error("Error generating 413 response for: " +
-                            			this, e1);
+                            logger.error(this + " error generating 413 response", e1);
                         }
                     }
                 }
@@ -1500,8 +1497,8 @@ public class Transaction
                  * RFC tells us to silently ignore request if no message
                  * can be associated with it. We'll just log it
                  */
-                logger.warn("Incoming report request for unknown message. ID: " +
-                			getMessageID());
+                logger.warn(this + " incoming report request for unknown message [" +
+                			getMessageID() + "]");
                 break;
         	}
         }
@@ -1658,7 +1655,8 @@ public class Transaction
             	if (value.matches("yes|no|partial"))
             		failureReport = value;
             	else
-	                logger.warn("Failure-Report invalid value found: " + value);
+	                logger.warn(this + " failure-Report invalid value found: " +
+	                			value);
             }
             matcher = sReportPattern.matcher(headerBuffer);
             if (matcher.matches())
@@ -1669,7 +1667,8 @@ public class Transaction
             	else if (value.equals("no"))
             			successReport = false;
             	else
-	                logger.warn("Success-Report invalid value found: " + value);
+	                logger.warn(this + " success-Report invalid value found: " +
+	                			value);
             }
             break;
         case NICKNAME:
@@ -1680,10 +1679,10 @@ public class Transaction
                 throw new InvalidHeaderException("Nickname not found");
             matcher = fReportPattern.matcher(headerBuffer);
             if (matcher.matches())
-            	logger.warn("Failure report included in NICKNAME request, ignoring...");
+            	logger.warn(this + " failure report included in NICKNAME request, ignoring...");
             matcher = sReportPattern.matcher(headerBuffer);
             if (matcher.matches())
-            	logger.warn("Success report included in NICKNAME request, ignoring...");
+            	logger.warn(this + " success report included in NICKNAME request, ignoring...");
         	break;
         case UNSUPPORTED:
         	/* nothing to do (yet) */
