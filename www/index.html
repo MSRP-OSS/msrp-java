@@ -1,63 +1,229 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<title>MSRP</title>
+<meta charset="utf-8">
+<title>MSRP - Homepage</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<!-- Le styles -->
+<link href="css/bootstrap.css" rel="stylesheet">
+<style type="text/css">
+body {
+	padding-top: 60px;
+	padding-bottom: 40px;
+}
+
+.sidebar-nav {
+	padding: 9px 0;
+}
+</style>
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/docs.css" rel="stylesheet">
+
+<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+<!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+<!-- Le fav and touch icons -->
+<link rel="shortcut icon" href="ico/favicon.ico">
+<link rel="apple-touch-icon-precomposed" sizes="144x144"
+	href="ico/apple-touch-icon-144-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="114x114"
+	href="ico/apple-touch-icon-114-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="72x72"
+	href="ico/apple-touch-icon-72-precomposed.png">
+<link rel="apple-touch-icon-precomposed"
+	href="ico/apple-touch-icon-57-precomposed.png">
 </head>
-<body>
 
-<h1>Java MSRP implementation home page </h1>
+<body data-spy="scroll" data-target=".bs-docs-sidebar">
 
-<h3>Project Description:</h3>
-<h4>Documentation</h4>
-An short introduction to this library can be found <a href=tutorial.html>here</a>.
-<h4>Project Goals and mission:</h4>
-<p>This project's goal is to develop a Message Session Relay Protocol (MSRP,
-<a href="http://tools.ietf.org/html/rfc4975" target="_blank">RFC 4975</a>)
-and the MSRP relay extensions
-(<a href="http://tools.ietf.org/html/rfc4975" target="_blank">RFC 4976</a>)
-open source peer library for the Java developers community intended to be flexible
-enough so that it can be used by any application.</p>
+	<div class="navbar navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container-fluid">
+				<a class="btn btn-navbar" data-toggle="collapse"
+					data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+					class="icon-bar"></span> <span class="icon-bar"></span>
+				</a> <a class="brand" href="#">MSRP (Java)</a>
+				<div class="nav-collapse collapse">
+					<ul class="nav">
+						<li class="active"><a href="#">Home</a></li>
+						<li ><a href="tutorial.html">Tutorial</a></li>
+						<li><a href="issues.html">Issues</a></li>
+						<li><a href="source.html">Source Code</a></li>
+						<li><a href="mailinglists.html">Mailing lists</a></li>
+					</ul>
+				</div>
+				<!--/.nav-collapse -->
+			</div>
+		</div>
+	</div>
 
-<h4>Project history:</h4>
-<p>This project was born from the marvellous
-<a href="http://code.google.com/soc" target="_blank">Google Summer of Code (GSoC)</a>
-in it's 2008 edition. Initial project's abstract can be found
-<a href="http://code.google.com/soc/2008/sipcomm/appinfo.html?csaid=1CEECECA189098B4" target="_blank">here</a>.</p>
+	<div class="container-fluid">
+		<div class="row-fluid">
+			<div class="span3 bs-docs-sidebar">
+				<ul class="nav nav-list bs-docs-sidenav" data-spy="affix">
+					<li><a href="#goalsandmission">Project goals and mission <i
+							class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#history">Project history <i
+							class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#participation">Participation <i
+							class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#sponsorsandcontributions">Sponsors and
+							contributors <i class="icon-chevron-right"></i>
+					</a></li>
+				</ul>
+			</div>
+			<!--/span-->
+			<div class="span9">
+				
+				<div class="row-fluid">
+					<section id="goalsandmission">
+						<h1>Project goals and mission</h1>
+						<p>
+							This project's goal is to develop an open source peer library for
+							the Message Session Relay Protocol (MSRP, <a
+								href="http://tools.ietf.org/html/rfc4975" target="_blank">RFC
+								4975</a>) that also supports the MSRP relay extensions (<a
+								href="http://tools.ietf.org/html/rfc4975" target="_blank">RFC
+								4976</a>), flexible enough so that it can be used by any
+							application.
+						</p>
+						<!-- <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p> -->
+					</section>
+				</div>
+				<!--/goalsandmission-->
+				<div class="row-fluid">
+					<section id="history">
+						<h1>Project history</h1>
+						<h4>Past</h4>
+						<p>
+							This project was born from the marvellous <a
+								href="http://code.google.com/soc" target="_blank">Google
+								Summer of Code (GSoC)</a> in it's 2008 edition. Initial project's
+							abstract can be found <a
+								href="http://code.google.com/soc/2008/sipcomm/appinfo.html?csaid=1CEECECA189098B4"
+								target="_blank">here</a>.
+						</p>
 
-<h4>Project present and future:</h4>
-<p>Currently the project is more oriented to the requirements of a general
-instant messaging file transfer application as specified on
-<a href="http://tools.ietf.org/html/draft-ietf-mmusic-file-transfer-mech-08" target="_blank">this draft</a>. That meanwhile became RFC 5547</p>
-<p>The project's current direction is to solve all of <a href="http://java.net/jira/browse/MSRP">these issues</a>,
-giving priority to the general requirements of the instant messaging file
-transfer application and more specifically to the specific requirements of
-<a href="http://jitsi.org/" target="_blank">Jitsi (Sip Communicator)</a>.</p>
+						<h4>Project present and future:</h4>
+						<p>
+							Currently the project is more oriented to the requirements of a
+							general instant messaging file transfer application as specified
+							on <a
+								href="http://tools.ietf.org/html/draft-ietf-mmusic-file-transfer-mech-08"
+								target="_blank">this draft</a>. That meanwhile became RFC 5547
+						</p>
+						<p>
+							The project's current direction is to solve all of <a
+								href="http://java.net/jira/browse/MSRP">these issues</a>, giving
+							priority to the general requirements of the instant messaging
+							file transfer application and more specifically to the specific
+							requirements of <a href="http://jitsi.org/" target="_blank">Jitsi
+								(Sip Communicator)</a>.
+						</p>
+						<div class="offset1 span3">
+							<script type="text/javascript"
+								src="http://www.ohloh.net/p/596699/widgets/project_basic_stats.js"></script>
+						</div>
+						<div class="offset2 span4">
+							<script type="text/javascript"
+								src="http://www.ohloh.net/p/596699/widgets/project_factoids_stats.js"></script>
+						</div>
+					</section>
+				</div>
+				<!-- history -->
+				<div class="row-fluid">
+					<section id="participation">
+						<h1>Participation</h1>
+						<p>
+							This is an open source project that welcomes new developers. If
+							you are interested in participating, drop us an email at our
+							developer <a href="mailinglists.html">mailing list.</a>
+						</p>
+					</section>
+				</div>
+				<!-- participation -->
+				<div class="row-fluid">
+					<section id="sponsorsandcontributions">
+						<h1>Sponsors and contributors</h1>
+						<h4>Main contributors</h4>
+						<ul>
+							<li><a href="http://web.ist.utl.pt/~joao.a.p.antunes/"
+								target="_blank">João Antunes</a> - founder and early (2008~2010)
+								main developer;</li>
+							<li><a
+								href="http://www.linkedin.com/pub/tom-uijldert/3/962/568"
+								target="_blank">Tom Uijldert</a> - current main developer;</li>
+							<li>Arnau Vàzquez - developer responsible for the <a
+								target="_blank" href="http://kenai.com/projects/msrp-for-me">MSRP
+									mobile edition</a> port;
+							</li>
+							<li>Albert Petit - developer responsible for the <a
+								target="_blank" href="http://kenai.com/projects/msrp-for-me">MSRP
+									mobile edition</a> port;
+							</li>
+						</ul>
 
-<h3>Participation:</h3>
-<p>This is an open source project which may provide an opportunity for developers 
-to participate in a variety of ways.  If you are interested in participating please 
-send an inquiry to the owner at owner@msrp.java.net</p>
-<p>If you are a member, you can see the current list of members and request membership
-<a href="http://java.net/projects/msrp/lists">here</a></p>
+						<h4>Sponsors</h4>
+						<h5>Early development was sponsored by:</h5>
+						<p>
+							<a href="http://www.nlnet.nl" target="_blank"><img
+								src="banner-nf-160x60.jpg" width="160" height="60"
+								alt="NLNet Foundation"></a>.
+						</p>
+						<p>and</p>
+						<p>
+							<a href="http://code.google.com/soc">Google Summer of Code
+								2008 edition</a>
+						</p>
+					</section>
+				</div> <!-- sponsorsandcontributions -->
+			</div>
+			<!--/span-->
+		</div>
+		<!--/row-->
 
-<h3>Mailing Lists:</h3>
-<p>If you wish to subscribe to one of this project's mailing lists,
-click <a href="http://java.net/projects/msrp/lists">here</a>.</p>
+		<hr>
 
-<h3>Downloads:</h3>
-<ul>
-    <li>
-        To access the repository, click <a href="http://java.net/projects/msrp/sources">here</a>
-    </li>
-</ul>
+		<footer class="offset3">
+			<p>
+				&copy; <a href="http://web.ist.utl.pt/~joao.a.p.antunes/"
+					target="_blank">João Antunes 2012</a>
+			</p>
+		</footer>
 
-<h3>Issues:</h3>
-<p>To submit a project issue, or query existing issues, click <a href="http://java.net/jira/browse/MSRP">here</a>.</p>
+	</div>
+	<!--/.fluid-container-->
 
-<h3>Development sponsored by:</h3>
-<p>Proudly sponsored by:<a href="http://www.nlnet.nl" target="_blank"><img src = "banner-nf-160x60.jpg" width="160" height="60" alt="NLNet Foundation"></a>.</p>
-<p><a href="http://code.google.com/soc">Google Summer of Code 2008 edition</a></p>
+	<!-- Le javascript
+    ================================================== -->
+	<!-- Placed at the end of the document so the pages load faster -->
+	<script src="js/jquery.js"></script>
+	<script src="js/bootstrap.js"></script>
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push([ '_setAccount', 'UA-35236086-1' ]);
+		_gaq.push([ '_trackPageview' ]);
+
+		(function() {
+			var ga = document.createElement('script');
+			ga.type = 'text/javascript';
+			ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+					: 'http://www')
+					+ '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0];
+			s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
 
 </body>
 </html>
