@@ -9,6 +9,9 @@
 
 <!-- Le styles -->
 <link href="css/bootstrap.css" rel="stylesheet">
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/docs.css" rel="stylesheet">
+<link href="css/prettify.css" rel="stylesheet">
 <style type="text/css">
 body {
 	padding-top: 60px;
@@ -27,10 +30,13 @@ body {
      -moz-border-radius: 0;
           border-radius: 0;
 }
+
+code {
+    background-color: inherit;
+    border: none;
+    }
+
 </style>
-<link href="css/bootstrap-responsive.css" rel="stylesheet">
-<link href="css/docs.css" rel="stylesheet">
-<link href="css/prettify.css" rel="stylesheet">
 
 <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
 <!--[if lt IE 9]>
@@ -206,12 +212,7 @@ import java.util.ArrayList;
 ArrayList<URI> toList = new ArrayList<URI>();
 URI targetURI = new URI('TheNegotiatedTargetNodeMsrpUri');
 toList.add(targetURI);
-activeSession.addToPath(toList);
-						
-						
-						
-						
-						</pre>
+activeSession.addToPath(toList);</pre>
 						<p>
 							The target can be a list of URI's to support <A target="_blank"
 								HREF="http://tools.ietf.org/html/rfc4976">relaying</A>
@@ -244,8 +245,7 @@ Session passiveSession = Session.create(false, false, hisMsrpUri, myAddress);</P
 						<pre class="prettyprint">
 import javax.net.msrp.Message;
 
-Message sendMsg = activeSession.sendMessage("text/plain", "Hello world\n".getBytes());
-						</pre>
+Message sendMsg = activeSession.sendMessage("text/plain", "Hello world\n".getBytes());</pre>
 						<p>The message will be sent as soon as a connection is
 							established.</p>
 
