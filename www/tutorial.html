@@ -104,6 +104,8 @@ code {
 							class="icon-chevron-right"></i></a></li>
 					<li><a href="#nicknamesupport">Nickname support <i
 							class="icon-chevron-right"></i></a></li>
+					<li><a href="#compositionindication">Indication of message composition <i
+							class="icon-chevron-right"></i></a></li>
 				</ul>
 			</div>
 			<!--/span-->
@@ -389,6 +391,46 @@ Session.sendNickResult();</PRE>
 					</section>
 				</div>
 				<!-- nicknamesupport -->
+				<div class="row-fluid">
+					<section id="compositionindication">
+						<H1 CLASS="western">Indication of message composition</H1>
+						<P>
+							Within the MSRP message stream, it is possible to send a status to
+                            the other chatter, indicating that a message is actively being
+                            composed. This is specified in <A HREF="http://tools.ietf.org/html/rfc3994">RFC3994</A>.
+                            Indicating that you are in the middle of composing a message and what
+                            type you are actually composing can be done by calling:
+						</P>
+                        <pre class="prettyprint">Session.setActive(contentType);</PRE>
+						<P>
+                            and the couterpart:
+						</P>
+                        <pre class="prettyprint">Session.setIdle();</PRE>
+						<P>
+                            The library will send a status message containing the
+                            application/im-iscomposing+xml document over the session. Beware that
+                            it will do this only once within a refresh period.
+                        </P>
+                        <P>
+                            A received status message can be detected by testing for:
+                        </P>
+                        <pre class="prettyprint">if (message instanceof StatusMessage)</PRE>
+                        <P>
+                            or
+                        </P>
+                        <pre class="prettyprint">if (message instanceof IncomingStatusMessage)</PRE>
+                        <P>
+                            when true, further information on the composing can be obtained through:
+                        </P>
+                        <pre class="prettyprint">StatusMessage.getState();
+StatusMessage.getComposeContentType();</PRE>
+                        <P>
+                            etc.
+                        </P>
+
+                        </section>
+				</div>
+				<!-- compositionindication -->
 
 			</div>
 			<!-- span9 -->
