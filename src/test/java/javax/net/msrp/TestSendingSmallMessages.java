@@ -82,10 +82,6 @@ public class TestSendingSmallMessages extends TestFrame
             byte[] smallData = new byte[2 * 1024];
             TextUtils.generateRandom(smallData);
 
-            Message twoKbMessage =
-                new OutgoingMessage(receivingSession, "plain/text", smallData);
-            twoKbMessage.setSuccessReport(false);
-
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
@@ -93,8 +89,8 @@ public class TestSendingSmallMessages extends TestFrame
             sendingSession.sendMessage("text/plain", space);
 
             /*
-             * message should be transfered or in the process of being
-             * completely transfered
+             * message should be transferred or in the process of being
+             * completely transferred
              */
             synchronized (receivingSessionListener)
             {
@@ -105,6 +101,10 @@ public class TestSendingSmallMessages extends TestFrame
                 receivingSessionListener.wait();
             	receivingSessionListener.wait(500);
             }
+
+            Message twoKbMessage =
+                    new OutgoingMessage(receivingSession, "plain/text", smallData);
+                twoKbMessage.setSuccessReport(false);
 
             synchronized (sendingSessionListener)
             {

@@ -478,8 +478,8 @@ public class TransactionManager
      */
     protected void addSession(Session session)
     {
-        session.setTransactionManager(this);
         associatedSessions.put(session.getURI(), session);
+        session.setTransactionManager(this);
     }
 
     protected void removeSession(Session session) {
