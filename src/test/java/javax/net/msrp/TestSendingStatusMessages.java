@@ -27,5 +27,4 @@ public class TestSendingStatusMessages extends TestFrame {
 			fail(e.getLocalizedMessage());
 		}
 	}
-
 }

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 
 import javax.net.msrp.DataContainer;
 import javax.net.msrp.Direction;
+import javax.net.msrp.IncomingAliveMessage;
 import javax.net.msrp.IncomingMessage;
 import javax.net.msrp.Message;
 import javax.net.msrp.OutgoingMessage;
@@ -162,6 +163,8 @@ public class MockSessionListener
     public void receivedMessage(Session session, IncomingMessage message)
     {
         logger.debug("receiveMessage(id=[" + message.getMessageID() + "])");
+        if (message instanceof IncomingAliveMessage)
+        	return;
         receiveMessage = message;
         receiveMessageSession = session;
         /* 

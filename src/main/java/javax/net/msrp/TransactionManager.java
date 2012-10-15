@@ -507,8 +507,7 @@ public class TransactionManager
             generateTransactionsToSend(session.getMessageToSend());
 		else
 			try {
-				// TODO: should be empty message...
-				new OutgoingMessage(session, "text/plain", " ".getBytes());
+				session.sendAliveMessage();
 			} catch (Exception e) {
 				logger.warn(this + " " + e.getMessage());
 			}

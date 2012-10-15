@@ -106,6 +106,8 @@ code {
 							class="icon-chevron-right"></i></a></li>
 					<li><a href="#compositionindication">Typing... <i
 							class="icon-chevron-right"></i></a></li>
+					<li><a href="#keepalive">Keepalive <i
+							class="icon-chevron-right"></i></a></li>
 				</ul>
 			</div>
 			<!--/span-->
@@ -403,7 +405,7 @@ Session.sendNickResult();</PRE>
 						</P>
                         <pre class="prettyprint">Session.setActive(contentType);</PRE>
 						<P>
-                            and the couterpart:
+                            and the counterpart:
 						</P>
                         <pre class="prettyprint">Session.setIdle();</PRE>
 						<P>
@@ -431,6 +433,29 @@ StatusMessage.getComposeContentType();</PRE>
                         </section>
 				</div>
 				<!-- compositionindication -->
+				<div class="row-fluid">
+					<section id="keepalive">
+						<H1 CLASS="western">Keep alive messages</H1>
+						<P>
+							An empty MSRP SEND message is defined as a possible keepalive
+                            mechanism to support any NAT mechanisms or others.<BR>
+                            Empty, meaning having no content-type and containing no data.
+                            In the library, this is supported by 2 seperate message types:
+						</P>
+                        <pre class="prettyprint">IncomingAliveMessage
+OutgoingAliveMessage</PRE>
+						<P>
+                            and the session method:
+						</P>
+                        <pre class="prettyprint">Session.sendAliveMessage();</PRE>
+						<P>
+                            An incoming bodiless SEND will be passed to the sessionlistener,
+                            the <code class="prettyprint">acceptHook()</code> however, will not be called.
+                        </P>
+
+                        </section>
+				</div>
+				<!-- keepalive -->
 
 			</div>
 			<!-- span9 -->

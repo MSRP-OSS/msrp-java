@@ -153,7 +153,7 @@ public abstract class Message
     protected Message(Session session, String contentType, byte[] data,
             ReportMechanism reportMechanism)
     {
-        if (data.length > Stack.getShortMessageBytes())
+        if (contentType != null && data.length > Stack.getShortMessageBytes())
         {
             throw new RuntimeException("Session[" + session +
             			"] data too big, use file source or stream constructors",
@@ -162,10 +162,19 @@ public abstract class Message
         this.session = session;
         this.contentType = contentType;
 		messageId = Stack.generateMessageID();
-        dataContainer = new MemoryDataContainer(data);
-        size = data.length;
         constructorAssociateReport(reportMechanism);
-        this.session.addMessageToSend(this);
+		if (contentType != null)
+		{
+			dataContainer = new MemoryDataContainer(data);
+			size = data.length;
+	        session.addMessageToSend(this);
+		}
+		else
+		{
+	        dataContainer = new MemoryDataContainer(0);
+	        size = 0;
+	        session.addMessageOnTop(this);
+		}
     }
 
     protected Message(Session session, String nickname) {
