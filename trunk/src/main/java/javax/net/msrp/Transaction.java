@@ -353,26 +353,28 @@ public class Transaction
         	header	.append("Failure-Report: ")
         			.append(message.getFailureReport()).append("\r\n");
 
-        /*
-         * first value of the Byte-Range header field is the
-         * currentReadOffset + 1, or the current number of already sent
-         * bytes + 1 because the first field is the number of the first byte
-         * being sent:
-         */
-        long firstByteChunk = ((OutgoingMessage) message).getSentBytes() + 1;
-        /*
-         * Currently all transactions are interruptible, solving Issue #25
-         * if ((message.getSize() - ((OutgoingMessage)message).getSize()) >
-         * 								Stack.MAX_UNINTERRUPTIBLE_CHUNK) {
-         */
-        interruptible = true;
-        header	.append("Byte-Range: ").append(firstByteChunk).append("-*/")
-        		.append(message.getStringTotalSize()).append("\r\n");
         String ct = message.getContentType();
-        if ((ct == null) || (ct.length() == 0))
-        	ct = "text/plain";
-        header.append("Content-Type: ").append(ct).append("\r\n\r\n");
-
+        if (ct != null)
+        {
+	        /*
+	         * first value of the Byte-Range header field is the
+	         * currentReadOffset + 1, or the current number of already sent
+	         * bytes + 1 because the first field is the number of the first byte
+	         * being sent:
+	         */
+	        long firstByteChunk = ((OutgoingMessage) message).getSentBytes() + 1;
+	        /*
+	         * Currently all transactions are interruptible, solving Issue #25
+	         * if ((message.getSize() - ((OutgoingMessage)message).getSize()) >
+	         * 								Stack.MAX_UNINTERRUPTIBLE_CHUNK) {
+	         */
+	        interruptible = true;
+	        header	.append("Byte-Range: ").append(firstByteChunk).append("-*/")
+	        		.append(message.getStringTotalSize()).append("\r\n");
+	        if (ct.length() == 0)
+	        	ct = "text/plain";
+	        header.append("Content-Type: ").append(ct).append("\r\n\r\n");
+        }
         headerBytes = header.toString().getBytes(TextUtils.utf8);
     }
 
@@ -1448,7 +1450,8 @@ public class Transaction
                     e1.printStackTrace();
                 }
 
-                boolean result = session.triggerAcceptHook(in);
+                boolean result = in instanceof IncomingAliveMessage ||
+                				session.triggerAcceptHook(in);
                 if (result && in.getResult() != ResponseCode.RC200)
                 {
                     in.setResult(ResponseCode.RC200);
