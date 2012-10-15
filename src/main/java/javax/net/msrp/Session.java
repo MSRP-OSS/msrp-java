@@ -303,7 +303,16 @@ public class Session
         				+ uris.get(0).toString());
     }
 
-	/** send the given content over this session.
+    /** send a bodiless message (keep-alive).
+     * @return the message that will be sent.
+	 * @see Message
+     */
+    public Message sendAliveMessage()
+    {
+    	return new OutgoingAliveMessage(this);
+    }
+
+    /** send the given content over this session.
 	 * 
 	 * @param contentType	the type of content (refer to the MIME RFC's).
 	 * @param content		the content itself

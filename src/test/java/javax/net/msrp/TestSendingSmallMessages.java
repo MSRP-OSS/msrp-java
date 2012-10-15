@@ -71,7 +71,9 @@ public class TestSendingSmallMessages extends TestFrame
     }
 
     /**
-     * Test sending Text Data from receiving to sending session
+     * Test sending Text Data from receiving to sending session.
+     * Also tests the sending of a first alive-message (== connection complete
+     * but nothing to send yet -> active session will start with a bodiless SEND).
      */
     @Test
     public void testReverseSending()
