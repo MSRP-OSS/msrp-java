@@ -564,8 +564,10 @@ public class Session
      */
     protected void addMessageOnTop(Message message)
     {
-        if (sendQueue != null)
+        if (sendQueue != null) {
         	sendQueue.add(0, message);
+        	triggerSending();
+        }
     }
 
     /**
