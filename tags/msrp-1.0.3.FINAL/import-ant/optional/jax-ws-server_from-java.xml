@@ -1,0 +1,92 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the authors at: miguel.pardal@ist.utl.pt
+-->
+<project name="jax-ws-server_from-java">
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="build.jax-ws-server.apt.rel-dir" value="${build.jax-ws-server.rel-dir}/apt" />
+
+    <property name="jax-ws-server.apt.fork" value="true" />
+    <property name="jax-ws-server.apt.verbose" value="false" />
+    <property name="jax-ws-server.apt.debug" value="${compile.debug}" />
+    <property name="jax-ws-server.apt.debuglevel" value="${compile.debuglevel}" />
+    <property name="jax-ws-server.apt.encoding" value="${compile.encoding}" />
+    <property name="jax-ws-server.apt.target" value="${compile.target.version}" />
+    <property name="jax-ws-server.apt.deprecation" value="${compile.deprecation}" />
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="build-jax-ws-server-from-java"
+            depends="config,-jax-ws-server-replaces,compile,jax-ws-server-apt,create-jax-ws-server-war">
+       <!-- description="Build JAX-WS server from Java" -->
+    </target>
+
+    <target name="jax-ws-server-apt"
+            depends="-jax-ws-server-init,-jax-ws-env.taskdef.init">
+        <!-- create working directory -->
+        <mkdir dir="${build.jax-ws-server.apt.rel-dir}" />
+
+        <echo level="info" message="Executing apt to process code annotations..." />
+        <jax-ws-apt fork="${jax-ws-server.apt.fork}"
+             verbose="${jax-ws-server.apt.verbose}"
+             debug="${jax-ws-server.apt.debug}"
+             debuglevel="${jax-ws-server.apt.debuglevel}"
+             encoding="${jax-ws-server.apt.encoding}"
+             target="${jax-ws-server.apt.target}"
+             deprecation="${jax-ws-server.apt.deprecation}"
+          	 sourcepath="${src.java.rel-dir}"
+           	 destdir="${build.jax-ws-server.apt.rel-dir}"
+          	 sourcedestdir="${build.jax-ws-server.apt.rel-dir}" >
+            <classpath>
+                <path refid="compile.classpath"/>
+                <pathelement location="${java.home}/../lib/tools.jar" />
+            </classpath>
+            <option key="r" value="${build.jax-ws-server.apt.rel-dir}"/>
+            <source dir="${src.java.rel-dir}" />
+        </jax-ws-apt>
+
+        <echo level="verbose" message="Copying generated classes and descriptors to build classes dir..." />
+        <copy todir="${build.classes.rel-dir}" overwrite="true">
+            <fileset dir="${build.jax-ws-server.apt.rel-dir}">
+                <include name="**/*.class"/>
+                <include name="**/*.xml"/>
+            </fileset>
+        </copy>
+        <echo level="verbose" message="Copying handlers config..." />
+        <copy todir="${build.classes.rel-dir}" overwrite="true">
+            <fileset dir="${build.config.jax-ws-server.rel-dir}">
+                <include name="${jax-ws-server.handlers.config.file-pattern}"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+
+</project>

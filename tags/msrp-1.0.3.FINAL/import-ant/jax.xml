@@ -1,0 +1,76 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<project name="jax">
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.jax" value="true" />
+
+    <!-- Directories -->
+    <property name="jax.dir-name" value="xml" />
+    <property name="src.jax.rel-dir" value="${src.rel-dir}/${jax.dir-name}" />
+    <property name="build.jax.rel-dir" value="${build.rel-dir}/${jax.dir-name}" />
+
+
+    <!--       -->
+    <!-- PATHS -->
+    <!--       -->
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="jax-init" depends="init,-jax-init-check-src,-jax-init-copy-src,-jax-init-external" />
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <target name="-jax-init-check-src">
+        <mkdir dir="${build.jax.rel-dir}" />
+        <available file="${src.jax.rel-dir}" type="dir"
+                   property="src.jax.rel-dir.exists" />
+    </target>
+
+    <target name="-jax-init-copy-src" if="src.jax.rel-dir.exists">
+        <copy todir="${build.jax.rel-dir}" overwrite="true">
+            <fileset dir="${src.jax.rel-dir}" includes="**/*" />
+        </copy>
+    </target>
+
+    <target name="-jax-init-external" if="jax.external.enabled">
+        <copy todir="${build.jax.rel-dir}"
+              overwrite="true"
+              flatten="true">
+            <path refid="jax.external.path" />
+        </copy>
+    </target>
+
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+
+    <!--         -->
+    <!-- IMPORTS -->
+    <!--         -->
+
+</project>

@@ -1,0 +1,74 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<project name="core_libs_nest-3">
+
+    <property name="this.lib.parent.rel-dir" value="." />
+    <property name="this.lib.rel-dir" value="lib" />
+
+    <path id="this.lib.path">
+        <fileset dir="${this.lib.parent.rel-dir}">
+            <include name="${this.lib.rel-dir}/**/*.jar" />
+        </fileset>
+    </path>
+
+    <property name="super.lib.parent.rel-dir" value=".." />
+    <property name="super.lib.rel-dir" value="lib" />
+
+    <path id="super.lib.path">
+        <fileset dir="${super.lib.parent.rel-dir}">
+            <include name="${super.lib.rel-dir}/**/*.jar" />
+        </fileset>
+    </path>
+
+    <property name="super.super.lib.parent.rel-dir" value="../.." />
+    <property name="super.super.lib.rel-dir" value="lib" />
+
+    <path id="super.super.lib.path">
+        <fileset dir="${super.super.lib.parent.rel-dir}">
+            <include name="${super.super.lib.rel-dir}/**/*.jar" />
+        </fileset>
+    </path>
+
+    <path id="project.lib.path">
+        <path refid="this.lib.path" />
+        <path refid="super.lib.path" />
+        <path refid="super.super.lib.path" />
+    </path>
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <target name="-build-project-libs">
+        <copy todir="${build.lib.rel-dir}" flatten="true" overwrite="true">
+            <fileset dir="${super.super.lib.parent.rel-dir}" includes="${super.super.lib.rel-dir}/**/*.jar" />
+        </copy>
+        <copy todir="${build.lib.rel-dir}" flatten="true" overwrite="true">
+            <fileset dir="${super.lib.parent.rel-dir}" includes="${super.lib.rel-dir}/**/*.jar" />
+        </copy>
+        <copy todir="${build.lib.rel-dir}" flatten="true" overwrite="true">
+            <fileset dir="${this.lib.parent.rel-dir}" includes="${this.lib.rel-dir}/**/*.jar" />
+        </copy>
+    </target>
+
+</project>

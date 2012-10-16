@@ -1,0 +1,67 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the authors at: miguel.pardal@ist.utl.pt
+-->
+<!--
+ jax-b-env - jax-b environment
+
+ This is a module specification not an implementation.
+ Known implementation modules: jwsdp, glassfish
+
+ A jax-b-env module is expected to:
+
+ 1 - define jax-b application enviroment property:
+
+    <property name="import-ant.module.jax-b-env" value="true" />
+
+
+ 2 - define jax-b application environment properties
+
+    <property name="jax-b-env.name" value="..." />
+    <property name="jax-b-env.version" value="..." />
+
+
+ 3 - define jar collection for jax-b applications
+
+    <path id="jax-b.jars.path">
+        ...
+    </path>
+
+
+ 4 - define xjc task and adapter targets
+
+    <target name="-jax-ws-env.taskdef.init">
+
+        <taskdef name="xjc" classname="...">
+            ...
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+    </target>
+
+    <target name="-xjc-adapter-override()">
+        ...
+
+    </target>
+    <target name="-xjc-adapter()">
+        ...
+    </target>
+
+
+-->

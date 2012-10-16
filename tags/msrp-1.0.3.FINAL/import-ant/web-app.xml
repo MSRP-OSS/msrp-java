@@ -1,0 +1,117 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<project name="web-app">
+    <fail message="MUST INCLUDE core BEFORE web-app" unless="import-ant.module.core" />
+    <fail message="MUST INCLUDE A web-app-env BEFORE web-app" unless="import-ant.module.web-app-env" />
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.web-app" value="true" />
+
+    <!-- Directories -->
+    <property name="src.web.rel-dir" value="${src.rel-dir}/web" />
+    <property name="config.web-app.rel-dir" value="${config.rel-dir}/web" />
+    <property name="build.config.web-app.rel-dir" value="${build.rel-dir}/${config.web-app.rel-dir}" />
+
+    <property name="web-app-env.deploy.context" value="${ant.project.name}" />
+    <property name="web-app-env.deploy.war.file-name" value="${web-app-env.deploy.context}.war" />
+    <property name="web-app-env.deploy.war.rel-file" value="${dist.rel-dir}/${web-app-env.deploy.war.file-name}" />
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="build-web-app"
+            depends="compile,config,-web-app-replaces,create-war">
+       <!-- description="Build Web Application Archive" -->
+    </target>
+
+    <target name="create-war" depends="compile,config">
+        <!-- test required files (check file in build/config, complain about config) -->
+        <fail message="${config.web-app.rel-dir}/web.xml is missing!" >
+            <condition>
+                <not><available file="${build.config.web-app.rel-dir}/web.xml" type="file" /></not>
+            </condition>
+        </fail>
+        <!-- copy additional configuration files to build classes -->
+        <copy todir="${build.classes.rel-dir}" overwrite="true">
+            <fileset dir="${build.config.web-app.rel-dir}"
+                     includes="**/*"
+                     excludes="web.xml"/>
+        </copy>
+        <!-- prepare libraries -->
+        <antcall target="-build-libs" />
+        <!-- create new war, deleting previous version first -->
+        <delete file="${web-app-env.deploy.war.rel-file}" />
+        <jar destfile="${web-app-env.deploy.war.rel-file}">
+            <zipfileset dir="${build.config.web-app.rel-dir}"
+                        includes="web.xml"
+                        prefix="WEB-INF" />
+            <zipfileset dir="${build.classes.rel-dir}"
+                        prefix="WEB-INF/classes" />
+            <zipfileset dir="${src.web.rel-dir}" />
+            <zipfileset dir="${build.lib.rel-dir}"
+                        prefix="WEB-INF/lib" />
+        </jar>
+        <!-- delete lib copies immediately to save space -->
+        <antcall target="-clean-libs" />
+    </target>
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <!-- USER NOTE: override '-web-app-replaces' to do more or different replaces in configuration files -->
+    <target name="-web-app-replaces">
+        <echo message="Replacing tokens in resource files..." />
+        <property name="web-app.custom-tokens.target-name" value="-replace-web-app-custom-tokens(dir)" />
+        <antcall target="${web-app.custom-tokens.target-name}">
+            <param name="dir" value="${build.config.web-app.rel-dir}" />
+        </antcall>
+        <antcall target="-replace-web-app-tokens(dir)">
+            <param name="dir" value="${build.config.web-app.rel-dir}" />
+        </antcall>
+    </target>
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <target name="-replace-web-app-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@web-app-env.name@" value="${web-app-env.name}" />
+            <replacefilter token="@web-app-env.version@" value="${web-app-env.version}" />
+            <replacefilter token="@web-app-env.deploy.context@" value="${web-app-env.deploy.context}" />
+            <replacefilter token="@web-app-env.deploy.war.file-name@" value="${web-app-env.deploy.war.file-name}" />
+            <replacefilter token="@web-app-env.deploy.war.rel-file@" value="${web-app-env.deploy.war.rel-file}" />
+        </replace>
+    </target>
+
+    <!-- USER NOTE: override '-replace-web-app-custom-tokens(dir)' to replace custom tokens -->
+    <target name="-replace-web-app-custom-tokens(dir)">
+        <!--
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@token@" value="value" />
+        </replace>
+        -->
+    </target>
+
+</project>
