@@ -10,7 +10,7 @@
 
 	<artifactId>msrp</artifactId>
 	<groupId>net.java.msrp</groupId>
-	<version>1.0.3.FINAL</version>
+	<version>1.0.4.BETA-SNAPSHOT</version>
 
 	<name>MSRP :: ${project.artifactId}</name>
 	<description>A library, implementing the MSRP protocol.</description>
@@ -23,9 +23,9 @@
 	   </license>
 	 </licenses>
 	 <scm>
-	   <connection>scm:svn:http://svn.java.net/svn/msrp~svn/tags/msrp-1.0.3.FINAL</connection>
-	   <developerConnection>scm:svn:https://svn.java.net/svn/msrp~svn/tags/msrp-1.0.3.FINAL</developerConnection>
-       <url>http://java.net/projects/msrp/sources/svn/show/tags/msrp-1.0.3.FINAL</url>
+	   <connection>scm:svn:http://svn.java.net/svn/msrp~svn/trunk</connection>
+	   <developerConnection>scm:svn:https://svn.java.net/svn/msrp~svn/trunk</developerConnection>
+       <url>http://java.net/projects/msrp/sources/svn/show</url>
 	 </scm>
 	 <developers>
 	   <developer>
