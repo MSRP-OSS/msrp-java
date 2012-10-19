@@ -51,7 +51,7 @@ body {
 				<div class="nav-collapse collapse">
 					<ul class="nav">
 						<li class="active"><a href="#">Home</a></li>
-						<li ><a href="tutorial.html">Tutorial</a></li>
+						<li><a href="tutorial.html">Tutorial</a></li>
 						<li><a href="issues.html">Issues</a></li>
 						<li><a href="source.html">Source Code</a></li>
 						<li><a href="mailinglists.html">Mailing lists</a></li>
@@ -78,14 +78,17 @@ body {
 					<li><a href="#sponsorsandcontributions">Sponsors and
 							contributors <i class="icon-chevron-right"></i>
 					</a></li>
+					<li><a href="#announcements">Announcements <i
+							class="icon-chevron-right"></i>
+					</a></li>
 				</ul>
 			</div>
 			<!--/span-->
 			<div class="span9">
-				
+
 				<div class="row-fluid">
 					<section id="goalsandmission">
-						<h1>Project goals and mission</h1>
+						<h1>Project goals and mission <sup><a href="#announcements">new release!</a></sup></h1>
 						<p>
 							This project's goal is to develop an open source peer library for
 							the Message Session Relay Protocol (MSRP, <a
@@ -107,8 +110,9 @@ body {
 						<p>
 							This project was born from the marvellous <a
 								href="http://code.google.com/soc" target="_blank">Google
-								Summer of Code (GSoC)</a> in it's 2008 edition, as a project for <a target="_blank" href="http://www.jitsi.org">Jitsi</a>. Initial project
-							abstract can be found <a
+								Summer of Code (GSoC)</a> in it's 2008 edition, as a project for <a
+								target="_blank" href="http://www.jitsi.org">Jitsi</a>. Initial
+							project abstract can be found <a
 								href="http://code.google.com/soc/2008/sipcomm/about.html"
 								target="_blank">here</a>.
 						</p>
@@ -119,7 +123,9 @@ body {
 							general instant messaging file transfer application as specified
 							on <a
 								href="http://tools.ietf.org/html/draft-ietf-mmusic-file-transfer-mech-08"
-                                target="_blank">this draft</a>. That meanwhile became <a target="_blank" href="http://tools.ietf.org/html/rfc5547">RFC 5547</a>
+								target="_blank">this draft</a>. That meanwhile became <a
+								target="_blank" href="http://tools.ietf.org/html/rfc5547">RFC
+								5547</a>
 						</p>
 						<p>
 							The project's current direction is to solve all of <a
@@ -162,9 +168,9 @@ body {
 							<li><a
 								href="http://www.linkedin.com/pub/tom-uijldert/3/962/568"
 								target="_blank">Tom Uijldert</a> - current main developer,
-                                sponsored by <a href="http://www.contactmakers.nl" target="_blank"><img
-								src="contactmakers.png" width="200" height="50"
-								alt="ContactMakers"></a>;</li>
+								sponsored by <a href="http://www.contactmakers.nl"
+								target="_blank"><img src="contactmakers.png" width="200"
+									height="50" alt="ContactMakers"></a>;</li>
 							<li>Arnau Vàzquez - developer responsible for the <a
 								target="_blank" href="http://kenai.com/projects/msrp-for-me">MSRP
 									mobile edition</a> port;
@@ -185,10 +191,80 @@ body {
 						<p>and</p>
 						<p>
 							<a href="http://code.google.com/soc">Google Summer of Code
-								2008 edition</a> - <a target="_blank" href="http://www.jitsi.org">Jitsi</a> project
+								2008 edition</a> - <a target="_blank" href="http://www.jitsi.org">Jitsi</a>
+							project
 						</p>
 					</section>
-				</div> <!-- sponsorsandcontributions -->
+				</div>
+				<!-- sponsorsandcontributions -->
+				<div class="row-fluid">
+					<section id="announcements">
+						<h1>Announcements</h1>
+						<h4>18/10/2012 - 1.0.3.FINAL release</h4>
+						<!-- <blockquote> -->
+							<p>Greetings Java developer,</p>
+							<p>After a flying start within the brilliant Google Summer of
+								Code, having it simmer for a while and finally polishing it up
+								with some actual use-cases, the MSRP project team is proud to
+								announce version 1.0.3 FINAL of its' magnificent library!</p>
+							<p>This is an open source library, implementing the Message
+								Session Relay Protocol (MSRP: RFC 4975), for you to deploy in
+								any application.</p>
+
+							<p>Functionalities include</p>
+
+							<ul>
+								<li>establishing MSRP sessions</li>
+
+								<li>sending and receiving instant messages (chat) using
+									MSRP</li>
+
+								<li>sending and receiving files using MSRP</li>
+
+								<li>message/cpim wrapping to interface with other chat
+									systems</li>
+
+								<li>nicknames (draft-ietf-simple-chat)</li>
+
+								<li>message composition indication (RFC 3994)</li>
+
+							</ul>
+
+
+							<p>
+								For a quick introduction, read the <a href="tutorial.html">tutorial</a>.
+							</p>
+
+							<p>Build versions can be found in the central Maven
+								repository, just include the dependency in your projects'
+								pom.xml buildfile and you're good to go.</p>
+
+							<p>So be our guest, use it, abuse it and send us your
+								patches, comments, issues, wishlists and what have you.</p>
+							<p>Happy coding!</p>
+
+							<p>The MSRP team.</p>
+
+
+
+							<p>Special thanks go to:</p>
+
+							<ul>
+								<li>The Jitsi project for initiating this</li>
+
+								<li>Google summer of code for making it possible</li>
+
+								<li>Nlnet for early development sponsoring</li>
+
+								<li>ContactMakers for sponsoring the polishing.</li>
+							</ul>
+
+	<!-- 					</blockquote> -->
+						<!-- <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p> -->
+					</section>
+				</div>
+				<!--/announcements-->
 			</div>
 			<!--/span-->
 		</div>
