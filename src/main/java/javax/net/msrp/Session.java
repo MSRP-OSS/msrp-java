@@ -130,7 +130,7 @@ public class Session
      * The associated connection will be an active one
      * (will connect automatically to target).
      * <br>
-     * Connection will be established once a call to {@link #addToPath(ArrayList)}
+     * Connection will be established once a call to {@link #setToPath(ArrayList)}
      * defines the target-list. 
      * 
      * @param isSecure	Is it a secure connection or not (use TLS - not implemented yet)?
@@ -138,7 +138,7 @@ public class Session
      * @param address	the address to use as local endpoint.
      * @throws InternalErrorException if any error ocurred. More info about the
      *             error in the accompanying Throwable.
-     * @see #addToPath(ArrayList)
+     * @see #setToPath(ArrayList)
      */
     public static Session create(boolean isSecure, boolean isRelay, InetAddress address)
             throws InternalErrorException {
@@ -272,6 +272,15 @@ public class Session
     }
 
     /**
+     * @deprecated
+     * Replaced by {@link #setToPath(ArrayList)}
+     */
+    public void addToPath(ArrayList<URI> uris) throws IOException
+    {
+    	setToPath(uris);
+    }
+
+    /**
      * Adds the given destination URI's and establish the connection according RFC.
      * <br>
      * This call should follow the creation of a {@link Session}.
@@ -280,10 +289,13 @@ public class Session
      * 
      * @throws IOException if there was a connection problem.
      * @throws IllegalArgumentException if the given URI's are not MSRP URIs
+     * @throws RuntimeException when called twice.
      * @see #create(boolean, boolean, InetAddress)
      */
-    public void addToPath(ArrayList<URI> uris) throws IOException
+    public void setToPath(ArrayList<URI> uris) throws IOException
     {
+    	if (!toUris.isEmpty())			// sanity check
+    		throw new RuntimeException("Cannot set To-path twice");
         for (URI uri : uris)
         {
         	if (RegEx.isMsrpUri(uri))
