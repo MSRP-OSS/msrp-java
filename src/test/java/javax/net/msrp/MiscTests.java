@@ -334,7 +334,7 @@ public class MiscTests
             ArrayList<URI> uris = new ArrayList<URI>();
             uris.add(sessionReceive.getURI());
             // Enable the sessionSend on sessionReceive
-            sessionSend.addToPath(uris);
+            sessionSend.setToPath(uris);
 
             // TODO sessionSend.addToPath(null);
         }

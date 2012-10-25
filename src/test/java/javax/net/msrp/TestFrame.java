@@ -225,7 +225,7 @@ public abstract class TestFrame {
 		ArrayList<URI> toPathSendSession = new ArrayList<URI>();
 		toPathSendSession.add(receivingSession.getURI());
 
-		sendingSession.addToPath(toPathSendSession);
+		sendingSession.setToPath(toPathSendSession);
 
 		/* message should be transferred or in the process of... */
 

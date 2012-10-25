@@ -73,7 +73,7 @@ public class TestSendingExistingFile extends TestFrame
 	        /* start transfer by adding the toPath to the sendingSession */
 	        ArrayList<URI> toPathSendSession = new ArrayList<URI>();
 	        toPathSendSession.add(receivingSession.getURI());
-            sendingSession.addToPath(toPathSendSession);
+            sendingSession.setToPath(toPathSendSession);
 
             /* make the MockListener accept the message */
             synchronized (receivingSessionListener)

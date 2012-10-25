@@ -245,7 +245,7 @@ public class UsingLibraryByTwoNetworkEndpoints
                     toPathSendSession.add(MessageReceiver
                         .setUpConnection(senderUri));
 
-                    MessageSender.sendingSession.addToPath(toPathSendSession);
+                    MessageSender.sendingSession.setToPath(toPathSendSession);
                     /* make the mocklistener accept the message */
                     synchronized (MessageReceiver.receivingSessionListener)
                     {
@@ -337,7 +337,7 @@ public class UsingLibraryByTwoNetworkEndpoints
                      * add it to the sendingSession's toPath (connecting the two
                      * end-points and starting the message transfer):
                      */
-                    MessageSender.sendingSession.addToPath(toPathSendSession);
+                    MessageSender.sendingSession.setToPath(toPathSendSession);
 
                 }
                 catch (Exception e)
