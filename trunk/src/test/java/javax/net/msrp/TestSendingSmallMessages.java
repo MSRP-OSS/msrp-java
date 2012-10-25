@@ -87,7 +87,7 @@ public class TestSendingSmallMessages extends TestFrame
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-            sendingSession.addToPath(toPathSendSession);
+            sendingSession.setToPath(toPathSendSession);
             sendingSession.sendMessage("text/plain", space);
 
             /*
@@ -147,7 +147,7 @@ public class TestSendingSmallMessages extends TestFrame
             toPathSendSession.add(receivingSession.getURI());
             Message m = sendingSession.sendWrappedMessage(
             		"message/cpim", "from", "to", "text/plain", smallData);
-            sendingSession.addToPath(toPathSendSession);
+            sendingSession.setToPath(toPathSendSession);
 
             synchronized (receivingSessionListener)
             {
@@ -181,7 +181,7 @@ public class TestSendingSmallMessages extends TestFrame
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
             Message m = sendingSession.requestNickname("Hairy Scary");
-            sendingSession.addToPath(toPathSendSession);
+            sendingSession.setToPath(toPathSendSession);
 
             synchronized (receivingSessionListener)
             {
