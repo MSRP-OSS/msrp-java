@@ -563,8 +563,19 @@ public class TransactionManager
         connection.notifyWriteThread();
     }
 
-    private void removeTransactionToSend(Transaction t) {
-		transactionsToSend.remove(t);
+    /**
+     * Remove this transaction from the send queue.
+     * In case this is an interrupted transaction, generate and queue the rest.
+     * @param tx the transaction to remove.
+     */
+    private void removeTransactionToSend(Transaction tx) {
+		if (transactionsToSend.remove(tx))
+		{
+			if (tx.interrupted && !tx.isAborted())
+			{
+				generateTransactionsToSend(tx.getMessage());
+			}
+		}
     }
 
     /**
@@ -696,7 +707,7 @@ public class TransactionManager
                 throw new ImplementationException(
                     "Error, bad use of the class "
                         + "outgoingDataValidator on TransactionManager, after "
-                        + "after calling parse a call should always be made "
+                        + "calling parse a call should always be made "
                         + "to the dataHasEndLine");
             for (int i = 0; i < length; i++)
             {
@@ -743,12 +754,13 @@ public class TransactionManager
                 }
             }
         }
+
         /**
          * Returns the number of positions we should rewind
          * on the buffer and on the transaction's read offset before we
          * interrupt the current transaction.
          */
-        private int numberPositionsToRewind()
+        private int amount2Rewind()
         {
             return toRewind;
         }
@@ -758,28 +770,30 @@ public class TransactionManager
         new OutgoingDataValidator();
 
     /**
-     * Method used by the connection object to retrieve the byte array of data
-     * to be sent by the connection
+     * Method used by the connection object to retrieve a byte array of data
+     * to be sent by the connection.
      * 
-     * Validates and interrupts the transaction as neccessary with the validator
+     * 3 mechanisms are active here:
+     *  - 1 piggyback multiple transactions to send into the byte array.
+     *  - 2 split large data over multiple byte-array blocks
+     *  - 3 interrupt transactions that contain endline-data in the content
+     *  	(and split into multiple transactions, using the validator).
      * 
      * It is also at this level that the sending of bytes is accounted for
-     * purposes of triggering the sendUpdateStatus and the prioritizer
+     * purposes of triggering the sendUpdateStatus and the prioritiser
      * 
-     * @param outData the byte array to fill with data to be sent
+     * @param outData the byte array to fill with data to send
      * @return the number of bytes filled on outData
-     * @throws Exception if something went wrong retrieving the data FIXME (?!
-     *             or maybe not ?!) maybe be more specific on the exception
+     * @throws Exception if something went wrong retrieving the data.
      */
-    protected int dataToSend2(byte[] outData) throws Exception
+    protected int getDataToSend(byte[] outData) throws Exception
     {
         int byteCounter = 0;
         int bytesToAccount = 0;		/* Number of bytes per transaction sent */
 
         synchronized (this) {
-	        while (hasDataToSend() && byteCounter < outData.length)
+	        while (byteCounter < outData.length && hasDataToSend())
 	        {
-	            outgoingDataValidator.reset();
 	            Transaction t = transactionsToSend.get(0);
 	            outgoingDataValidator.init(t.getTID());
 
@@ -811,19 +825,17 @@ public class TransactionManager
 	                        outgoingDataValidator.reset();
 	                        if (outgoingDataValidator.dataHasEndLine())
 	                        {
-	                            int numberPositionsToRewind =
-	                            		outgoingDataValidator.numberPositionsToRewind();
-	                            t.rewind(numberPositionsToRewind);
+	                            int rewindAmount =
+	                            		outgoingDataValidator.amount2Rewind();
+	                            t.rewind(rewindAmount);
 	                            t.interrupt();
-	                            byteCounter -= numberPositionsToRewind;
-	                            bytesToAccount -= numberPositionsToRewind;
+	                            byteCounter -= rewindAmount;
+	                            bytesToAccount -= rewindAmount;
 	                            continue;
 	                        }
-	                        bytesToAccount++;
-	                        // TODO ISSUE #PF probably could optimize better with a
-	                        // bulk end line method, but seen that this is less than
-	                        // 30 bytes..
-	                        outData[byteCounter++] = t.getEndLineByte();
+	                        int nrBytes = t.getEndLine(outData, byteCounter);
+	                        byteCounter += nrBytes;
+	                        bytesToAccount += nrBytes;
 	                    }
 	                    else
 	                    {
@@ -838,16 +850,15 @@ public class TransactionManager
 	                         * correct end-line as an end-line on the body content.
 	                         */
 	                        outgoingDataValidator.reset();
-	                        // let's get the next transaction if any
-	                        stopTransmission = true; // jump out of second while
-	
+
+	                        stopTransmission = true; // get next transaction, if any
 	                    }
 	                }
 	            }// end of transaction while
 	            stopTransmission = false;
 
 	            /*
-	             * the buffer is full and or the transaction has been removed from
+	             * the buffer is full or the transaction has been removed from
 	             * the list of transactions to send and if that was the case the
 	             * outgoingValidator won't make a false positive because it has been
 	             * reset
@@ -855,17 +866,24 @@ public class TransactionManager
 	            outgoingDataValidator.parse(outData, byteCounter);
 	            if (outgoingDataValidator.dataHasEndLine())
 	            {
-	                int numberPositionsToRewind =
-	                    outgoingDataValidator.numberPositionsToRewind();
-	                t.rewind(numberPositionsToRewind);
+	                int rewindAmount =
+	                    outgoingDataValidator.amount2Rewind();
+	                t.rewind(rewindAmount);
 	                t.interrupt();
-	                byteCounter -= numberPositionsToRewind;
-	                bytesToAccount -= numberPositionsToRewind;
+	                byteCounter -= rewindAmount;
+	                bytesToAccount -= rewindAmount;
+
+                    int nrBytes = t.getEndLine(outData, byteCounter);
+                    byteCounter += nrBytes;
+                    bytesToAccount += nrBytes;
+
+	                removeTransactionToSend(t);
 	                outgoingDataValidator.reset();
 	            }
-
-	            // account for the bytes sent from this transaction if they should
-	            // be accounted for
+	            /* 
+				 * account for the bytes sent from this transaction if they should
+	             * be accounted for
+	             */
 	            if (!t.isIncomingResponse()
 	                && t.getTransactionType() == TransactionType.SEND
 	                && !t.hasResponse())
@@ -911,15 +929,11 @@ public class TransactionManager
     }
 
     /**
-     * Checks if the first transaction of the list of transactions to send is
-     * interruptible and if it is interrupts it and puts this new one next to be
-     * sent. Calls the generateTransactionsToSend() in order to generate the
-     * rest of the transactions of the message send request that was interrupted
+     * Inserts transaction to send at the first interruptible spot in the queue.
+     * Or appends it when a transaction is being processed and interrupts that
+     * transaction.
      * 
-     * It's responsible for appropriate queuing of REPORT and responses
-     * 
-     * FIXME This probably at this point shouldn't be public, solving of Issue
-     * #27
+     * It's responsible for appropriate queueing of REPORT and responses
      * 
      * @param transaction the REPORT or response transaction
      * @throws IllegalUseException if the transaction argument is invalid
@@ -947,11 +961,11 @@ public class TransactionManager
 	            Transaction t = transactionsToSend.get(i);
 	            if (t.isInterruptible())
 	            {
-	                if (i == 0)
+	                if (i == 0 && t.hasSentData()) {
 	                    addTransactionToSend(transaction, 1);
-	                else
+		                t.interrupt();
+	                } else
 	                    addTransactionToSend(transaction, i);
-	                t.interrupt();
 	                return;
 	            }
 	        }

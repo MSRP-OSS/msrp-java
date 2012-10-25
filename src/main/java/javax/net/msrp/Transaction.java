@@ -826,6 +826,14 @@ public class Transaction
     }
 
     /**
+     * @return has some data from this transaction already been sent? 
+     */
+    public boolean hasSentData()
+    {
+    	return readIndex[HEADER] > 0;
+    }
+
+    /**
      * Fills the given array with DATA (header and content excluding
      * end-line) bytes starting from offset and stopping at the array limit
      * or end of data. Returns the number of bytes filled
@@ -934,6 +942,17 @@ public class Transaction
         return continuation_flag;
     }
 
+    protected int getEndLine(byte[] data, int offset) throws InternalErrorException
+    {
+    	for (int i = 0; i < data.length - offset; i++)
+    	{
+    		if (hasEndLine())
+    			data[offset + i] = getEndLineByte();
+    		else
+    			return i;
+    	}
+    	return 0;
+    }
     /**
      * Asserts if a transaction is interruptible or not.
      * 
@@ -975,7 +994,7 @@ public class Transaction
      * Interrupt transaction by setting the flag and appropriate
      * continuation flag (+)
      * 
-     * @throws IllegalUseException if this method was inapropriately called
+     * @throws IllegalUseException if this method was inappropriately called
      *             (meaning the transaction can't be interrupted either because
      *             it's not an OutgoingMessage or is not interruptible)
      */
@@ -1009,6 +1028,14 @@ public class Transaction
         interrupted = true;
         // let's wake up the write thread
         transactionManager.getConnection().notifyWriteThread();
+    }
+
+    /**
+     * @return was this transaction aborted?
+     */
+    public boolean isAborted()
+    {
+    	return interrupted && continuation_flag == FLAG_ABORT;
     }
 
     /**

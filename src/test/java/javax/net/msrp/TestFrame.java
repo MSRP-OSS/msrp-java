@@ -237,7 +237,7 @@ public abstract class TestFrame {
 		    receivingSessionListener.setAcceptHookResult(true);
 		    receivingSessionListener.notify();
 		    receivingSessionListener.wait();
-		    receivingSessionListener.wait(1200);
+		    receivingSessionListener.wait(3000);
 		}
 		if (receivingSessionListener.getAcceptHookMessage() == null ||
 		    receivingSessionListener.getAcceptHookSession() == null)
