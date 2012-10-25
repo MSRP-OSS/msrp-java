@@ -46,16 +46,25 @@ public class TestCorrectlyBreaksSentData extends TestFrame
      * valid end-line characters, the message is broken into at least two
      * transactions
      */
-	// FIXME: (MSRP-12)this still fails, we don't know why, ignore test for now...
-	@Ignore
     @Test
-    public void testBreakingOfTransactions()
+    public void testBreakingOfSmallTransaction()
     {
-        try
+    	breakTransactionTest(499);
+    }
+
+    @Test
+    public void testBreakingOfLargeTransaction()
+    {
+    	breakTransactionTest(2499);
+    }
+
+    void breakTransactionTest(int dataSize) 
+    {
+    	try
         {
             /* first let's generate the random data to transfer */
-            byte[] data = new byte[499];
-            randomGenerator.nextBytes(data);
+            byte[] data = new byte[dataSize];
+            fillBinary(data);
 
             /* let's fabricate the new TID */
             byte[] tid = new byte[8];
@@ -87,32 +96,7 @@ public class TestCorrectlyBreaksSentData extends TestFrame
             Message newMessage =
                 new OutgoingMessage(sendingSession, "plain/text", data);
 
-            /* connect the two sessions: */
-            ArrayList<URI> toPathSendSession = new ArrayList<URI>();
-            toPathSendSession.add(receivingSession.getURI());
-
-            sendingSession.addToPath(toPathSendSession);
-
-            /*
-             * message should be transfered or in the process of being
-             * completely transfered
-             */
-
-            /* make the mocklistener accept the message */
-            synchronized (receivingSessionListener)
-            {
-                DataContainer dc = new MemoryDataContainer(499);
-                receivingSessionListener.setDataContainer(dc);
-                receivingSessionListener.setAcceptHookResult(new Boolean(true));
-                receivingSessionListener.notify();
-                receivingSessionListener.wait();
-                receivingSessionListener.wait(500);
-            }
-
-            if (receivingSessionListener.getAcceptHookMessage() == null
-                || receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't work, message not accepted");
-
+            triggerSendReceive(data);
             /*
              * after the message is received, let's check the list of
              * existingTransactions on the sending session to make sure that the
@@ -158,7 +142,7 @@ public class TestCorrectlyBreaksSentData extends TestFrame
         catch (Exception e)
         {
             e.printStackTrace();
-            fail("It occurred an unexpected exception: " + e.getMessage());
+            fail("Unexpected exception: " + e.getMessage());
         }
     }
 }

@@ -206,7 +206,7 @@ public class TestAbortMechanism extends TestFrame
                  * Wait for the first updateSendStatusCounter (that should be
                  * done at the 10% [more or less the buffer size in %])
                  */
-                sendingSessionListener.updateSendStatusCounter.wait(100);
+                sendingSessionListener.updateSendStatusCounter.wait(200);
             }
             /* abort the message */
             receivingSessionListener.getAcceptHookMessage().abort(

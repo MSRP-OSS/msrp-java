@@ -385,7 +385,7 @@ class Connection extends Observable implements Runnable
                     // toWriteNrBytes = transactionManager.dataToSend(outData);
                     // FIXME remove comment and change method name after the
                     // tests go well
-                    toWriteNrBytes = transactionManager.dataToSend2(outData);
+                    toWriteNrBytes = transactionManager.getDataToSend(outData);
 
                     outByteBuffer.limit(toWriteNrBytes);
                     wroteNrBytes = 0;
