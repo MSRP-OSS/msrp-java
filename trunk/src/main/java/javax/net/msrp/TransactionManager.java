@@ -985,6 +985,10 @@ public class TransactionManager
     	}
     }
 
+    /**
+     * Remove any transactions of this message that were in the send queue.
+     * @param message the message to abort.
+     */
     public void abortMessage(Message message)
     {
     	synchronized(this)

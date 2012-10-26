@@ -73,10 +73,7 @@ public class OutgoingMessage
     {
         logger.debug("Going to abort an OutgoingMessage, reason: " + reason +
         			" comment: " + extraReasonInfo);
-        if (this.isComplete())			/* Sanity checks */
-            throw new InternalErrorException(
-            		"pause() called on a complete message!");
-        if (session == null)
+        if (session == null)			/* Sanity checks */
             throw new InternalErrorException(
 				                "pause() called on message with no session.");
         TransactionManager transactionManager = session.getTransactionManager();

@@ -450,10 +450,13 @@ public class Transaction
     public String toString()
     {
     	StringBuilder toReturn = new StringBuilder(40);
-    	toReturn.append("Tx-").append(transactionType).append("[").append(tID);
-        if (hasResponse())
-            toReturn.append(" response code -").append(response.responseCode);
-        toReturn.append("]");
+    	toReturn.append("Tx-").append(transactionType).append("[").append(tID).append("]");
+        if (hasResponse()) {
+            toReturn.append(" returned[").append(response.responseCode).append("]");
+            String c = response.comment;
+            if (c != null && c.length() > 0)
+            	toReturn.append(" - ").append(c);
+        }
         return toReturn.toString();
     }
 
@@ -557,44 +560,37 @@ public class Transaction
             }
             try
             {
-                byte[] byteData;
+                byte[] data;
                 if (!isIncomingResponse() && message != null &&
                     transactionType == TransactionType.SEND)
                 {
-                    /*
+                    /* put remaining data on the container, update realChunkSize.
+                     * Account the reported bytes (automatically calls trigger)
+                     * 
                      * TODO validate byteRange values for non negatives etc
                      */
-                    long startIndex =
-                        (byteRange[CHUNKSTARTBYTEINDEX] - 1) + realChunkSize;
-                    logger.trace(this + " parsing body, starting " + startIndex +
+                    long start =
+                    		(byteRange[CHUNKSTARTBYTEINDEX] - 1) + realChunkSize;
+                    int blockSize =
+                    		message.getReportMechanism().getTriggerGranularity();
+                    data = new byte[blockSize];
+                    int size2Copy = blockSize;
+
+                    logger.trace(this + " parsing body, starting " + start +
                             ", size " + incBuffer.remaining());
+                    
                     while (incBuffer.hasRemaining())
                     {
-                        if (message.getReportMechanism().getTriggerGranularity()
-                        		>= incBuffer.limit() - incBuffer.position())
-                        {
-                            /*
-                             * put all of the remaining data on the data
-                             * container and update realChunkSize,
-                             * account the reported bytes (that
-                             * automatically calls the trigger)
-                             */
-                            byteData = new byte[incBuffer.remaining()];
-                            incBuffer.get(byteData);
+                        if (blockSize > incBuffer.remaining()) {
+                        	size2Copy = incBuffer.remaining();
+                            data = new byte[size2Copy];
                         }
-                        else
-                        {
-                            byteData =
-                                new byte[message.getReportMechanism()
-                                         	.getTriggerGranularity()];
-                            incBuffer.get(byteData, 0, message
-                                .getReportMechanism().getTriggerGranularity());
-                        }
-                        message.getDataContainer().put(startIndex, byteData);
-                        realChunkSize += byteData.length;
+                        incBuffer.get(data);
+                        message.getDataContainer().put(start, data);
+                        realChunkSize += size2Copy;
                         message.getReportMechanism().countReceivedBodyBlock(
-                        		message, this, startIndex, byteData.length);
-                        startIndex += byteData.length;
+                        		message, this, start, size2Copy);
+                        start += size2Copy;
                     }
                 }
                 else
@@ -602,16 +598,16 @@ public class Transaction
                     logger.trace(this +
                     		" parsing body of non-send message. Nr of bytes=" +
                     		incBuffer.remaining());
-                    byteData = new byte[incBuffer.remaining()];
-                    incBuffer.get(byteData);
-                    if (byteData.length > 0)
+                    data = new byte[incBuffer.remaining()];
+                    incBuffer.get(data);
+                    if (data.length > 0)
                     {
                     	if (bodyByteBuffer == null)
-                            bodyByteBuffer = ByteBuffer.wrap(byteData);
+                            bodyByteBuffer = ByteBuffer.wrap(data);
                     	else
                     	{
-                            bodyByteBuffer.put(byteData);
-                            realChunkSize += byteData.length;
+                            bodyByteBuffer.put(data);
+                            realChunkSize += data.length;
                     	}
                     }
                 }
@@ -682,17 +678,15 @@ public class Transaction
              * call the report mechanism function so that it can call the should
              * generate report
              */
-            if (transactionType == TransactionType.SEND
-                && !isIncomingResponse() && message != null
-                && flag == FLAG_END)
+            if (transactionType == TransactionType.SEND &&
+            		!isIncomingResponse() && message != null &&
+            		flag == FLAG_END)
             {
                 (message.getReportMechanism()).getCounter(message)
                     .receivedEndOfMessage();
             }
-
-            if (transactionType == TransactionType.SEND
-                && !isIncomingResponse()
-                && continuation_flag == FLAG_ABORT)
+            if (transactionType == TransactionType.SEND &&
+            		!isIncomingResponse() && continuation_flag == FLAG_ABORT)
             {
                 /*
                  * if we received a send request with a continuation flag of
