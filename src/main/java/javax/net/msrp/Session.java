@@ -610,7 +610,10 @@ public class Session
 	 */
 	private void triggerSending() {
 		if (txManager != null)
-			txManager.generateTransactionsToSend(getMessageToSend());
+        {
+            while (hasMessagesToSend())
+                txManager.generateTransactionsToSend(getMessageToSend());
+        }
 	}
 
     /**
