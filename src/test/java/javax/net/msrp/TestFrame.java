@@ -58,7 +58,7 @@ public abstract class TestFrame {
     File tempFile;
     File receivingTempFile;
 
-    Message outMessage = null;
+    OutgoingMessage outMessage = null;
 
     /** fill array with random data. Time and log when chunk is large
      * @param data the array to fill
@@ -187,8 +187,9 @@ public abstract class TestFrame {
         try
         {
             outMessage =
-                new OutgoingMessage(sendingSession, "plain/text", data);
+                new OutgoingMessage("plain/text", data);
             outMessage.setSuccessReport(wantSuccessReport);
+            sendingSession.sendMessage(outMessage);
 
             startTime = System.currentTimeMillis();
             triggerSendReceive(data);
@@ -252,8 +253,9 @@ public abstract class TestFrame {
         try
         {
             outMessage =
-                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingMessage("plain/text", tempFile);
             outMessage.setSuccessReport(wantSuccessReport);
+            sendingSession.sendMessage(outMessage);
 
             startTime = System.currentTimeMillis();
             triggerSendReceive((byte[]) null);
@@ -281,8 +283,9 @@ public abstract class TestFrame {
         try
         {
             outMessage =
-                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingMessage("plain/text", tempFile);
             outMessage.setSuccessReport(wantSuccessReport);
+            sendingSession.sendMessage(outMessage);
 
             /*
              * generate a new temporary file to receive data and wrap it on a

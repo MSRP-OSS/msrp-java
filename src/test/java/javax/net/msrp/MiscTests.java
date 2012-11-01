@@ -326,11 +326,10 @@ public class MiscTests
         {
             // Create a new message and place it on the toSendQueue of the
             // session
-            Message newMessage =
-                new OutgoingMessage(sessionSend, "plain/text",
-                    ("this is just a simple"
-                        + "test to see if this message can get through")
-                        .getBytes(TextUtils.usascii));
+            sessionSend.sendMessage(
+                new OutgoingMessage("plain/text", ("this is just a simple"
+				    + "test to see if this message can get through")
+				    .getBytes(TextUtils.usascii)));
             ArrayList<URI> uris = new ArrayList<URI>();
             uris.add(sessionReceive.getURI());
             // Enable the sessionSend on sessionReceive

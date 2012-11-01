@@ -26,37 +26,35 @@ import javax.net.msrp.*;
 import javax.net.msrp.events.MessageAbortedEvent;
 import javax.net.msrp.exceptions.*;
 
-
 /**
- * This class is used to demonstrate examples of all the functionalities that
- * should be present upon the first milestone completion. Currently
- * functionalities that aren't yet implemented/validated are still here
- * commented and with a description of what they do.
+ * This class contains examples, used to demonstrate the functionality that
+ * should be present upon first milestone completion.
+ * Functionality not yet implemented/validated is in commented form, with a
+ * description of what it should do.
  * 
  * TODO Custom ConnectionPrioritizer example, however no point at this moment
- * because this is not fully implemented
+ * because not fully implemented
  * 
- * This class purpose is to serve as general instructions and act also as a
+ * Purpose of this class is to serve as general instruction and also act as a
  * manual for the user that wants to use this library. The comments herein along
  * with the javadoc of the classes and methods should be sufficient for common
- * programmer to be enlightened of the use of this lib. If you, lib user, feel
- * that i failed to do such thing in this class, please let me know.
+ * programmers to become enlightened in the use of this lib. If you, lib user, feel
+ * that I failed to do that here, please let me know.
  * 
  * @author João André Pereira Antunes
- * 
  */
 public class FirstMilestoneFunctionalities
 {
     /**
      * This method describes the use of simple sending and receiving sessions.
      * 
-     * TODO To note that both sessions can receive and send messages. They have
+     * Note that both sessions can receive and send messages. They have
      * different constructors due to the fact that one sends a URI and the other
      * one receives a URI, to be able to distinguish these two scenarios is
      * important for Connection reuse.
-     * 
      */
-    private void implementedBehavior()
+    @SuppressWarnings("unused")
+	private void implementedBehavior()
     {
         InetAddress address = null;
         try
@@ -75,10 +73,10 @@ public class FirstMilestoneFunctionalities
         Session receivingSession;
         try
         {
-            // the constructor is responsible for assigning a connection to a
-            // session.
             /*
-             * Note: currently we don't support neither TLS nor Relays, so
+             * This assigns a connection to a session.
+             * 
+             * Note: currently we support neither TLS nor Relays, so
              * setting the first two arguments to something different than false
              * has no practical effect.
              */
@@ -88,44 +86,36 @@ public class FirstMilestoneFunctionalities
              * at this point usually one retrieves the URI of the sending
              * session and sends it to the other endpoint via some negotiation
              * mechanism.
+             * 
+             * the received URI from the sendingSession is used to set up the
+             * "receiving" session:
+             * (note: the receiving session needs the uri in order to validate
+             * incoming connections [however the timer isn't yet implemented,
+             * so illegitimate connections done here don't get disconnected see
+             * planning.
              */
-            // the received URI from the sendingSession is used to set up the
-            // "receiving" session:
-            // (note: the receiving session needs the uri in order to validate
-            // incoming connections [however the timer isn't yet implemented,
-            // so unlegitimate connections done here don't get disconnected see
-            // planning]
             receivingSession =
                 Session.create(false, false, sendingSessionUri, address);
 
-            // ALTERNATIVE: for both or one of the sessions, one could easily
-            // add another report mechanism, however this isn't tested yet. See
-            // the javadoc for the ReportMechanism class for more information on
-            // this functionality
+            /*
+             * We have to add a Listener to both sessions so that the
+             * Stack interfaces with the application using it.
+             * More info about these Listeners can be found on the comments of
+             * the private class created for demonstration's and instruction
+             * sake.
+             */
+            MSRPExampleSessionListener receivingSessionListener =
+                new MSRPExampleSessionListener();
+            MSRPExampleSessionListener sendingSessionListener =
+                new MSRPExampleSessionListener();
 
-            // receivingSession = new Session(false, false, sendingSessionUri,
-            // address, customReportMechanism);
-            // sendingSession = new Session(false, false, address,
-            // customReportMechanism);
-
-            // We have to add a Listener to both the sessions so that the
-            // Stack interfaces with the application that is using it.
-            // More info about these Listener can be found on the comments of
-            // the private class created for demonstration's and instruction
-            // sake
-
-            MSRPExampleSessionHandler receivingSessionHandler =
-                new MSRPExampleSessionHandler();
-            MSRPExampleSessionHandler sendingSessionHandler =
-                new MSRPExampleSessionHandler();
-
-            // as required on RFC upon two sessions connection occurs, the
-            // connecting session must send a SEND request in order for the
-            // receiving session to validate the URIs and therefore the
-            // connection. If at that point the session has no messages to send,
-            // it should generate and send an empty body SEND, however that
-            // behavior isn't yet implemented so it's required for one to assign
-            // a Message to a Session like this:
+            /*
+             * as required per RFC upon sessions connect, the connecting
+             * (active) session must send a SEND request in order for the
+             * receiving session to validate the URIs and therefore the
+             * connection. If at that point the session has no messages to send,
+             * it generates and sends an bodiless SEND.
+             */
             try
             {
                 byte[] someData = null;
@@ -134,8 +124,10 @@ public class FirstMilestoneFunctionalities
             }
             catch (Exception e)
             {
-                // this is caused by a too big message, see
-                // Stack.setShortMessageBytes(int) for more info
+            	/*
+                 * this can be caused by too big a message, see
+                 * Stack#setShortMessageBytes(int) for more info
+                 */
                 e.printStackTrace();
             }
 
@@ -157,48 +149,42 @@ public class FirstMilestoneFunctionalities
                 e.printStackTrace();
             }
 
-            // ALTERNATIVE: also the reportMechanisms could be set like in the
-            // Session, in such case we would have a different report mechanism
-            // specific to this Message
-            // Message exampleMessage = new Message(sendingSession,
-            // "MIMEType/MIMEsubType",
-            // someData, customReportMechanism);
-            // Message exampleFileMessage = new FileMessage(sendingSession,
-            // "MIMEType/MIMEsubType",
-            // someFile, customReportMechanism);
-
-            // now the ToPath (collection of URIs if using relays, or just one
-            // URI) gets transfered to the sending endpoint
-            // and we just have to add the ToPath received to establish
-            // connection and start sending the Messages already bound to this
-            // session
-
-            // seen that we only implement MSRP without relays the to-path will
-            // have only one URI
-            // however support for multiple URIs is already implemented here
+            /*
+             * ALTERNATIVE: reportMechanisms could be set, in that case we
+             * would have a different report mechanism
+             * specific to this Message
+             * Message exampleMessage = new OutgoingMessage(
+             * 							"MIMEType/MIMEsubType", someData);
+             * exampleMessage.setReportMechanism(customReportMechanism);
+             * 
+             * Message exampleFileMessage = new OutgoingMessage(
+             * 					"MIMEType/MIMEsubType", * someFile);
+             * exampleFileMessage.setReportMechanism(cuustomReportMechanism);
+             * 
+             * now the ToPath (collection of URIs if using relays, or just one
+             * URI) gets transfered to the sending end point
+             * and we just have to add the ToPath received to establish
+             * connection and start sending the Messages already bound to this
+             * session
+             */
             ArrayList<URI> toPath = new ArrayList<URI>();
             toPath.add(receivingSession.getURI());
 
-            // now the connection is established and the transfer is started.
-
+            // now the connection is established and transfer is started.
         }
         catch (InternalErrorException e)
         {
-            // in case the Sessions constructors failed we can get more info
-            // from printing the stack trace of the InternalErrorException, as
-            // this exception is usually used as a wrapper for other exceptions
             e.printStackTrace();
         }
     }
 
     /**
-     * This is the class that implements the SessionListener which through
-     * the stack communicates with it's user
+     * This is the class that implements the SessionListener which -through
+     * the stack- communicates with it's user
      * 
      * @author João André Pereira Antunes
-     * 
      */
-    private class MSRPExampleSessionHandler
+    private class MSRPExampleSessionListener
         implements SessionListener
     {
         /*
@@ -208,8 +194,7 @@ public class FirstMilestoneFunctionalities
          * javax.net.msrp.IncomingMessage)
          */
         /*
-         * This is the method that is called by the stack when we receive an
-         * incoming message.
+         * Called by the stack when we receive an incoming message.
          */
         public boolean acceptHook(Session session, IncomingMessage message)
         {
@@ -248,21 +233,24 @@ public class FirstMilestoneFunctionalities
             }
             else
             {
-                // if we don't feel like it or have any other reason, we can
-                // accept the message
-                // however we need to generate a new data container, either a
-                // memory or a file one with appropriate size (in case of being
-                // a memory one)
+            	/*
+                 * if we don't feel like it or have any other reason, we can
+                 * accept the message
+                 * however we need to generate a new data container, either a
+                 * memory or a file one with appropriate size (in case of being
+                 * a memory one)
+                 */
                 DataContainer dataContainer = new MemoryDataContainer(300);
-                // for alternatives to the MemoryDataContainer see javadoc of
-                // FileDataContainer
-
-                // now we have to assign the newly generated data container to
-                // the message
+                /*
+                 * for alternatives to the MemoryDataContainer see javadoc of
+                 * FileDataContainer
+                 * 
+                 * now we have to assign the newly generated data container to
+                 * the message
+                 */
                 message.setDataContainer(dataContainer);
 
                 return true;
-
             }
         }
 
@@ -350,7 +338,7 @@ public class FirstMilestoneFunctionalities
         /*
          * this method is called regularly, see DefaultReportMechanism
          * shouldTriggerSentHook for more info This granularity can be
-         * customized by implementing a ReportMechanism class and changing this
+         * Customised by implementing a ReportMechanism class and changing this
          * method
          */
         public void updateSendStatus(Session session, Message message,

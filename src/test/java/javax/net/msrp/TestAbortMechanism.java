@@ -66,8 +66,9 @@ public class TestAbortMechanism extends TestFrame
                 + ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             outMessage =
-                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingMessage("plain/text", tempFile);
             outMessage.setSuccessReport(false);
+            sendingSession.sendMessage(outMessage);
 
             /* connect the two sessions: */
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
@@ -174,7 +175,7 @@ public class TestAbortMechanism extends TestFrame
     				+ ((System.currentTimeMillis() - startTime) / 1000) + "s");
 
             outMessage =
-                new OutgoingFileMessage(sendingSession, "plain/text", tempFile);
+                new OutgoingMessage("plain/text", tempFile);
             outMessage.setSuccessReport(false);
 
             /* connect the two sessions: */
@@ -182,15 +183,12 @@ public class TestAbortMechanism extends TestFrame
             toPathSendSession.add(receivingSession.getURI());
 
             sendingSession.setToPath(toPathSendSession);
-
-            /*
-             * message should be transferred or in the process of...
-             */
+            sendingSession.sendMessage(outMessage);
 
             /* make the mocklistener accept the message */
             synchronized (receivingSessionListener)
             {
-                DataContainer dc = new MemoryDataContainer(5 * 1024 * 1024);
+                DataContainer dc = new MemoryDataContainer(data.length);
                 receivingSessionListener.setDataContainer(dc);
                 receivingSessionListener.setAcceptHookResult(new Boolean(true));
                 receivingSessionListener.notify();
@@ -198,12 +196,12 @@ public class TestAbortMechanism extends TestFrame
             }
             if (receivingSessionListener.getAcceptHookMessage() == null ||
                 receivingSessionListener.getAcceptHookSession() == null)
-                fail("The Mock didn't worked and the message didn't got "
-                    + "accepted");
+                fail("The Mock didn't work, message not accepted");
+
             synchronized (sendingSessionListener.updateSendStatusCounter)
             {
                 /*
-                 * Wait for the first updateSendStatusCounter (that should be
+                 * Wait for the first updateSendStatusCounter (should be
                  * done at the 10% [more or less the buffer size in %])
                  */
                 sendingSessionListener.updateSendStatusCounter.wait(200);
@@ -289,10 +287,10 @@ public class TestAbortMechanism extends TestFrame
     /*
      * This method tests the functionality of aborting an unsent message.
      */
-    @Ignore
-    @Test
-    public void testAbortUnsentMessage()
-    {
-        /* TODO after fixing Issue #11 */
-    }
+//    @Ignore
+//    @Test
+//    public void testAbortUnsentMessage()
+//    {
+//        /* TODO after fixing Issue #11 */
+//    }
 }

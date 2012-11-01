@@ -18,11 +18,8 @@ package javax.net.msrp;
 
 import static org.junit.Assert.*;
 
-import java.net.*;
 import java.util.*;
 
-import javax.net.msrp.DataContainer;
-import javax.net.msrp.MemoryDataContainer;
 import javax.net.msrp.Transaction;
 import javax.net.msrp.TransactionType;
 import javax.net.msrp.utils.*;
@@ -93,8 +90,8 @@ public class TestCorrectlyBreaksSentData extends TestFrame
              * all set, let's assign the message to the sending session and
              * connect them
              */
-            Message newMessage =
-                new OutgoingMessage(sendingSession, "plain/text", data);
+            sendingSession.sendMessage(
+            		new OutgoingMessage("plain/text", data));
 
             triggerSendReceive(data);
             /*

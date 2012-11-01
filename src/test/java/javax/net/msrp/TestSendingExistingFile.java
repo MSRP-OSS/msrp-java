@@ -48,12 +48,13 @@ public class TestSendingExistingFile extends TestFrame
             + fileToSend.getAbsolutePath(), fileToSend.exists());
         String sizeFileString = "file with: " + fileToSend.length() + " bytes";
 
-        Message messageToBeSent = null;
+        OutgoingMessage messageToBeSent = null;
         try
         {
-            messageToBeSent = new OutgoingFileMessage(sendingSession,
-            						"prs.genericfile/prs.rawbyte", fileToSend);
+            messageToBeSent = new OutgoingMessage("prs.genericfile/prs.rawbyte",
+            						fileToSend);
 	        messageToBeSent.setSuccessReport(true);
+            sendingSession.sendMessage(messageToBeSent);
 	        Long startTime = System.currentTimeMillis();
 
 	        sendingSession.addListener(sendingSessionListener);

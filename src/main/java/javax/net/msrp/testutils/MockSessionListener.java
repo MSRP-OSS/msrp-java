@@ -362,6 +362,7 @@ public class MockSessionListener
 	@Override
 	public void connectionLost(Session session, Throwable cause) {
 		logger.warn("Connection broke, reason: " + cause.getMessage());
+		cause.printStackTrace();
 		session.tearDown();
 	}
 

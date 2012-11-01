@@ -16,7 +16,6 @@
  */
 package javax.net.msrp.examples;
 
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -27,10 +26,8 @@ import javax.net.msrp.*;
 import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.testutils.*;
 
-
 /**
- * 
- * Simple class that exemplifies the use of the library in two distinct pcs,
+ * Simple class that demonstrates the use of the library in two distinct pcs,
  * used to reply to Thomas's question read comments for further info
  * 
  * Note: the MSRP connection is always both ways but for simplification here, we
@@ -39,7 +36,6 @@ import javax.net.msrp.testutils.*;
  * and send messages
  * 
  * @author João André Pereira Antunes
- * 
  */
 public class UsingLibraryByTwoNetworkEndpoints
 {
@@ -59,11 +55,10 @@ public class UsingLibraryByTwoNetworkEndpoints
     String tempFileDir;
 
     /**
-     * Class that represents the message receiver, similar code as this one
+     * Class representing the message receiver, similar code as this one
      * should be on the receiver endpoint
      * 
      * @author João André Pereira Antunes
-     * 
      */
     static class MessageReceiver
     {
@@ -113,11 +108,10 @@ public class UsingLibraryByTwoNetworkEndpoints
     }
 
     /**
-     * Class that represents the message sender, similar code as this one should
+     * Class representing the message sender, similar code as this one should
      * be on the sender endpoint
      * 
      * @author João André Pereira Antunes
-     * 
      */
     static class MessageSender
     {
@@ -128,7 +122,7 @@ public class UsingLibraryByTwoNetworkEndpoints
          * @see MessageReceiver#receivingSessionListener
          */
         static MockSessionListener sendingSessionListener =
-            new MockSessionListener("sendinSessionListener");
+            new MockSessionListener("sendingSessionListener");
 
         /**
          * The created session object for the receiving endpoint
@@ -174,8 +168,7 @@ public class UsingLibraryByTwoNetworkEndpoints
          * @return the Message object created
          * @throws IllegalUseException thrown if the Message creation originated
          *             an exception @see
-         *             {@link Message#Message(Session, String, byte[])}:w
-         * 
+         *             {@link Message#Message(Session, String, byte[])}
          */
         protected static Message generateRandomMemoryMessage(int size)
             throws IllegalUseException
@@ -183,12 +176,12 @@ public class UsingLibraryByTwoNetworkEndpoints
             byte[] data = new byte[size];
             randomGenerator.nextBytes(data);
             /*
-             * Create the message and bind it from the beginning to the
-             * sendingSession:
+             * Create the message and queue it to the sendingSession
              */
-            Message messageToReturn = sendingSession.sendMessage("raw/whatever", data);
+            OutgoingMessage messageToReturn = new OutgoingMessage("raw/whatever", data);
             /* let us disable the success report for this example */
             messageToReturn.setSuccessReport(false);
+            sendingSession.sendMessage(messageToReturn);	// queue for sending
 
             return messageToReturn;
         }
@@ -199,9 +192,8 @@ public class UsingLibraryByTwoNetworkEndpoints
      */
     private static void usage()
     {
-        System.out.println("Usage: programName" + " automatic");
-        System.out.println("or, instead: programName"
-            + " manual [receiver URIsender|sender]");
+        System.out.println("Usage: programName automatic");
+        System.out.println("or, instead: programName manual [receiver URIsender|sender]");
         System.out.println();
     }
 
@@ -261,15 +253,13 @@ public class UsingLibraryByTwoNetworkEndpoints
                      * message should be transfered or in the process of being
                      * completely transfered
                      */
-
                     if (MessageReceiver.receivingSessionListener
                         .getAcceptHookMessage() == null
                         || MessageReceiver.receivingSessionListener
                             .getAcceptHookSession() == null)
                     {
-                        System.out
-                            .println("The Mock didn't worked and the message didn't got "
-                                + "accepted");
+                    	System.out.println(
+                    			"The Mock didn't work and the message wasn't accepted");
                         System.exit(ERROR);
                     }
                     synchronized (MessageReceiver.receivingSessionListener)
@@ -288,7 +278,6 @@ public class UsingLibraryByTwoNetworkEndpoints
                             .println("Successfully received the message!");
                         return;
                     }
-
                 }
                 catch (Exception e)
                 {
@@ -297,12 +286,11 @@ public class UsingLibraryByTwoNetworkEndpoints
                     e.printStackTrace();
                     System.exit(ERROR);
                 }
-
             }
             break;
         case 2:
-            if (args[0].compareToIgnoreCase("manual") != 0
-                || args[1].compareToIgnoreCase("sender") != 0)
+            if (args[0].compareToIgnoreCase("manual") != 0 ||
+                args[1].compareToIgnoreCase("sender") != 0)
                 parameterError();
             else
             {
@@ -314,14 +302,14 @@ public class UsingLibraryByTwoNetworkEndpoints
                      * is run with the generated URI from this sender, after
                      * that it connects to the receiver
                      */
-
-                    URI senderUri = MessageSender.setUpConnection();
+                    @SuppressWarnings("unused")
+					URI senderUri = MessageSender.setUpConnection();
 
                     MessageSender.generateRandomMemoryMessage(3000);
 
                     /* prompt and get the uri from the standard input: */
-                    System.out
-                        .print("Please input the sender's one-URI to-path (the receiver URI that was generated by the program in the receiver mode):");
+                    System.out.print(
+                    		"Please input the sender's one-URI to-path (the receiver URI that was generated by the program in the receiver mode):");
                     BufferedReader br =
                         new BufferedReader(new InputStreamReader(System.in));
                     String uriString;
@@ -338,7 +326,6 @@ public class UsingLibraryByTwoNetworkEndpoints
                      * end-points and starting the message transfer):
                      */
                     MessageSender.sendingSession.setToPath(toPathSendSession);
-
                 }
                 catch (Exception e)
                 {
@@ -350,8 +337,8 @@ public class UsingLibraryByTwoNetworkEndpoints
             }
             break;
         case 3:
-            if (args[0].compareToIgnoreCase("manual") != 0
-                || args[1].compareToIgnoreCase("receiver") != 0)
+            if (args[0].compareToIgnoreCase("manual") != 0 ||
+                args[1].compareToIgnoreCase("receiver") != 0)
                 parameterError();
             else
             {
@@ -389,9 +376,8 @@ public class UsingLibraryByTwoNetworkEndpoints
                         || MessageReceiver.receivingSessionListener
                             .getAcceptHookSession() == null)
                     {
-                        System.out
-                            .println("The Mock didn't worked and the message didn't got "
-                                + "accepted");
+                        System.out.println(
+                        		"The Mock didn't work and the message wasn't accepted");
                         System.exit(ERROR);
                     }
                     synchronized (MessageReceiver.receivingSessionListener)
@@ -406,11 +392,9 @@ public class UsingLibraryByTwoNetworkEndpoints
                         && MessageReceiver.receivingSessionListener
                             .getReceiveMessage().getSize() == 3000)
                     {
-                        System.out
-                            .println("Successfully received the message!");
+                        System.out.println( "Successfully received message!");
                         return;
                     }
-
                 }
                 catch (URISyntaxException syntaxExcptn)
                 {
@@ -421,15 +405,12 @@ public class UsingLibraryByTwoNetworkEndpoints
                 }
                 catch (Exception e)
                 {
-                    System.out
-                        .println("An exception occurred in the receiver in the manual mode:");
+                    System.out.println(
+                    		"An exception occurred in the receiver in the manual mode:");
                     e.printStackTrace();
                     System.exit(ERROR);
                 }
-
             }
-
         }
-
     }
 }

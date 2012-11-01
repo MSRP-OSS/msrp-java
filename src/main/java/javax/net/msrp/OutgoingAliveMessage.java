@@ -10,8 +10,8 @@ package javax.net.msrp;
 public class OutgoingAliveMessage extends OutgoingMessage
 {
 
-	public OutgoingAliveMessage(Session session)
+	protected OutgoingAliveMessage()
 	{
-		super(session, null, null);
+		;
 	}
 }
