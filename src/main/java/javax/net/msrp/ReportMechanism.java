@@ -57,7 +57,6 @@ public abstract class ReportMechanism
             callCount);
 
         message.lastCallReportCount = callCount;
-
     }
 
     /**
@@ -83,8 +82,9 @@ public abstract class ReportMechanism
         if (shouldTriggerSentHook(outgoingMessage, session,
             outgoingMessage.lastCallSentData))
             session.triggerUpdateSendStatus(session, outgoingMessage);
-        outgoingMessage.lastCallSentData =
-            outgoingMessage.getDataContainer().currentReadOffset();
+        if (outgoingMessage.getDataContainer() != null)
+	        outgoingMessage.lastCallSentData =
+	            outgoingMessage.getDataContainer().currentReadOffset();
 
         // TODO call the connection prioritizer method so far we will only check
         // to see if message is complete and account it on the session's sent
@@ -92,14 +92,11 @@ public abstract class ReportMechanism
         // should be removed:
         // Store the sent message based on the success report
         if (outgoingMessage.wantSuccessReport())
-            outgoingMessage.getSession().addSentOrSendingMessage(
-                outgoingMessage);
-
+            session.addSentOrSendingMessage(outgoingMessage);
     }
 
     /**
-     * Method that is used to retrieve the counter associated with the given
-     * message
+     * Retrieve the counter associated with the given message
      * 
      * @param message the message to retrieve the counter from
      * @return the counter associated with the given message
@@ -116,7 +113,7 @@ public abstract class ReportMechanism
     }
 
     /**
-     * method used to eventually trigger an success report
+     * Trigger a success report when appropriate
      * 
      * @param message the message that triggered this call
      * @param transaction the transaction that triggered this call
@@ -126,11 +123,10 @@ public abstract class ReportMechanism
     protected void triggerSuccessReport(Message message,
         Transaction transaction, long lastCallCount, long callCount)
     {
-
         if (message.wantSuccessReport())
         {
             /*
-             * use this mechanism also as a way of asserting also if a message
+             * use this mechanism also as a way of asserting if a message
              * with a negative success report is complete or not
              */
             if (shouldGenerateReport(message, lastCallCount, callCount))
@@ -138,61 +134,50 @@ public abstract class ReportMechanism
                 /*
                  * if there was a change in the number of bytes accounted for
                  */
-
                 Stack.generateAndSendSuccessReport(message, transaction, null);
             }
-
         }
     }
 
     /**
-     * @return an int with the default value of the triggerReportGranularity
-     *         basicly this value sets the number of received body bytes before
-     *         calling the triggerSuccessReport method
-     * 
-     *         All of the implementing classes must implement this method
+     * @return How many body bytes should be received before
+     *         calling {@link #shouldGenerateReport(Message, long, long)}.
      */
     public abstract int getTriggerGranularity();
 
     /**
-     * Method to be implemented by the actual reportMechanism This method is
-     * called whenever any alteration to the number of bytes is detected on the
-     * message
+     * Called whenever {@link #getTriggerGranularity()} change to the number
+     * of received bytes is detected on the message.
+     * <P>
+     * Indicates whether a {@link SuccessReport} should be generated now.
+     * <P>
+     * Hint: access the totalNrBytes of the message. May be useful to generate
+     * reports based on percentage (if applicable, totalNrBytes may be unspecified/unknown)
      * 
-     * Hint: one always has access to the totalNrBytes of the message that may
-     * be useful to generate reports based on percentage (if applicable, because
-     * the totalNrBytes of the message may be unspecified/unknown)
-     * 
-     * @param message Message to which the alteration of the number of bytes
-     *            ocurred (message being received)
-     * @param lastCallCount the number of bytes that were received on the last
-     *            call to this method
-     * @param callCount the number of bytes received so far by the message
-     * @return true if it's reasoned that a success report should be sent now,
-     *         false otherwise
+     * @param message Message this change pertains to (message being received)
+     * @param lastCallCount number of received bytes on the last call to this method
+     * @param callCount the number of bytes received so far
+     * @return true if a {@link SuccessReport} should be sent now, false otherwise
      */
     public abstract boolean shouldGenerateReport(Message message,
-        long lastCallCount, long callCount);
+    		long lastCallCount, long callCount);
 
     /**
-     * Method to be implemented by the actual reportMechanism This method is
-     * called whenever any significant alteration to the number of bytes is
+     * Called whenever any significant change to the number of sent bytes is
      * detected on the message.
+     * <P> 
+     * Implementation of this method allows the application to determine
+     * the granularity of call-backs to
+     * {@link SessionListener#updateSendStatus(Session, Message, long)}.
      * 
-     * The implementation of this method allows the specific application to
-     * decide upon the granularity of the callbacks to the updateSendStatus on
-     * the SessionListener
-     * 
-     * 
-     * @param outgoingMessage the message that triggered the call
+     * @param message message that triggered the call
      * @param session the session to which the message belongs
-     * @param nrBytesLastCall the number of bytes accounted for on the last call
-     *            to this method - needed because we don't have a fixed
-     *            granularity for this method call -
-     * @return true if one should call the updateSendStatus trigger and false
-     *         otherwise
-     * 
+     * @param nrBytesLastCall number of bytes accounted for on the last call
+     *			to this method (we don't have a fixed granularity for this call)
+     * @return true if 
+     * 			{@link SessionListener#updateSendStatus(Session, Message, long)}
+     * 			should be called
      */
-    public abstract boolean shouldTriggerSentHook(Message outgoingMessage,
-        Session session, long nrBytesLastCall);
+    public abstract boolean shouldTriggerSentHook(Message message,
+    		Session session, long nrBytesLastCall);
 }

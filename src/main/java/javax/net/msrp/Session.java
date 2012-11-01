@@ -316,12 +316,11 @@ public class Session
     }
 
     /** send a bodiless message (keep-alive).
-     * @return the message that will be sent.
 	 * @see Message
      */
-    public Message sendAliveMessage()
+    public void sendAliveMessage()
     {
-    	return new OutgoingAliveMessage(this);
+    	sendMessage(new OutgoingAliveMessage());
     }
 
     /** send the given content over this session.
@@ -334,13 +333,12 @@ public class Session
 	 */
 	public Message sendMessage(String contentType, byte[] content)
 	{
-		endComposing();
-		return new OutgoingMessage(this, contentType, content);
+		return sendMessage(new OutgoingMessage(contentType, content));
 	}
 
 	public Message requestNickname(String nickname)
 	{
-		return new OutgoingMessage(this, nickname);
+		return sendMessage(new OutgoingMessage(nickname));
 	}
 
 	/** Wrap the given content in another type and send over this session.
@@ -357,10 +355,8 @@ public class Session
 	{
 		Wrap wrap = Wrap.getInstance();
 		if (wrap.isWrapperType(wrapType)) {
-			endComposing();
 			WrappedMessage wm = wrap.getWrapper(wrapType);
-			return new OutgoingMessage(this, wrapType,
-										wm.wrap(from, to, contentType, content));
+			return sendMessage(new OutgoingMessage(wrapType, wm.wrap(from, to, contentType, content)));
 		}
 		return null;
 	}
@@ -368,17 +364,28 @@ public class Session
 	/** send the given file over this session.
 	 * 
 	 * @param contentType	the type of file.
-	 * @param content		the file itself
+	 * @param fileHandle	the file itself
 	 * @return				the message-object that will be send, can be used
 	 * 						to abort large content.
 	 * @throws SecurityException not allowed to read and/or write
 	 * @throws FileNotFoundException file not found
 	 */
-	public Message sendMessage(String contentType, File content)
+	public Message sendMessage(String contentType, File fileHandle)
 			throws FileNotFoundException, SecurityException
 	{
-		endComposing();
-		return new OutgoingFileMessage(this, contentType, content);
+		return sendMessage(new OutgoingMessage(contentType, fileHandle));
+	}
+
+	public Message sendMessage(OutgoingMessage message)
+	{
+		message.setSession(this);
+		if (message.hasData())
+			endComposing();
+		if (message.contentType != null)
+	        addMessageToSend(message);
+		else
+	        addMessageOnTop(message);
+		return message;
 	}
 
 	/**
@@ -474,7 +481,7 @@ public class Session
 				refresh = 60;
 			this.refresh = refresh;
 			activeEnd = lastActive + (refresh * 1000);
-			new OutgoingStatusMessage(this, isComposing, composeContentType, refresh);
+			sendMessage(new OutgoingStatusMessage(this, isComposing, composeContentType, refresh));
 		}
 	}
 
@@ -487,7 +494,7 @@ public class Session
 		if (isComposing == ImState.active)
 		{
 			endComposing();
-			new OutgoingStatusMessage(this, isComposing, composeContentType, 0);
+			sendMessage(new OutgoingStatusMessage(this, isComposing, composeContentType, 0));
 		}
 	}
 
@@ -502,23 +509,27 @@ public class Session
 		// clear local resources
 		toUris = null;
 
-		if (sendQueue != null) {
+		if (sendQueue != null)
+		{
 			for (Message msg : sendQueue) {
 				msg.discard();
 			}
 			sendQueue = null;
 		}
 
-		if (txManager != null) {
+		if (txManager != null)
+		{
 			txManager.removeSession(this);
 			txManager = null;
 		}
 		// FIXME: (javax.net.msrp-31) allow connection reuse by sessions.
-		if (connection != null) {
+		if (connection != null)
+		{
 			connection.close();
 			connection = null;
 		}
-		if (stack != null) {
+		if (stack != null)
+		{
 			stack.removeActiveSession(this);
 			stack = null;
 		}
@@ -583,9 +594,10 @@ public class Session
      * 
      * @param message the message to be added on top of the message queue
      */
-    protected void addMessageOnTop(Message message)
+    private void addMessageOnTop(Message message)
     {
-        if (sendQueue != null) {
+        if (sendQueue != null)
+        {
         	sendQueue.add(0, message);
         	triggerSending();
         }
@@ -597,9 +609,10 @@ public class Session
      * 
      * @param message the message to be added to the end of the message queue
      */
-    protected void addMessageToSend(Message message)
+    private void addMessageToSend(Message message)
     {
-        if (sendQueue != null) {
+        if (sendQueue != null)
+        {
             sendQueue.add(message);
             triggerSending();
         }
@@ -608,12 +621,13 @@ public class Session
 	/**
 	 * Have txManager send awaiting messages from session.
 	 */
-	private void triggerSending() {
+	private void triggerSending()
+	{
 		if (txManager != null)
-        {
-            while (hasMessagesToSend())
-                txManager.generateTransactionsToSend(getMessageToSend());
-        }
+		{
+			while (hasMessagesToSend())
+				txManager.generateTransactionsToSend(getMessageToSend());
+		}
 	}
 
     /**
@@ -651,7 +665,7 @@ public class Session
      */
     public boolean isActive()
     {
-        // TODO Auto-generated method stub
+        // TODO implement some check.
         return true;
     }
 
@@ -719,9 +733,9 @@ public class Session
      * @param message the {@link IncomingMessage} to be put on the receive queue
      * @see #messagesReceive
      */
-    // FIXME: in the future just put the queue of messages
-    // being received on the Stack as the Message object isn't necessarily bound
-    // to the Session
+    /* FIXME: in the future just put the queue of messages being received on
+     * the Stack as the Message object isn't necessarily bound to the Session
+     */
     protected void putReceivingMessage(IncomingMessage message)
     {
         messagesReceive.put(message.getMessageID(), message);

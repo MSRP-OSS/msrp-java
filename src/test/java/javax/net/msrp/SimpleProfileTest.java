@@ -68,9 +68,10 @@ public class SimpleProfileTest extends TestFrame
 
         try
         {
-            outMessage = new OutgoingFileMessage(sendingSession,
-                					"prs.genericfile/prs.rawbyte", fileToSend);
+            outMessage = new OutgoingMessage("prs.genericfile/prs.rawbyte",
+                					fileToSend);
 	        outMessage.setSuccessReport(true);
+            sendingSession.sendMessage(outMessage);
 	
 	        /*
 	         * set up the receiving session handler to receive the data to the

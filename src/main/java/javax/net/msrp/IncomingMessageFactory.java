@@ -17,6 +17,6 @@ public class IncomingMessageFactory {
 		else if (contentType.equals(Message.IMCOMPOSE_TYPE))
 			return new IncomingStatusMessage(session, messageId, contentType, size);
 		else
-			return new IncomingMessage(session, messageId, contentType, size);
+			return new IncomingMessage(session, messageId, contentType, size, null);
 	}
 }

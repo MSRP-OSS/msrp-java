@@ -370,7 +370,7 @@ public class Transaction
 	         */
 	        interruptible = true;
 	        header	.append("Byte-Range: ").append(firstByteChunk).append("-*/")
-	        		.append(message.getStringTotalSize()).append("\r\n");
+	        		.append(message.getSizeString()).append("\r\n");
 	        if (ct.length() == 0)
 	        	ct = "text/plain";
 	        header.append("Content-Type: ").append(ct).append("\r\n\r\n");
@@ -1476,19 +1476,17 @@ public class Transaction
                 if (result && in.getResult() != ResponseCode.RC200)
                 {
                     in.setResult(ResponseCode.RC200);
-                    /*
-                     * if user didn't assign DataContainer to message; discard & log.
-                     */
-                    if (in.getDataContainer() == null)
-                    {
+                    if (in instanceof IncomingAliveMessage || in.getDataContainer() != null)
+                    {	// put on receiving message "list" of the Session
+                        session.putReceivingMessage(in);
+                    }
+                    else
+                    {	// if user didn't assign DataContainer to message;
+                    	//		discard & log.
                     	logger.error(this + 
                 			" no datacontainer given to store incoming data, " +
             				"discarding incoming message " + in);
                         result = false;
-                    }
-                    else
-                    {	// put on receiving message "list" of the Session
-                        session.putReceivingMessage(in);
                     }
                 }
                 if (!result)

@@ -16,8 +16,6 @@
  */
 package javax.net.msrp;
 
-import java.nio.BufferOverflowException;
-
 import javax.net.msrp.events.MessageAbortedEvent;
 import javax.net.msrp.exceptions.*;
 import javax.net.msrp.utils.TextUtils;
@@ -35,12 +33,6 @@ public abstract class Message
     /** The logger associated with this class */
     private static final Logger logger = LoggerFactory.getLogger(Message.class);
 
-    /** Message is incoming. */
-    public static final int IN = 1;
-
-    /** Message is outgoing. */
-    public static final int OUT = 2;
-
     public static final int UNINTIALIZED = -2;
 
     public static final int UNKNOWN = -1;
@@ -49,18 +41,23 @@ public abstract class Message
     public static final String NO = "no";
     public static final String PARTIAL = "partial";
 
+	/** content-type of an isComposing message	*/
+	public static final String IMCOMPOSE_TYPE = "application/im-iscomposing+xml";
+
     /**
      * Size of this message as indicated on the byte-range header field
      */
     public long size = UNINTIALIZED;
 
     /**
+     * @uml.property name="successReport"
+     */
+    private boolean successReport = false;
+
+    /**
      * @uml.property name="failureReport"
      */
     private String failureReport = YES;
-
-	/** content-type of an isComposing message	*/
-	public static final String IMCOMPOSE_TYPE = "application/im-iscomposing+xml";
 
     /**
      * Abort-state of message
@@ -91,9 +88,10 @@ public abstract class Message
 
     /**
      * The report mechanism associated with this message.
-     * Basically used to decide upon the granularity of success reports.
+     * Basically used to determine the granularity of success reports.
      */
-    public ReportMechanism reportMechanism;
+    private ReportMechanism reportMechanism =
+    		DefaultReportMechanism.getInstance();
 
     /**
      * To be used by ConnectionPrioritizer.
@@ -106,7 +104,7 @@ public abstract class Message
     protected short priority = 0;
 
     /**
-     * @uml.property name="_contentType"
+     * @uml.property name="contentType"
      */
     protected String contentType = null;
 
@@ -116,14 +114,9 @@ public abstract class Message
     protected String messageId;
 
     /**
-     * @uml.property name="_session"
+     * @uml.property name="session"
      */
     protected Session session = null;
-
-    /**
-     * @uml.property name="successReport"
-     */
-    private boolean successReport = false;
 
     protected WrappedMessage wrappedMessage = null;
 
@@ -135,65 +128,17 @@ public abstract class Message
      */
     protected Transaction lastSendTransaction = null;
 
-    protected Message(Session session, String contentType, byte[] data)
-    {
-        this(session, contentType, data, null);
-    }
-
-    /** Create new MSRP message and queue in session for sending.
-     * @param session the session associated with the message
-     * @param contentType the content type associated with this byteArarray
-     * @param data the content of the message to be sent
-     * @param reportMechanism the report mechanism to be used for this message
-     * @return the newly created message
-     * @throws RuntimeException if message content is too big to send in memory,
-     * 					as defined on Stack (cause {@code BufferOverflowException})
-     * @see Stack#setShortMessageBytes(int)
-     */
-    protected Message(Session session, String contentType, byte[] data,
-            ReportMechanism reportMechanism)
-    {
-        if (contentType != null && data.length > Stack.getShortMessageBytes())
-        {
-            throw new RuntimeException("Session[" + session +
-            			"] data too big, use file source or stream constructors",
-            			new BufferOverflowException());
-        }
-        this.session = session;
-        this.contentType = contentType;
-		messageId = Stack.generateMessageID();
-        constructorAssociateReport(reportMechanism);
-		if (contentType != null)
-		{
-			dataContainer = new MemoryDataContainer(data);
-			size = data.length;
-	        session.addMessageToSend(this);
-		}
-		else
-		{
-	        dataContainer = new MemoryDataContainer(0);
-	        size = 0;
-	        session.addMessageOnTop(this);
-		}
-    }
-
-    protected Message(Session session, String nickname) {
-        this.session = session;
-        this.nickname = nickname;
-        dataContainer = new MemoryDataContainer(0);
-        size = 0;
-        this.session.addMessageToSend(this);
-    }
-
     /**
-     * Internal constructor used by the derived classes
+     * Constructor used by the derived classes
      */
     protected Message()
     {
+    	;
     }
 
     /**
-     * @return the direction of the transfer: {@link #IN} or {@link #OUT}.
+     * @return the direction this message is travelling:
+     * 		{@link Direction#IN} or {@link Direction#OUT}.
      */
     public abstract Direction getDirection();
 
@@ -223,39 +168,31 @@ public abstract class Message
     }
 
     /**
-     * Convenience method called internally by the constructors of this class
-     * to associate the given reportMechanism (or session's default) to the
-     * newly created message.
-     * <p>
-     * MUST be called after a session is associated.
+     * Convenience method to associate the given reportMechanism (or a default)
+     * to this message.
      * 
      * @param reportMechanism
      */
-    protected void constructorAssociateReport(ReportMechanism reportMechanism)
+    public void setReportMechanism(ReportMechanism reportMechanism)
     {
-        if (reportMechanism == null)
-        {
-            this.reportMechanism = this.session.getReportMechanism();
-        }
-        else
-        {
+        if (reportMechanism != null)
             this.reportMechanism = reportMechanism;
-        }
+        else if (session != null)
+            this.reportMechanism = session.getReportMechanism();
     }
 
     /**
-     * Called by OutgoingMessages when their isComplete() is
-     * called
+     * Called by OutgoingMessages when their isComplete() is called.
      * 
      * @see #isComplete()
      * @return true if message is completely sent
      */
-    protected boolean outgoingIsComplete(long sentBytes)
+    protected boolean isOutgoingComplete(long sentBytes)
     {
     	if (logger.isTraceEnabled())
             logger.trace(String.format(
-            		"Called isComplete(), message(size[%d], sent[%d]) will return[%b]",
-            		sentBytes, size, sentBytes == size));
+            		"isOutgoingComplete(%s, sent[%d])? %b",
+            		this.toString(), sentBytes, size, sentBytes == size));
         return sentBytes == size;
     }
 
@@ -290,13 +227,16 @@ public abstract class Message
         {
             throw new InternalErrorException(e);
         }
+        /*
+         * FIXME: How to resume? as this is just re-scheduling....
         session.addMessageOnTop(this);
+         */
     }
 
     /**
      * TODO WORKINPROGRESS to be used by ConnectionPrioritizer. Currently
      * the priority field of the messages is irrelevant as the messages work in
-     * a FIFO for each session (NB: not sure if a prioritizer within messages
+     * a FIFO for each session (NB: not sure if a prioritiser within messages
      * of same session will serve any practical purpose)
      * 
      * @return the priority of this message
@@ -307,11 +247,8 @@ public abstract class Message
     }
 
     /**
-     * TODO WORKINPROGRESS to be used by the ConnectinPrioritizer.Currently,
-     * the priority field of the messages is irrelevant as the messages work in
-     * a FIFO for each session (NB: not sure if a prioritizer within messages
-     * in same session will serve any practical purpose)
-     * 
+     * TODO WORKINPROGRESS to be used by ConnectionPrioritizer.
+     *  
      * @param priority the priority to set
      */
     protected void setPriority(short priority)
@@ -320,13 +257,13 @@ public abstract class Message
     }
 
     /**
-     * Has this message object still unused content?
+     * Has this message still unused content?
      * 
      * @return true if this message still has some data to retrieve
      */
     public boolean hasData()
     {
-        return dataContainer.hasDataToRead();
+        return (dataContainer != null && dataContainer.hasDataToRead());
     }
 
     /**
@@ -343,8 +280,7 @@ public abstract class Message
      *             this operation to be an unsuccessful one
      */
     public int get(byte[] outData, int offset)
-        throws ImplementationException,
-        InternalErrorException
+    		throws ImplementationException, InternalErrorException
     {
         try
         {
@@ -361,7 +297,7 @@ public abstract class Message
     }
 
     /**
-     * Handy method to retrieve the associated counter of this message
+     * Convenience method to retrieve associated counter of this message
      * 
      * @return the counter associated with this message
      */
@@ -371,9 +307,17 @@ public abstract class Message
     }
 
     /**
-     * Getter of the property <tt>contentType</tt>
+     * Setter of property {@code contentType}
+     */
+    public void setContentType(String contentType)
+    {
+    	this.contentType = contentType;
+    }
+
+    /**
+     * Getter of property {@code contentType}
      * 
-     * @return Returns the type.
+     * @return the content type.
      * @uml.property name="contentType"
      */
     public String getContentType()
@@ -381,11 +325,17 @@ public abstract class Message
         return contentType;
     }
 
+    /**
+     * @return true if message contains a wrapped message.
+     */
     public boolean isWrapped()
     {
     	return wrappedMessage != null;
     }
 
+    /**
+     * @return the wrapped message within this message.
+     */
     public WrappedMessage getWrappedMessage()
     {
     	return wrappedMessage;
@@ -419,9 +369,9 @@ public abstract class Message
 	}
 
     /**
-     * Method used to set the success report field associated with this message.
+     * Set the success report field associated with this message.
      * 
-     * @param successReport true to set it to "yes" false to set it to "no"
+     * @param successReport True, set to "yes". False, set to "no".
      */
     public void setSuccessReport(boolean successReport)
     {
@@ -429,10 +379,7 @@ public abstract class Message
     }
 
     /**
-     * Get header content of successReport
-     * 
-     * @return Returns success report header field of this message. True
-     *         represents "yes" and false "no"
+     * @return report header setting of this message. True == "yes", false == "no".
      */
     public boolean wantSuccessReport()
     {
@@ -440,11 +387,10 @@ public abstract class Message
     }
 
     /**
-     * method used to set the failure report string
+     * Set the failure report field associated with this message.
      * 
-     * @param failureReport String representing the failure report field, it
-     *            must be one of: yes no partial. case insensitive
-     * @throws IllegalUseException if the argument wasn't valid
+     * @param failureReport Field setting: "yes", "no" or "partial".
+     * @throws IllegalUseException if the argument wasnone of these strings.
      */
     public void setFailureReport(String failureReport)
         throws IllegalUseException
@@ -459,9 +405,7 @@ public abstract class Message
     }
 
 	/**
-     * Get header content of failureReport.
-     * 
-     * @return Returns the report.
+     * @return failure report setting of this message ('partial', 'yes', 'no').
      * @uml.property name="_failureReport"
      */
     public String getFailureReport()
@@ -470,9 +414,7 @@ public abstract class Message
     }
 
     /**
-     * Getter of the property <tt>_messageID</tt>
-     * 
-     * @return Returns the _messageid.
+     * @return the id of this message.
      * @uml.property name="_messageID"
      */
     public String getMessageID()
@@ -488,14 +430,7 @@ public abstract class Message
 	}
 
 	/**
-	 * @param nickname the nickname to set
-	 */
-	public void setNickname(String nickname) {
-		this.nickname = nickname;
-	}
-
-	/**
-     * returns the message id of this string
+     * returns the id of this message
      */
     @Override
     public String toString()
@@ -509,8 +444,7 @@ public abstract class Message
      *       complete this method should report the actual size of the
      *       received message
      * 
-     * @return the size (bytes) of the message, -1 if this value is
-     *         uninitialized, -2 if the total size is unknown for this message.
+     * @return the size (bytes) of this message: -1 == uninitialized, -2 == unknown.
      */
     public long getSize()
     {
@@ -518,20 +452,15 @@ public abstract class Message
     }
 
     /**
-     * @return the string representing the total number of bytes of this message
-     *         or '*' if it's unknown
+     * @return number of bytes in this message as a string, '*' if unknown.
      */
-    public String getStringTotalSize()
+    public String getSizeString()
     {
-        if (size == UNKNOWN)
-            return "*";
-        return Long.toString(size);
+        return size == UNKNOWN ? "*" : Long.toString(size);
     }
 
     /**
-     * Getter of the property <tt>_session</tt>
-     * 
-     * @return Returns the _session.
+     * @return session this message is currently associated with.
      * @uml.property name="_session"
      */
     public Session getSession()
@@ -540,19 +469,17 @@ public abstract class Message
     }
 
     /**
-     * Setter of the property <tt>_session</tt>
+     * Associate given session with this message
      * 
-     * @param _session The _session to set.
+     * @param session The session to associate with this message.
      * @uml.property name="_session"
      */
-    protected void setSession(Session _session)
+    protected void setSession(Session session)
     {
-        this.session = _session;
+        this.session = session;
     }
 
     /**
-     * Retrieves the associated data container of the message
-     * 
      * @return DataContainer associated with this message
      */
     public DataContainer getDataContainer()
@@ -569,7 +496,7 @@ public abstract class Message
     }
 
     /**
-     * @return the lastSendTransaction
+     * @return the last transaction sent
      */
     public Transaction getLastSendTransaction()
     {
@@ -577,11 +504,7 @@ public abstract class Message
     }
 
     /**
-     * Method that states if this message is completely sent or received,
-     * depending on the type of message
-     * 
-     * @return true if the message is completely sent or received, false
-     *         otherwise
+     * @return true if message is completely sent or received, false otherwise.
      */
     public abstract boolean isComplete();
 
@@ -598,15 +521,15 @@ public abstract class Message
      * 
      * @param reason the Reason for the abort, only important if this is an
      *            Incoming message
-     * @param reasonExtraInfo the extra info about the abort, or null if it
+     * @param extraInfo extra info about the abort, or null if it
      *            doesn't exist, this will be sent on the REPORT if we are
      *            aborting an Incoming message
      * @throws InternalErrorException if by any Internal error, the message
      *             couldn't be aborted
      * @throws IllegalUseException if any of the arguments is invalid
      */
-    public abstract void abort(int reason, String reasonExtraInfo)
-        throws InternalErrorException, IllegalUseException;
+    public abstract void abort(int reason, String extraInfo)
+    		throws InternalErrorException, IllegalUseException;
 
     /**
      * Called by Transaction when it wants to notify a message that it got aborted.
@@ -617,10 +540,10 @@ public abstract class Message
      * @param transaction the transaction associated with the abort
      */
     /*
-     * TODO reflect about the possibility to eliminate all the data associated
-     * with this message or not. Could be done with a variable associated with
-     * the stack, in some cases it may be useful to keep the data. ATM it
-     * disposes the DataContainer associated with it
+     * TODO reflect on possibly eliminating all data associated with this
+     * message or not. Could be done with a variable associated with the stack,
+     * in some cases it may be useful to keep the data.
+     * ATM it disposes the DataContainer associated with it
      */
     public void gotAborted(Transaction transaction)
     {
@@ -647,13 +570,13 @@ public abstract class Message
      * This creates and fires a MessageAbortEvent
      * 
      * @param reason the reason for the Abort
-     * @param extraReasonInfo the String that was carried in the
+     * @param extraInfo the String that was carried in the
      *            REPORT request triggering this event (null if empty).
      * @see MessageAbortedEvent
      */
-    public void fireMessageAbortedEvent(int reason, String extraReasonInfo, Transaction transaction)
+    public void fireMessageAbortedEvent(int reason, String extraInfo, Transaction transaction)
     {
-        session.fireMessageAbortedEvent(this, reason, extraReasonInfo, transaction);
+        session.fireMessageAbortedEvent(this, reason, extraInfo, transaction);
     }
 
     /**

@@ -104,9 +104,10 @@ public class TestSendingSmallMessages extends TestFrame
             	receivingSessionListener.wait(500);
             }
 
-            Message twoKbMessage =
-                    new OutgoingMessage(receivingSession, "plain/text", smallData);
-                twoKbMessage.setSuccessReport(false);
+            OutgoingMessage twoKbMessage =
+                    new OutgoingMessage("plain/text", smallData);
+            twoKbMessage.setSuccessReport(false);
+            receivingSession.sendMessage(twoKbMessage);
 
             synchronized (sendingSessionListener)
             {

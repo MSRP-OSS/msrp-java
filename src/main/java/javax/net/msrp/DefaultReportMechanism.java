@@ -37,94 +37,57 @@ package javax.net.msrp;
 public class DefaultReportMechanism
     extends ReportMechanism
 {
-
-    /**
-     * Constructor for the singleton class default report mechanism defined to
-     * protect unauthorized instances of this class
-     */
     protected DefaultReportMechanism()
     {
+    	;
     }
 
-    /**
-     * SingletonHolder is loaded on the first execution of
-     * Singleton.getInstance() or the first access to SingletonHolder.instance ,
-     * not before.
-     */
-    private static class SingletonHolder
+    private static class Singleton
     {
         private final static DefaultReportMechanism INSTANCE =
             new DefaultReportMechanism();
-
     }
 
     public static DefaultReportMechanism getInstance()
     {
-        return SingletonHolder.INSTANCE;
+        return Singleton.INSTANCE;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.net.msrp.ReportMechanism#shouldGenerateReport(javax.net.msrp.Message, int)
-     */
     /**
-     * This method is called every time getTriggerGranularity() of the message
-     * is received
-     * 
-     * The default success report granularity is the whole message
-     * 
-     * @see #getTriggerGranularity()
+     * Generate {@link SuccessReport} only when message is complete.
      */
     @Override
     public boolean shouldGenerateReport(Message message, long lastCallCount,
         long CallCount)
     {
-        if (message.isComplete())
-            return true;
-        return false;
+        return message.isComplete();
     }
 
     /**
-     * if the message size is unknown dont trigger
-     * 
-     * The default sent hook granularity is for each 10% of the message if the
-     * message is bigger than 500K
-     * 
-     * else only trigger once when it passes the 49% to 50% barrier
-     * 
-     * also if the message is complete trigger it
-     * 
+     * Trigger the update after every 10% of the total size sent.
+     * when message size over 500Kb, trigger only when exceeding 50%.
+     * Always trigger when all is sent.
      */
     @Override
-    public boolean shouldTriggerSentHook(Message outgoingMessage,
-        Session session, long nrBytesLastCall)
+    public boolean shouldTriggerSentHook(Message message, Session session,
+    		long nrBytesLastCall)
     {
-        if (outgoingMessage.isComplete())
+        if (message.isComplete())
             return true;
-        if (outgoingMessage.getSize() == Message.UNKNOWN)
-            return false;
-        else if (outgoingMessage.getSize() > Message.UNINTIALIZED)
-        {
-            int lastPercentage =
-                (int) nrBytesLastCall * 100 / (int) outgoingMessage.getSize();
-            int currentPercentage =
-                (int) outgoingMessage.getDataContainer().currentReadOffset()
-                    * 100 / (int) outgoingMessage.getSize();
-            if (outgoingMessage.size <= 500 * 1024)
-            {
-                if (lastPercentage < 50 && currentPercentage >= 50)
-                    return true;
-            }
-            else
-            {
-                if (lastPercentage / 10 == (currentPercentage / 10) - 1)
-                    return true;
-                return false;
 
-            }
+        long size = message.getSize();
+        if (size < 0)
+            return false;
+        else
+        {
+            long lastPercentage = nrBytesLastCall * 100 / size;
+            long currentPercentage =
+                message.getDataContainer().currentReadOffset() * 100 / size;
+            if (size <= 500 * 1024)
+                return lastPercentage < 50 && currentPercentage >= 50;
+            else
+                 return lastPercentage / 10 == (currentPercentage / 10) - 1;
         }
-        return false;
     }
 
     @Override
@@ -132,5 +95,4 @@ public class DefaultReportMechanism
     {
         return 1024;
     }
-
 }
