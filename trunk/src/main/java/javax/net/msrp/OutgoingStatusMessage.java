@@ -23,7 +23,7 @@ public class OutgoingStatusMessage extends OutgoingMessage implements StatusMess
 
 	private static final String REFRESH_PARAM = "<refresh>%d</refresh>";
 
-	private String includeRefresh(int refresh)
+	private static String includeRefresh(int refresh)
 	{
 		if (refresh > 0)
 			return String.format(REFRESH_PARAM, refresh);
@@ -33,19 +33,11 @@ public class OutgoingStatusMessage extends OutgoingMessage implements StatusMess
 
 	protected OutgoingStatusMessage(Session session, ImState state, String contentType, int refresh)
 	{
+		super(Message.IMCOMPOSE_TYPE, String.format(ISCOMPOSING, state.name(),
+							contentType, includeRefresh(refresh)).getBytes());
 		this.state = state;
 		composeContentType = contentType;
 		this.refresh = refresh;
-		String content = String.format(ISCOMPOSING, state.name(),
-					composeContentType, includeRefresh(refresh));
-
-        this.session = session;
-        this.contentType = Message.IMCOMPOSE_TYPE;
-		messageId = Stack.generateMessageID();
-        dataContainer = new MemoryDataContainer(content.getBytes());
-        size = content.length();
-        constructorAssociateReport(null);
-        this.session.addMessageToSend(this);
 	}
 
 	public ImState	getState() { return state; }

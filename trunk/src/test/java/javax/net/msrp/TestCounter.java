@@ -294,16 +294,15 @@ public class TestCounter
     }
 
     /**
-     * Test the typical receival of a message TODO this test is embedded in a
+     * Test the typical reception of a message. This test is embedded in a
      * way in the other tests and is non essential as the other two before
-     * already assert the good behavior of the algorithm
+     * already assert the good behaviour of the algorithm
      * @TODO
      */
-    @Test
-    @Ignore("TODO")
-    public void testContinuousNonOverlapping()
-    {
-
-    }
-
+//    @Test
+//    @Ignore("TODO")
+//    public void testContinuousNonOverlapping()
+//    {
+//
+//    }
 }

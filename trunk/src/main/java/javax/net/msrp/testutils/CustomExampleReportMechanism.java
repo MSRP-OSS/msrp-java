@@ -19,56 +19,36 @@ package javax.net.msrp.testutils;
 import javax.net.msrp.*;
 
 /**
- * Class used to resolve Issues #2 and #3 This class is a custom Report
- * Mechanism used for test purposes to validate the functionality of using
+ * Custom Report Mechanism for test purposes to validate functionality of using
  * different report mechanisms with the protocol.
  * 
  * This class is used to test both the Success report generation and the sent
  * bytes call on the MSRP Listener
  * 
- * List of JUNIT tests that use this class:
- * 
  * @author João André Pereira Antunes
- * 
  */
 public class CustomExampleReportMechanism
-    extends ReportMechanism
+    extends DefaultReportMechanism
 {
-
-    /**
-     * Constructor for the singleton class default report mechanism defined to
-     * protect unauthorized instances of this class
-     */
-    public CustomExampleReportMechanism()
+    protected CustomExampleReportMechanism()
     {
+    	;
     }
 
-    /**
-     * SingletonHolder is loaded on the first execution of
-     * Singleton.getInstance() or the first access to SingletonHolder.instance ,
-     * not before.
-     */
-    private static class SingletonHolder
+    private static class Singleton
     {
         private final static CustomExampleReportMechanism INSTANCE =
             new CustomExampleReportMechanism();
-
     }
 
     public static CustomExampleReportMechanism getInstance()
     {
-        return SingletonHolder.INSTANCE;
+        return Singleton.INSTANCE;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.net.msrp.ReportMechanism#getTriggerGranularity()
-     */
     /**
-     * We have chosen a custom different value of the 1024 of the default just
-     * to make sure that it can work with a different value, the 2014 value
-     * could be some other
+     * Custom value, different from the default 1024 just
+     * to make sure that it can work with a different value.
      */
     @Override
     public int getTriggerGranularity()
@@ -76,73 +56,42 @@ public class CustomExampleReportMechanism
         return 2014;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.net.msrp.ReportMechanism#shouldGenerateReport(javax.net.msrp.Message, long, long)
-     */
     /**
-     * for testing purposes, we put the same behavior on this method than the one on the DefaultReportMechanism shouldTriggerSentHook, basicly:
-     * 
-     * if the message size is unknown always trigger
-     * 
-     * The default sent hook granularity is for each 10% of the message if the
-     * message is bigger than 500K
-     * 
-     * else only trigger once when it passes the 49% to 50% barrier
-     * 
-     * also if the message is complete trigger it
+     * for testing purposes, we reversed the behaviour on the default methods.
      * @see DefaultReportMechanism#shouldTriggerSentHook(Message, Session, long)
      */
     @Override
     public boolean shouldGenerateReport(Message message, long lastCallCount,
         long callCount)
     {
-    	if (message.isComplete())
-    		return true;
-        if (message.getSize() == Message.UNKNOWN)
+        if (message.isComplete())
             return true;
-        else if (message.getSize() > Message.UNINTIALIZED)
-        {
-            int lastPercentage =
-                (int) lastCallCount * 100 / (int)message.getSize();
-            int currentPercentage =
-                (int) message.getDataContainer().currentReadOffset()
-                    * 100 / (int)message.getSize();
-            if (message.getSize() <= 500 * 1024)
-            {
-                if (lastPercentage < 50 && currentPercentage >= 50)
-                    return true;
-            }
-            else
-            {
-                if (lastPercentage / 10 == (currentPercentage / 10) - 1)
-                    return true;
-                return false;
 
-            }
+        long size = message.getSize();
+        if (size == Message.UNKNOWN)
+        	return true;
+        if (size < 0)
+        	return false;
+        else
+        {
+            long lastPercentage = lastCallCount * 100 / size;
+            long currentPercentage =
+                message.getDataContainer().currentReadOffset() * 100 / size;
+            if (size <= 500 * 1024)
+                return lastPercentage < 50 && currentPercentage >= 50;
+            else
+                 return lastPercentage / 10 == (currentPercentage / 10) - 1;
         }
-        return false;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see javax.net.msrp.ReportMechanism#shouldTriggerSentHook(javax.net.msrp.Message,
-     * javax.net.msrp.Session, long)
-     */
     /**
-     * This method behaves as the method on the DefaultReportMechanism.shouldGenerateReport method, basicly:
-     * it only returns true if the message is complete
-     * 
+     * for testing purposes, we reversed the behaviour on the default methods.
+     * @see DefaultReportMechanism#shouldGenerateReport(Message, long, long)
      */
     @Override
-    public boolean shouldTriggerSentHook(Message outgoingMessage,
-        Session session, long nrBytesLastCall)
+    public boolean shouldTriggerSentHook(Message message, Session session,
+    		long nrBytesLastCall)
     {
-        if (outgoingMessage.isComplete())
-            return true;
-        return false;
+        return message.isComplete();
     }
-
 }

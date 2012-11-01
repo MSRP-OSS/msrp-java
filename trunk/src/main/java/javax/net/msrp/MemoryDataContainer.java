@@ -61,6 +61,9 @@ public class MemoryDataContainer
      */
     public MemoryDataContainer(byte[] data)
     {
+        if (data.length > Stack.getShortMessageBytes())
+            throw new BufferOverflowException();
+
         content = data;
         byteBuffer = ByteBuffer.wrap(content);
     }

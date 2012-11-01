@@ -17,7 +17,6 @@
 package javax.net.msrp;
 
 import javax.net.msrp.exceptions.IllegalUseException;
-import javax.net.msrp.exceptions.ImplementationException;
 import javax.net.msrp.exceptions.InternalErrorException;
 import javax.net.msrp.exceptions.InvalidHeaderException;
 import javax.net.msrp.wrap.Wrap;
@@ -25,12 +24,10 @@ import javax.net.msrp.wrap.Wrap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * This class is used to generate incoming messages
  * 
  * @author João André Pereira Antunes 2008
- * 
  */
 public class IncomingMessage
     extends Message
@@ -42,63 +39,24 @@ public class IncomingMessage
         LoggerFactory.getLogger(IncomingMessage.class);
 
     /**
-     * @param session
-     * @param messageId
-     * @param contentType
-     * @param size
-     * @param reportMechanism
-     */
-    public IncomingMessage(Session session, String messageId,
-        String contentType, long size)
-    {
-        this(session, messageId, contentType, size, null);
-    }
-
-    /**
-     * Constructor called internally when receiving an incoming message used by
-     * the IncomingMessage class
+     * Constructor called internally when receiving an incoming message.
      * 
      * @param session
      * @param messageId
      * @param contentType
-     * @param reportMechanism the report mechanism to be used for this message
-     *            or null to use the default one associated with the session
-     * @param size the size of the incoming message (should be bigger than -2
+     * @param size size of incoming message (should be bigger than -2
      *            and -1 for unknown (*) total size
+     * @param reportMechanism report mechanism to use for this message
+     *            or null to use the session-default.
      */
-    public IncomingMessage(Session session, String messageId,
-        String contentType, long size, ReportMechanism reportMechanism)
+    protected IncomingMessage(Session session, String messageId,
+    		String contentType, long size, ReportMechanism reportMechanism)
     {
-        super();
-        if (size <= UNINTIALIZED) {
-            try
-            {
-                throw new ImplementationException(
-                    "Message constructor with invalid size");
-            }
-            catch (ImplementationException e)
-            {
-                e.printStackTrace();
-            }
-        }
         this.session = session;
         this.contentType = contentType;
         this.messageId = messageId;
+        setReportMechanism(reportMechanism);
         this.size = size;
-        constructorAssociateReport(reportMechanism);
-    }
-
-    public IncomingMessage(Session session, String nickname)
-    {
-    	super();
-    	this.session = session;
-    	this.nickname = nickname;
-    }
-    /**
-     * Constructor used internally
-     */
-    protected IncomingMessage()
-    {
     }
 
     /**
@@ -111,9 +69,10 @@ public class IncomingMessage
     public boolean isComplete()
     {
         boolean toReturn = getCounter().isComplete();
-        logger.trace("Called isComplete, received bytes: "
-            + getCounter().getCount() + " message size: " + size
-            + " going to return: " + toReturn);
+        if (logger.isTraceEnabled())
+            logger.trace(String.format(
+            		"isComplete(%s: received %d of %d)? %b",
+            		this.toString(), getCounter().getCount(), size, toReturn));
         return toReturn;
     }
 
@@ -123,9 +82,9 @@ public class IncomingMessage
      */
     public Long getReceivedBytes()
     {
-        long valueToReturn = getCounter().getCount();
-        logger.trace("getReceivedBytes called, will return: " + valueToReturn);
-        return valueToReturn;
+        long count = getCounter().getCount();
+        logger.trace("Received" + count + " bytes.");
+        return count;
     }
 
     /** Response code of the accept hook call. */
@@ -139,7 +98,7 @@ public class IncomingMessage
 	}
 
 	/**
-	 * @param result the result to set
+	 * @param result the result code to set
 	 */
 	public void setResult(int result) {
 		this.result = result;
@@ -151,6 +110,9 @@ public class IncomingMessage
         return Direction.IN;
     }
 
+    /* (non-Javadoc)
+     * @see javax.net.msrp.Message#validate()
+     */
     public void validate() throws Exception {
     	if (this.getSize() > 0) {
     		if (this.getContentType() == null)
@@ -163,8 +125,8 @@ public class IncomingMessage
     }
 
     /**
-     * Convenience method used to reject an incoming message. Its equivalent to
-     * call abort with response 413
+     * Convenience method used to reject an incoming message. Equivalent to
+     * an abort with response 413
      * 
      * @throws InternalErrorException if abort also throws it
      */
@@ -221,5 +183,11 @@ public class IncomingMessage
             session.getTransactionManager().addPriorityTransaction(report);
         }
         aborted = true;					// mark message as aborted
+    }
+
+    @Override
+    public String toString()
+    {
+        return "InMsg(" + messageId + ")";
     }
 }

@@ -284,12 +284,12 @@ public class TestReportMechanism extends TestFrame
              */
             assertEquals(
                 "The updateSendStatus wasn't called the expected number "
-                    + "of times", 1,
+                    + "of times", 2,
                 sendingSessionListener.updateSendStatusCounter.size());
             /* make sure that it was called when the message was at 100% */
             assertEquals("The updateSendStatus was called with a "
                 + "strange/unexpected number of bytes sent as argument", 100,
-                (sendingSessionListener.updateSendStatusCounter.get(0)
+                (sendingSessionListener.updateSendStatusCounter.get(1)
                     .longValue() * 100)
                     / sendingSessionListener.getUpdateSendStatusMessage()
                         .getSize());
@@ -344,14 +344,14 @@ public class TestReportMechanism extends TestFrame
              */
             assertEquals(
                 "The updateSendStatus wasn't called the expected number "
-                    + "of times", 1,
+                    + "of times", 10,
                 sendingSessionListener.updateSendStatusCounter.size());
             /*
              * make sure it was called with the right percentages
              */
             assertEquals("The updateSendStatus was called with a "
                 + "strange/unexpected number of bytes sent as argument", 100,
-                (sendingSessionListener.updateSendStatusCounter.get(0)
+                (sendingSessionListener.updateSendStatusCounter.get(9)
                     .longValue() * 100)
                     / sendingSessionListener.getUpdateSendStatusMessage()
                         .getSize());

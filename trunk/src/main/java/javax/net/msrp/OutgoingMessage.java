@@ -16,16 +16,20 @@
  */
 package javax.net.msrp;
 
-import javax.net.msrp.exceptions.InternalErrorException;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.security.InvalidParameterException;
+
+import javax.net.msrp.exceptions.InternalErrorException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Generic outgoing MSRP message
- * @author João André Pereira Antunes
  * 
+ * @author João André Pereira Antunes
  */
 public class OutgoingMessage
     extends Message
@@ -34,22 +38,37 @@ public class OutgoingMessage
     private static final Logger logger =
         LoggerFactory.getLogger(OutgoingMessage.class);
 
-    protected OutgoingMessage(Session sendingSession, String contentType, byte[] someData)
-    {
-        super(sendingSession, contentType, someData);
-    }
-
-    protected OutgoingMessage(Session sendingSession, String nickname)
-    {
-        super(sendingSession, nickname);
-    }
-
     /**
-     * Constructor used internally
+     * Create a blank message that can be used to send over a session.
      */
-    protected OutgoingMessage()
+    public OutgoingMessage()
     {
+    	;
+    }
 
+    public OutgoingMessage(String contentType, byte[] data)
+    {
+		if (contentType != null)
+		{
+			this.contentType = contentType;
+			dataContainer = new MemoryDataContainer(data);
+			size = data.length;
+		}
+    }
+
+    public OutgoingMessage(String contentType, File file)
+            throws FileNotFoundException, SecurityException
+    {
+    	if (contentType == null || contentType.length() < 1)
+    		throw new InvalidParameterException("Content-type must be specified");
+        this.contentType = contentType;
+        dataContainer = new FileDataContainer(file);
+        size = dataContainer.size();
+    }
+
+    protected OutgoingMessage(String nickname)
+    {
+        this.nickname = nickname;
     }
 
     /**
@@ -62,17 +81,17 @@ public class OutgoingMessage
      * binded to the session.
      * 
      * @param reason Irrelevant for an OutgoingMessage
-     * @param extraReasonInfo Irrelevant for an OutgoingMessage
+     * @param extraInfo Irrelevant for an OutgoingMessage
      * 
      * @throws InternalErrorException If we have a failure on the sanity checks
      * 
      * @see SessionListener#abortedMessageEvent(javax.net.msrp.event.MessageAbortedEvent)
      */
-    public void abort(int reason, String extraReasonInfo)
-        throws InternalErrorException
+    public void abort(int reason, String extraInfo)
+    		throws InternalErrorException
     {
         logger.debug("Going to abort an OutgoingMessage, reason: " + reason +
-        			" comment: " + extraReasonInfo);
+        			" comment: " + extraInfo);
         if (session == null)			/* Sanity checks */
             throw new InternalErrorException(
 				                "pause() called on message with no session.");
@@ -89,6 +108,17 @@ public class OutgoingMessage
         transactionManager.abortMessage(this);
     }
 
+    /* (non-Javadoc)
+     * @see javax.net.msrp.Message#getMessageID()
+     */
+    @Override
+    public String getMessageID()
+    {
+    	if (messageId == null || messageId.length() < 1)
+    		messageId = Stack.generateMessageID();
+        return messageId;
+    }
+
     /**
      * Returns the sent bytes determined by the offset of the data container
      * 
@@ -96,7 +126,7 @@ public class OutgoingMessage
      */
     public long getSentBytes()
     {
-        return dataContainer.currentReadOffset();
+        return dataContainer != null ? dataContainer.currentReadOffset() : 0;
     }
 
     /* (non-Javadoc)
@@ -105,7 +135,7 @@ public class OutgoingMessage
     @Override
     public boolean isComplete()
     {
-        return outgoingIsComplete(getSentBytes());
+        return isOutgoingComplete(getSentBytes());
     }
 
     /* (non-Javadoc)
@@ -120,5 +150,12 @@ public class OutgoingMessage
     public void validate() throws Exception
     {
     	;
+    }
+
+    @Override
+    public String toString()
+    {
+    	return String.format("OutMsg(%s)",
+    			messageId == null || messageId.length() < 1 ? "new" : messageId);
     }
 }
