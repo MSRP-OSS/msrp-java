@@ -154,7 +154,7 @@ public class TestTransaction
 
         try
         {
-            byte[] tst = newTransaction.getBody(0);
+            newTransaction.getBody(0);
             assertEquals("Error there was a problem parsing the data",
                 0, newTransaction.getBody(0).length);
         }
@@ -162,7 +162,6 @@ public class TestTransaction
         {
             fail("Error ocurred while retrieving the body of the transaction");
         }
-
     }
 
     @Test

@@ -181,7 +181,7 @@ public class TestSendingSmallMessages extends TestFrame
         {
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
-            Message m = sendingSession.requestNickname("Hairy Scary");
+            sendingSession.requestNickname("Hairy Scary");
             sendingSession.setToPath(toPathSendSession);
 
             synchronized (receivingSessionListener)
