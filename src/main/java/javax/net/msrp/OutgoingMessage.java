@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.security.InvalidParameterException;
 
+import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.exceptions.InternalErrorException;
 
 import org.slf4j.Logger;
@@ -135,7 +136,49 @@ public class OutgoingMessage
     @Override
     public boolean isComplete()
     {
-        return isOutgoingComplete(getSentBytes());
+    	long sentBytes = getSentBytes();
+    	if (logger.isTraceEnabled())
+            logger.trace(String.format(
+            		"isOutgoingComplete(%s, sent[%d])? %b",
+            		this.toString(), sentBytes, sentBytes == size));
+        return sentBytes == size;
+    }
+
+    /**
+     * Interrupts all of the existing and interruptible SEND request
+     * transactions associated with this message that are on the transactions to
+     * be sent queue, and gets this message back on top of the messages to send
+     * queue of the respective session.
+     * 
+     * This method is meant to be called internally by the ConnectionPrioritizer.
+     * 
+     * @throws InternalErrorException if this method, that is called internally,
+     *             was called with the message in an invalid state
+     */
+    protected void pause() throws InternalErrorException
+    {
+        if (this.isComplete())			/* Sanity checks */
+            throw new InternalErrorException("pause()" +
+                " was called on a complete message!");
+        if (session == null)
+            throw new InternalErrorException(
+				                "pause() called on message with no session.");
+        TransactionManager transactionManager = session.getTransactionManager();
+        if (transactionManager == null)
+            throw new InternalErrorException(
+	                "pause() called on message with no transaction manager.");
+        try
+        {
+        	transactionManager.interruptMessage(this);
+        }
+        catch (IllegalUseException e)
+        {
+            throw new InternalErrorException(e);
+        }
+        /*
+         * FIXME: How to resume? as this is just re-scheduling....
+        session.addMessageOnTop(this);
+         */
     }
 
     /* (non-Javadoc)
