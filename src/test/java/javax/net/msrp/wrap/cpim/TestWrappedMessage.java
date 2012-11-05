@@ -51,7 +51,7 @@ public class TestWrappedMessage {
 	public void testWrap() {
 		WrappedMessage msg = Wrap.getInstance().getWrapper("message/cpim");
 
-		byte[] content = msg.wrap("from", "to", "text/plain", "hello world".getBytes());
+		msg.wrap("from", "to", "text/plain", "hello world".getBytes());
 
 		String test = msg.toString();
 		assertTrue(test.contains("hello"));
