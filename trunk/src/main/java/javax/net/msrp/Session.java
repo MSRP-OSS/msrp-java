@@ -331,12 +331,12 @@ public class Session
 	 * 						to abort large content.
 	 * @see Message
 	 */
-	public Message sendMessage(String contentType, byte[] content)
+	public OutgoingMessage sendMessage(String contentType, byte[] content)
 	{
 		return sendMessage(new OutgoingMessage(contentType, content));
 	}
 
-	public Message requestNickname(String nickname)
+	public OutgoingMessage requestNickname(String nickname)
 	{
 		return sendMessage(new OutgoingMessage(nickname));
 	}
@@ -350,7 +350,7 @@ public class Session
 	 * @return 				the message-object that will be send, can be used
 	 * 						to abort large content.
 	 */
-	public Message sendWrappedMessage(String wrapType, String from, String to,
+	public OutgoingMessage sendWrappedMessage(String wrapType, String from, String to,
 									String contentType, byte[] content)
 	{
 		Wrap wrap = Wrap.getInstance();
@@ -370,13 +370,13 @@ public class Session
 	 * @throws SecurityException not allowed to read and/or write
 	 * @throws FileNotFoundException file not found
 	 */
-	public Message sendMessage(String contentType, File fileHandle)
+	public OutgoingMessage sendMessage(String contentType, File fileHandle)
 			throws FileNotFoundException, SecurityException
 	{
 		return sendMessage(new OutgoingMessage(contentType, fileHandle));
 	}
 
-	public Message sendMessage(OutgoingMessage message)
+	public OutgoingMessage sendMessage(OutgoingMessage message)
 	{
 		message.setSession(this);
 		if (message.hasData())
