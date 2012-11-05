@@ -182,58 +182,6 @@ public abstract class Message
     }
 
     /**
-     * Called by OutgoingMessages when their isComplete() is called.
-     * 
-     * @see #isComplete()
-     * @return true if message is completely sent
-     */
-    protected boolean isOutgoingComplete(long sentBytes)
-    {
-    	if (logger.isTraceEnabled())
-            logger.trace(String.format(
-            		"isOutgoingComplete(%s, sent[%d])? %b",
-            		this.toString(), sentBytes, size, sentBytes == size));
-        return sentBytes == size;
-    }
-
-    /**
-     * Interrupts all of the existing and interruptible SEND request
-     * transactions associated with this message that are on the transactions to
-     * be sent queue, and gets this message back on top of the messages to send
-     * queue of the respective session.
-     * 
-     * This method is meant to be called internally by the ConnectionPrioritizer.
-     * 
-     * @throws InternalErrorException if this method, that is called internally,
-     *             was called with the message in an invalid state
-     */
-    protected void pause() throws InternalErrorException
-    {
-        if (this.isComplete())			/* Sanity checks */
-            throw new InternalErrorException("pause()" +
-                " was called on a complete message!");
-        if (session == null)
-            throw new InternalErrorException(
-				                "pause() called on message with no session.");
-        TransactionManager transactionManager = session.getTransactionManager();
-        if (transactionManager == null)
-            throw new InternalErrorException(
-	                "pause() called on message with no transaction manager.");
-        try
-        {
-        	transactionManager.interruptMessage(this);
-        }
-        catch (IllegalUseException e)
-        {
-            throw new InternalErrorException(e);
-        }
-        /*
-         * FIXME: How to resume? as this is just re-scheduling....
-        session.addMessageOnTop(this);
-         */
-    }
-
-    /**
      * TODO WORKINPROGRESS to be used by ConnectionPrioritizer. Currently
      * the priority field of the messages is irrelevant as the messages work in
      * a FIFO for each session (NB: not sure if a prioritiser within messages
