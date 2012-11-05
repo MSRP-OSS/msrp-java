@@ -57,7 +57,7 @@ public abstract class ConnectionPrioritizer
      * @param numberBytesSent Long that has the number of bytes that were sent
      *            for this given message
      */
-    protected final void accountSentBytes(Session session, Message message,
+    protected final void accountSentBytes(Session session, OutgoingMessage message,
         int numberBytesSent)
     {
         Long numberBytesAccounted = sessionsTotalUsefulBytesSent.get(session);
