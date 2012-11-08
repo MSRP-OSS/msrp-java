@@ -265,7 +265,6 @@ public class Connections
         session.setConnection(stack.getConnectionByLocalURI(
         		NetworkUtils.getCompleteAuthority(session.getNextURI())));
         stack.addActiveSession(session);
-        // TODO disable the alarm
     }
 
     protected void startConnectionThread(Runnable connection,

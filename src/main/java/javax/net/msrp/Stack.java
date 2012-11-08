@@ -132,10 +132,11 @@ public class Stack implements Observer {
 	/**
 	 * @param address
 	 *            the ip address to bind to
-	 *            
+	 *
 	 * @return a {@link Connections} instance bound to the given address.
 	 */
-	protected static Connections getConnectionsInstance(InetAddress address) {
+	synchronized protected static Connections getConnectionsInstance(InetAddress address)
+	{
 		Connections toReturn = addressConnections.get(address);
 		if (toReturn != null)
 			return toReturn;
