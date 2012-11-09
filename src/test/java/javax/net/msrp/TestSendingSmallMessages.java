@@ -71,6 +71,20 @@ public class TestSendingSmallMessages extends TestFrame
     }
 
     /**
+     * Tests sending a Text Message on a 2048 boundary
+     */
+    @Test
+    public void testBoundaryMsg()
+    {
+        byte[] data = new byte[1800];
+        fillText(data);
+
+        byte[] receivedData = memory2Memory(data, false);
+
+        assertArrayEquals(data, receivedData);
+    }
+
+    /**
      * Test sending Text Data from receiving to sending session.
      * Also tests the sending of a first alive-message (== connection complete
      * but nothing to send yet -> active session will start with a bodiless SEND).

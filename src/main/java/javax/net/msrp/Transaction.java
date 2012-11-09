@@ -877,15 +877,16 @@ public class Transaction
                 				outData, offset, bytesToCopy);
                 readIndex[HEADER] += bytesToCopy;
                 bytesCopied += bytesToCopy;
-                offset += bytesCopied;
+                offset += bytesToCopy;
                 continue;
             }
             if (!interrupted && message.hasData())
             {
                 hasContentStuff = true;
 
-                bytesCopied += message.get(outData, offset);
-                offset += bytesCopied;
+                int chunk = message.get(outData, offset);
+                bytesCopied += chunk;
+                offset += chunk;
                 continue;
 
             }
