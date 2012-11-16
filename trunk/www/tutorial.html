@@ -176,13 +176,13 @@ code {
 					<section id="sessionestablishment">
 						<h1>Establishing a session</h1>
 						<P>
-							To established the afore-mentioned sessions between peers, which
-							are the basis of communication with the MSRP protocol, the MSRP
+							To establish the afore-mentioned sessions between peers, which
+							form the basis of communication in the MSRP protocol, the MSRP
 							session must be negotiated by some 'rendezvous method', external
 							to the MSRP protocol itself (e.g. SIP + SDP). An example of such
 							a negotiation can be seen in MSRP's RFC, on <a target="_blank"
 								href="http://tools.ietf.org/html/rfc4975#section-4">section
-								4</a>, and a more detailed explanation of how to conduct such a
+								4</a>, and a more detailed explanation on how to conduct such a
 							negotiation in <a
 								href="http://tools.ietf.org/html/rfc4975#section-8"
 								target="_blank">section 8</a>. For more details on SDP's <A
@@ -204,13 +204,13 @@ import java.net.URI;
 InetAddress myAddress = InetAddress.getByName("myHostnameThatDoesMsrp");
 Session activeSession = Session.create(false, false, myAddress)
 URI myMsrpUri = activeSession.getURI();</pre>
-						<p>You have a session now with a local MSRP URI, which has to
-							be transmitted to the other peer through a rendezvous mechanism.
+						<p>You now have a session with a local MSRP URI, which has to
+							be transmitted to the other peer through the rendezvous mechanism.
 							This session is an active session. It means that as soon as you
 							feed it the target URI, which should be transmitted to you using
 							the rendezvous protocol, a connection will be established (if not
 							already present, as MSRP allows connection re-utilization), and a
-							first request is immediately sent (to bound the session):</p>
+							first request is immediately sent (to bind the session):</p>
 						<pre class="prettyprint">
 import java.util.ArrayList;
 
