@@ -1,0 +1,9 @@
+#address should be set to the local ip address of the interface you want to use #to run the tests 
+address=192.168.1.1
+
+#tempdirectory should contain the temporary directory to store temporary files
+#used to test the sending and receiving of messages
+# if this propriety isn't defined the tests will use JVM default temp directory
+# Note - one should use / instead of the \ as directory delimiters
+tempdirectory=c:/temp
+

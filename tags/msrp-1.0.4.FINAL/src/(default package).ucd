@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<editmodel:ClassDiagramEditModel xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:editmodel="editmodel.xmi" xmlns:options="options.xmi" name="(default package)" size="1191,260" id="" metadata="uml2-1.0" initialized="true" tag="10" key="32303037303533312D3130204D53525020537461636B">
+  <children xsi:type="editmodel:ClassEditModel" targetConnections="//@children.7/@sourceConnections.0" name="Session" location="91,23" size="166,279" id="javax.net.msrp/Session" runTimeClassModel="Session(ZZZ),set_messages,Session(ZZ),_failureReport,_toPath,newConnection(Ljava.lang.String;),_messages,addConnection(Lmsrp.Connection;),Session(),_successReport,_URI,Session(ZZZZ),_relays">
+    <children xsi:type="editmodel:CompartmentEditModel" size="143,108">
+      <children xsi:type="editmodel:AttributeEditModel" name="_URI" id="javax.net.msrp/Session#_URI"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_failureReport" id="javax.net.msrp/Session#_failureReport"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_messages" id="javax.net.msrp/Session#_messages"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_relays" id="javax.net.msrp/Session#_relays"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_successReport" id="javax.net.msrp/Session#_successReport"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_toPath" id="javax.net.msrp/Session#_toPath"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="106,108">
+      <children xsi:type="editmodel:MethodEditModel" name="Session" id="javax.net.msrp/Session#Session(ZZZZ)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="Session" id="javax.net.msrp/Session#Session(ZZZ)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="Session" id="javax.net.msrp/Session#Session(ZZ)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="addConnection" id="javax.net.msrp/Session#addConnection(Lmsrp.Connection;)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="newConnection" id="javax.net.msrp/Session#newConnection(Ljava.lang.String;)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="Session" id="javax.net.msrp/Session#Session()"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <sourceConnections xsi:type="editmodel:AssociationEditModel" autoLocated="true" id="javax.net.msrp/Session@_session+javax.net.msrp/Connection@_connectoin" source="//@children.0" target="//@children.5" targetEnd="//@children.0/@sourceConnections.0/@children.1" label="//@children.0/@sourceConnections.0/@children.2" sourceEnd="//@children.0/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan">
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_session" location="156,279" id="javax.net.msrp/Session@_session+javax.net.msrp/Connection@_connectoin|javax.net.msrp/Session#_session" attachSource="true" multiplicityLabel="//@children.0/@sourceConnections.0/@children.0/@children.1" roleLabel="//@children.0/@sourceConnections.0/@children.0/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _session" location="186,309" size="54,14" anchorKind="FirstPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="254,309" size="6,14" anchorKind="FirstPart"/>
+      </children>
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_connectoin" location="0,10" id="javax.net.msrp/Session@_session+javax.net.msrp/Connection@_connectoin|javax.net.msrp/Connection#_connectoin" multiplicityLabel="//@children.0/@sourceConnections.0/@children.1/@children.1" roleLabel="//@children.0/@sourceConnections.0/@children.1/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _connectoin" location="824,407" size="69,14" anchorKind="LastPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="887,379" size="6,14" anchorKind="LastPart"/>
+      </children>
+      <children xsi:type="editmodel:WireLabelEditModel" size="0,14" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <classifierPreferences xsi:type="editmodel:UMLClassDiagramClassifierPreference" showStereotype="true" attributeSorter="Natural" methodSorter="Natural" innerClassSorter="Natural" showPublicAttributes="true" showPackageAttributes="true" showStaticAttributes="true" showPublicMethods="true" showPackageMethods="true" showStaticMethods="true" showPublicInnerClasses="true" showPackageInnerClasses="true" showStaticInnerClasses="true" packageIndication="3" showAttributeProperty="true"/>
+  </children>
+  <children xsi:type="editmodel:ClassEditModel" targetConnections="//@children.2/@sourceConnections.0" name="Message" location="345,45" size="215,495" id="javax.net.msrp/Message" runTimeClassModel="_session,getContentType(),_streamContent,_failureReport,status(),_sessionManager,_messageID,set_streamContent,setFailureReport(Z),_typeContent,_byteContent,readData(I),_status,interrupt(),Message,setSuccessReport(Z),_contentType,report(),setContentType(Ljava.lang.String;),getFailureReport(),_successReport,_fileNameContent,_sending,Message(Lmsrp.Session;Ljava.lang.String;Ljava.lang.String;),pause(),Message(Lmsrp.Session;Ljava.lang.String;[B)">
+    <children xsi:type="editmodel:CompartmentEditModel" size="192,216">
+      <children xsi:type="editmodel:AttributeEditModel" name="_byteContent" id="javax.net.msrp/Message#_byteContent"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_contentType" id="javax.net.msrp/Message#_contentType"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_failureReport" id="javax.net.msrp/Message#_failureReport"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_fileNameContent" id="javax.net.msrp/Message#_fileNameContent"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_messageID" id="javax.net.msrp/Message#_messageID"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_sending" id="javax.net.msrp/Message#_sending"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_session" id="javax.net.msrp/Message#_session"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_status" id="javax.net.msrp/Message#_status"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_streamContent" id="javax.net.msrp/Message#_streamContent"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_successReport" id="javax.net.msrp/Message#_successReport"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_typeContent" id="javax.net.msrp/Message#_typeContent"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_sessionManager" id="javax.net.msrp/Message#_sessionManager"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="120,216">
+      <children xsi:type="editmodel:MethodEditModel" name="Message" id="javax.net.msrp/Message#Message(Lmsrp.Session;Ljava.lang.String;Ljava.lang.String;)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="getContentType" id="javax.net.msrp/Message#getContentType()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="getFailureReport" id="javax.net.msrp/Message#getFailureReport()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="interrupt" id="javax.net.msrp/Message#interrupt()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="pause" id="javax.net.msrp/Message#pause()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="readData" id="javax.net.msrp/Message#readData(I)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="report" id="javax.net.msrp/Message#report()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="setContentType" id="javax.net.msrp/Message#setContentType(Ljava.lang.String;)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="setFailureReport" id="javax.net.msrp/Message#setFailureReport(Z)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="setSuccessReport" id="javax.net.msrp/Message#setSuccessReport(Z)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="setSuccessReport" id="javax.net.msrp/Message#setSuccessReport(Z)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="status" id="javax.net.msrp/Message#status()"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <sourceConnections xsi:type="editmodel:AssociationEditModel" autoLocated="true" id="javax.net.msrp/Message@_message+javax.net.msrp/TransactionManager@_transactionManager" source="//@children.1" target="//@children.3" targetEnd="//@children.1/@sourceConnections.0/@children.1" label="//@children.1/@sourceConnections.0/@children.2" sourceEnd="//@children.1/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan">
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_message" location="215,133" id="javax.net.msrp/Message@_message+javax.net.msrp/TransactionManager@_transactionManager|javax.net.msrp/Message#_message" attachSource="true" multiplicityLabel="//@children.1/@sourceConnections.0/@children.0/@children.1" roleLabel="//@children.1/@sourceConnections.0/@children.0/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _message" location="567,157" size="60,14" anchorKind="FirstPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="567,185" size="6,14" anchorKind="FirstPart"/>
+      </children>
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_transactionManager" location="0,163" id="javax.net.msrp/Message@_message+javax.net.msrp/TransactionManager@_transactionManager|javax.net.msrp/TransactionManager#_transactionManager" multiplicityLabel="//@children.1/@sourceConnections.0/@children.1/@children.1" roleLabel="//@children.1/@sourceConnections.0/@children.1/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _transactionManager" location="661,157" size="112,14" anchorKind="LastPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="767,185" size="6,14" anchorKind="LastPart"/>
+      </children>
+      <children xsi:type="editmodel:WireLabelEditModel" size="0,14" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <classifierPreferences xsi:type="editmodel:UMLClassDiagramClassifierPreference" showStereotype="true" attributeSorter="Natural" methodSorter="Natural" innerClassSorter="Natural" showPublicAttributes="true" showPackageAttributes="true" showStaticAttributes="true" showPublicMethods="true" showPackageMethods="true" showStaticMethods="true" showPublicInnerClasses="true" showPackageInnerClasses="true" showStaticInnerClasses="true" packageIndication="3" showAttributeProperty="true"/>
+  </children>
+  <children xsi:type="editmodel:ClassEditModel" name="ContentManager" location="634,465" size="147,99" id="javax.net.msrp/ContentManager" runTimeClassModel="ContentManager,reader,read(I)">
+    <children xsi:type="editmodel:CompartmentEditModel" size="88,18">
+      <children xsi:type="editmodel:AttributeEditModel" name="reader" id="javax.net.msrp/ContentManager#reader"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="52,18">
+      <children xsi:type="editmodel:MethodEditModel" name="read" id="javax.net.msrp/ContentManager#read(I)"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <sourceConnections xsi:type="editmodel:AssociationEditModel" autoLocated="true" id="javax.net.msrp/ContentManager@_contentManager+javax.net.msrp/Message@_message" source="//@children.2" target="//@children.1" targetEnd="//@children.2/@sourceConnections.0/@children.1" label="//@children.2/@sourceConnections.0/@children.2" sourceEnd="//@children.2/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan">
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_contentManager" location="17,37" id="javax.net.msrp/ContentManager@_contentManager+javax.net.msrp/Message@_message|javax.net.msrp/ContentManager#_contentManager" attachSource="true" multiplicityLabel="//@children.2/@sourceConnections.0/@children.0/@children.1" roleLabel="//@children.2/@sourceConnections.0/@children.0/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _contentManager" location="533,481" size="94,14" anchorKind="FirstPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="621,509" size="6,14" anchorKind="FirstPart"/>
+      </children>
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_message" location="215,457" id="javax.net.msrp/ContentManager@_contentManager+javax.net.msrp/Message@_message|javax.net.msrp/Message#_message" multiplicityLabel="//@children.2/@sourceConnections.0/@children.1/@children.1" roleLabel="//@children.2/@sourceConnections.0/@children.1/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _message" location="567,481" size="60,14" anchorKind="LastPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="567,509" size="6,14" anchorKind="LastPart"/>
+      </children>
+      <children xsi:type="editmodel:WireLabelEditModel" size="0,14" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <classifierPreferences xsi:type="editmodel:UMLClassDiagramClassifierPreference" showStereotype="true" attributeSorter="Natural" methodSorter="Natural" innerClassSorter="Natural" showPublicAttributes="true" showPackageAttributes="true" showStaticAttributes="true" showPublicMethods="true" showPackageMethods="true" showStaticMethods="true" showPublicInnerClasses="true" showPackageInnerClasses="true" showStaticInnerClasses="true" packageIndication="3" showAttributeProperty="true"/>
+  </children>
+  <children xsi:type="editmodel:ClassEditModel" targetConnections="//@children.1/@sourceConnections.0 //@children.4/@sourceConnections.0" name="TransactionManager" location="780,15" size="173,297" id="javax.net.msrp/TransactionManager" runTimeClassModel="r506(),r200(),r481(),r408(),r413(),r423(),_connections,r400(),_transactionCounter,r501(),r415(),r403(),TransactionManager(Lmsrp.Connection;)">
+    <children xsi:type="editmodel:CompartmentEditModel" size="150,36">
+      <children xsi:type="editmodel:AttributeEditModel" name="_connections" id="javax.net.msrp/TransactionManager#_connections"/>
+      <children xsi:type="editmodel:AttributeEditModel" name="_transactionCounter" id="javax.net.msrp/TransactionManager#_transactionCounter"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="129,198">
+      <children xsi:type="editmodel:MethodEditModel" name="TransactionManager" id="javax.net.msrp/TransactionManager#TransactionManager(Lmsrp.Connection;)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="r200" id="javax.net.msrp/TransactionManager#r200()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="r400" id="javax.net.msrp/TransactionManager#r400()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="r403" id="javax.net.msrp/TransactionManager#r403()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="r408" id="javax.net.msrp/TransactionManager#r408()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="r413" id="javax.net.msrp/TransactionManager#r413()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="r415" id="javax.net.msrp/TransactionManager#r415()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="r423" id="javax.net.msrp/TransactionManager#r423()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="r481" id="javax.net.msrp/TransactionManager#r481()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="r501" id="javax.net.msrp/TransactionManager#r501()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="r506" id="javax.net.msrp/TransactionManager#r506()"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <sourceConnections xsi:type="editmodel:AssociationEditModel" autoLocated="true" id="javax.net.msrp/TransactionManager@_transactionManager+javax.net.msrp/Transaction@_transactions" source="//@children.3" target="//@children.6" targetEnd="//@children.3/@sourceConnections.0/@children.1" label="//@children.3/@sourceConnections.0/@children.2" sourceEnd="//@children.3/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan">
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_transactionManager" location="173,156" id="javax.net.msrp/TransactionManager@_transactionManager+javax.net.msrp/Transaction@_transactions|javax.net.msrp/TransactionManager#_transactionManager" attachSource="true" multiplicityLabel="//@children.3/@sourceConnections.0/@children.0/@children.1" roleLabel="//@children.3/@sourceConnections.0/@children.0/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _transactionManager" location="1051,148" size="112,14" automaticRelocationAllowed="false" locationOnWireFromSource="76.0" distanceFromWire="16.0" anchorKind="FirstPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="960,178" size="6,14" anchorKind="FirstPart"/>
+      </children>
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_transactions" location="0,21" id="javax.net.msrp/TransactionManager@_transactionManager+javax.net.msrp/Transaction@_transactions|javax.net.msrp/Transaction#_transactions" multiplicityLabel="//@children.3/@sourceConnections.0/@children.1/@children.1" roleLabel="//@children.3/@sourceConnections.0/@children.1/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _transactions" location="931,150" size="76,14" automaticRelocationAllowed="false" locationOnWireFromSource="-61.0" distanceFromWire="13.999999999999984" anchorKind="LastPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="*" location="1099,178" size="4,14" anchorKind="LastPart"/>
+      </children>
+      <children xsi:type="editmodel:WireLabelEditModel" size="0,14" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <classifierPreferences xsi:type="editmodel:UMLClassDiagramClassifierPreference" showStereotype="true" attributeSorter="Natural" methodSorter="Natural" innerClassSorter="Natural" showPublicAttributes="true" showPackageAttributes="true" showStaticAttributes="true" showPublicMethods="true" showPackageMethods="true" showStaticMethods="true" showPublicInnerClasses="true" showPackageInnerClasses="true" showStaticInnerClasses="true" packageIndication="3" showAttributeProperty="true"/>
+  </children>
+  <children xsi:type="editmodel:ClassEditModel" targetConnections="//@children.5/@sourceConnections.1" name="Connections" location="615,300" size="120,81" id="javax.net.msrp/Connections" runTimeClassModel="connection(Ljava.lang.String;)">
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <children xsi:type="editmodel:CompartmentEditModel" size="83,18">
+      <children xsi:type="editmodel:MethodEditModel" name="connection" id="javax.net.msrp/Connections#connection(Ljava.lang.String;)"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <sourceConnections xsi:type="editmodel:AssociationEditModel" autoLocated="true" id="javax.net.msrp/Connections@connections+javax.net.msrp/TransactionManager@_connections" source="//@children.4" target="//@children.3" targetEnd="//@children.4/@sourceConnections.0/@children.1" label="//@children.4/@sourceConnections.0/@children.2" sourceEnd="//@children.4/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan">
+      <children xsi:type="editmodel:AssociationEndEditModel" name="connections" location="103,5" id="javax.net.msrp/Connections@connections+javax.net.msrp/TransactionManager@_connections|javax.net.msrp/Connections#connections" attachSource="true"/>
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_connections" location="0,290" id="javax.net.msrp/Connections@connections+javax.net.msrp/TransactionManager@_connections|javax.net.msrp/TransactionManager#_connections" multiplicityLabel="//@children.4/@sourceConnections.0/@children.1/@children.1" roleLabel="//@children.4/@sourceConnections.0/@children.1/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _connections" location="698,312" size="75,14" anchorKind="LastPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="767,284" size="6,14" anchorKind="LastPart"/>
+      </children>
+      <children xsi:type="editmodel:WireLabelEditModel" size="0,14" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <classifierPreferences xsi:type="editmodel:UMLClassDiagramClassifierPreference" showStereotype="true" attributeSorter="Natural" methodSorter="Natural" innerClassSorter="Natural" showPrivateAttributes="true" showPackageAttributes="true" showStaticAttributes="true" showPublicMethods="true" showPackageMethods="true" showStaticMethods="true" showPackageInnerClasses="true" showPrivateInnerClasses="true" showStaticInnerClasses="true" packageIndication="3" showAttributeProperty="true"/>
+  </children>
+  <children xsi:type="editmodel:ClassEditModel" targetConnections="//@children.0/@sourceConnections.0" name="Connection" location="900,390" size="137,153" id="javax.net.msrp/Connection" runTimeClassModel="close(),read(),sessionClose(Lmsrp.Session;),newTransaction(Lmsrp.Session;Lmsrp.Message;Lmsrp.TransactionManager;Ljava.lang.String;),messageInterrupt(Lmsrp.Message;)">
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <children xsi:type="editmodel:CompartmentEditModel" size="114,90">
+      <children xsi:type="editmodel:MethodEditModel" name="close" id="javax.net.msrp/Connection#close()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="messageInterrupt" id="javax.net.msrp/Connection#messageInterrupt(Lmsrp.Message;)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="newTransaction" id="javax.net.msrp/Connection#newTransaction(Lmsrp.Session;Lmsrp.Message;Lmsrp.TransactionManager;Ljava.lang.String;)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="read" id="javax.net.msrp/Connection#read()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="sessionClose" id="javax.net.msrp/Connection#sessionClose(Lmsrp.Session;)"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <sourceConnections xsi:type="editmodel:AssociationEditModel" autoLocated="true" id="javax.net.msrp/Connection@_connection+javax.net.msrp/Transaction@_transactions" source="//@children.5" target="//@children.6" targetEnd="//@children.5/@sourceConnections.0/@children.1" label="//@children.5/@sourceConnections.0/@children.2" sourceEnd="//@children.5/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan">
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_connection" location="127,0" id="javax.net.msrp/Connection@_connection+javax.net.msrp/Transaction@_transactions|javax.net.msrp/Connection#_connection" attachSource="true" multiplicityLabel="//@children.5/@sourceConnections.0/@children.0/@children.1" roleLabel="//@children.5/@sourceConnections.0/@children.0/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _connection" location="951,369" size="69,14" anchorKind="FirstPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="1034,369" size="6,14" anchorKind="FirstPart"/>
+      </children>
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_transactions" location="0,33" id="javax.net.msrp/Connection@_connection+javax.net.msrp/Transaction@_transactions|javax.net.msrp/Transaction#_transactions" multiplicityLabel="//@children.5/@sourceConnections.0/@children.1/@children.1" roleLabel="//@children.5/@sourceConnections.0/@children.1/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _transactions" location="1027,162" size="76,14" anchorKind="LastPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="1097,190" size="6,14" anchorKind="LastPart"/>
+      </children>
+      <children xsi:type="editmodel:WireLabelEditModel" size="0,14" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <sourceConnections xsi:type="editmodel:AssociationEditModel" autoLocated="true" id="javax.net.msrp/Connection@connection1+javax.net.msrp/Connections@_connections" source="//@children.5" target="//@children.4" targetEnd="//@children.5/@sourceConnections.1/@children.1" label="//@children.5/@sourceConnections.1/@children.2" sourceEnd="//@children.5/@sourceConnections.1/@children.0" connectionRouterKind="Manhattan">
+      <children xsi:type="editmodel:AssociationEndEditModel" name="connection1" location="0,10" id="javax.net.msrp/Connection@connection1+javax.net.msrp/Connections@_connections|javax.net.msrp/Connection#connection1" attachSource="true"/>
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_connections" location="110,81" id="javax.net.msrp/Connection@connection1+javax.net.msrp/Connections@_connections|javax.net.msrp/Connections#_connections" multiplicityLabel="//@children.5/@sourceConnections.1/@children.1/@children.1" roleLabel="//@children.5/@sourceConnections.1/@children.1/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _connections" location="643,388" size="75,14" anchorKind="LastPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="732,388" size="6,14" anchorKind="LastPart"/>
+      </children>
+      <children xsi:type="editmodel:WireLabelEditModel" size="0,14" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <classifierPreferences xsi:type="editmodel:UMLClassDiagramClassifierPreference" showStereotype="true" attributeSorter="Natural" methodSorter="Natural" innerClassSorter="Natural" showPublicAttributes="true" showPackageAttributes="true" showStaticAttributes="true" showPublicMethods="true" showPackageMethods="true" showStaticMethods="true" showPublicInnerClasses="true" showPackageInnerClasses="true" showStaticInnerClasses="true" packageIndication="3" showAttributeProperty="true"/>
+  </children>
+  <children xsi:type="editmodel:ClassEditModel" targetConnections="//@children.3/@sourceConnections.0 //@children.5/@sourceConnections.0" name="Transaction" location="1110,150" size="116,43" id="javax.net.msrp/Transaction" runTimeClassModel="">
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <classifierPreferences xsi:type="editmodel:UMLClassDiagramClassifierPreference" showStereotype="true" attributeSorter="Natural" methodSorter="Natural" innerClassSorter="Natural" showPublicAttributes="true" showPackageAttributes="true" showStaticAttributes="true" showPublicMethods="true" showPackageMethods="true" showStaticMethods="true" showPublicInnerClasses="true" showPackageInnerClasses="true" showStaticInnerClasses="true" packageIndication="3" showAttributeProperty="true"/>
+  </children>
+  <children xsi:type="editmodel:ClassEditModel" name="SessionManager" location="60,405" size="147,117" id="javax.net.msrp/SessionManager" runTimeClassModel="delSession(Lmsrp.Session;),SessionManager(),addSession(Lmsrp.Session;)">
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <children xsi:type="editmodel:CompartmentEditModel" size="111,54">
+      <children xsi:type="editmodel:MethodEditModel" name="SessionManager" id="javax.net.msrp/SessionManager#SessionManager()"/>
+      <children xsi:type="editmodel:MethodEditModel" name="addSession" id="javax.net.msrp/SessionManager#addSession(Lmsrp.Session;)"/>
+      <children xsi:type="editmodel:MethodEditModel" name="delSession" id="javax.net.msrp/SessionManager#delSession(Lmsrp.Session;)"/>
+    </children>
+    <children xsi:type="editmodel:CompartmentEditModel" size="0,0"/>
+    <sourceConnections xsi:type="editmodel:AssociationEditModel" autoLocated="true" id="javax.net.msrp/SessionManager@_sessionManager+javax.net.msrp/Session@_sessions" source="//@children.7" target="//@children.0" targetEnd="//@children.7/@sourceConnections.0/@children.1" label="//@children.7/@sourceConnections.0/@children.2" sourceEnd="//@children.7/@sourceConnections.0/@children.0" connectionRouterKind="Manhattan">
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_sessionManager" location="88,0" id="javax.net.msrp/SessionManager@_sessionManager+javax.net.msrp/Session@_sessions|javax.net.msrp/SessionManager#_sessionManager" attachSource="true" multiplicityLabel="//@children.7/@sourceConnections.0/@children.0/@children.1" roleLabel="//@children.7/@sourceConnections.0/@children.0/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _sessionManager" location="155,384" size="96,14" anchorKind="FirstPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="1" location="135,384" size="6,14" anchorKind="FirstPart"/>
+      </children>
+      <children xsi:type="editmodel:AssociationEndEditModel" name="_sessions" location="57,279" id="javax.net.msrp/SessionManager@_sessionManager+javax.net.msrp/Session@_sessions|javax.net.msrp/Session#_sessions" multiplicityLabel="//@children.7/@sourceConnections.0/@children.1/@children.1" roleLabel="//@children.7/@sourceConnections.0/@children.1/@children.0" navigable="true">
+        <children xsi:type="editmodel:LabelEditModel" name=" - _sessions" location="155,309" size="60,14" anchorKind="LastPart"/>
+        <children xsi:type="editmodel:LabelEditModel" name="0..1" location="123,309" size="18,14" anchorKind="LastPart"/>
+      </children>
+      <children xsi:type="editmodel:WireLabelEditModel" size="0,14" anchorKind="MiddlePart"/>
+    </sourceConnections>
+    <classifierPreferences xsi:type="editmodel:UMLClassDiagramClassifierPreference" showStereotype="true" attributeSorter="Natural" methodSorter="Natural" innerClassSorter="Natural" showPublicAttributes="true" showPackageAttributes="true" showStaticAttributes="true" showPublicMethods="true" showPackageMethods="true" showStaticMethods="true" showPublicInnerClasses="true" showPackageInnerClasses="true" showStaticInnerClasses="true" packageIndication="3" showAttributeProperty="true"/>
+  </children>
+  <diagramOptions xsi:type="options:ClassDiagramOptions" properties="wireOptions=1;Product=eUML2" autoName="false"/>
+  <boardSetting snapToGeometry="true" gridEnabled="true" gridSpacing="15,15" gridOrigin="0,0" rulerUnit="pixel" gridVisibility="false">
+    <leftRuler/>
+    <topRuler/>
+  </boardSetting>
+  <classDiagramPreferences xsi:type="editmodel:UMLClassDiagramPreference" showPopupBars="true" showConnectionHandles="true" attributeSorter="Natural" methodSorter="Natural" showClassStereotype="true" showPackageStereotype="true" showDependencyStereotype="true" showInterfaceStereotype="true" innerClassSorter="Natural" showPublicAttributes="true" showPackageAttributes="true" showStaticAttributes="true" showPublicMethods="true" showPackageMethods="true" showStaticMethods="true" showPublicInnerClasses="true" showPackageInnerClasses="true" showStaticInnerClasses="true" packageIndication="3" showAttributeProperty="true"/>
+</editmodel:ClassDiagramEditModel>

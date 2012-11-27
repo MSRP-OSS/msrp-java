@@ -1,0 +1,76 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<project name="ws-registry_deployment">
+
+    <!-- PROPERTIES -->
+    <!-- Registry server and database deployment packages -->
+    <property name="ws-registry.web-app.context.path" value="RegistryServer" />
+    <property name="ws-registry.web-app.war.file-name" value="${ws-registry.web-app.context.path}.war" />
+    <property name="ws-registry.web-app.war.file" location="${jwsdp.dir}/registry-server/webapps/${ws-registry.web-app.war.file-name}" />
+
+    <property name="ws-registry.db.web-app.context.path" value="Xindice" />
+    <property name="ws-registry.db.web-app.war.file-name" value="${ws-registry.db.web-app.context.path}.war" />
+    <property name="ws-registry.db.web-app.war.file" location="${jwsdp.dir}/registry-server/webapps/${ws-registry.db.web-app.war.file-name}" />
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+    <!-- UDDI Registry server deployment targets -->
+
+    <!-- MAIN TARGETS (name, description) -->
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="undeploy-ws-registry-server">
+        <echo message="Undeploying registry server..." />
+        <antcall target="undeploy" inheritAll="false">
+            <param name="web-app-env.deploy.context" value="${ws-registry.web-app.context.path}" />
+        </antcall>
+        <echo message="Undeploying registry server database..." />
+        <antcall target="undeploy" inheritAll="false">
+            <param name="web-app-env.deploy.context" value="${ws-registry.db.web-app.context.path}" />
+        </antcall>
+    </target>
+
+    <target name="deploy-ws-registry-server">
+        <echo message="Deploying registry server database..." />
+        <antcall target="quick-deploy" inheritAll="false">
+            <param name="web-app-env.deploy.context" value="${ws-registry.db.web-app.context.path}" />
+            <param name="web-app-env.deploy.war.rel-file" value="${ws-registry.db.web-app.war.file}" />
+        </antcall>
+        <echo message="Deploying registry server..." />
+        <antcall target="quick-deploy" inheritAll="false">
+            <param name="web-app-env.deploy.context" value="${ws-registry.web-app.context.path}" />
+            <param name="web-app-env.deploy.war.rel-file" value="${ws-registry.web-app.war.file}" />
+        </antcall>
+    </target>
+
+    <target name="redeploy-ws-registry-server">
+        <antcall target="undeploy-ws-registry-server" />
+        <sleep seconds="5" />
+        <antcall target="deploy-ws-registry-server" />
+    </target>
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+
+</project>

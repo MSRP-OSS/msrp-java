@@ -1,0 +1,158 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<project name="ws-registry">
+    <fail message="MUST INCLUDE core BEFORE ws-registry" unless="import-ant.module.core" />
+    <fail message="MUST INCLUDE A ws-registry-env BEFORE ws-registry" unless="import-ant.module.ws-registry-env" />
+
+    <!-- PARAMETER PROPERTIES (defined in build.xml to customize build) -->
+    <!--
+    <property name="ws-registry.url" value="..." />
+    <property name="ws-registry.username" value="..." />
+    <property name="ws-registry.password" value="..." />
+
+    <property name="ws-registry.main-class" value="..." />
+
+    <property name="ws-registry.publish.args" value="..." />
+    <property name="ws-registry.delete.args" value="..." />
+    <property name="ws-registry.query.args" value="..." />
+    -->
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.ws-registry" value="true" />
+
+    <property name="ws-registry.dir-name" value="ws-registry" />
+
+    <property name="config.ws-registry.rel-dir" value="${config.rel-dir}/${ws-registry.dir-name}" />
+    <property name="build.config.ws-registry.rel-dir" value="${build.rel-dir}/${config.ws-registry.rel-dir}" />
+
+
+    <!--       -->
+    <!-- PATHS -->
+    <!--       -->
+    <path id="ws-registry.classpath">
+        <path refid="project.lib.path" />
+        <path refid="ws-registry.jars.path" />
+    </path>
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+    <target name="ws-publish"
+            description="Publish Web Service on registry"
+            depends="init-ws-registry,build-ws-registry">
+        <fail message="MUST DEFINE ws-registry.publish.args PROPERTY" unless="ws-registry.publish.args" />
+        <echo message="Publishing web service registration..." />
+        <java fork="true" classname="${ws-registry.main-class}">
+            <arg line="${ws-registry.publish.args}"/>
+            <classpath>
+                <path refid="ws-registry.classpath" />
+            </classpath>
+        </java>
+    </target>
+
+    <target name="ws-delete"
+            description="Delete Web Service from registry"
+            depends="init-ws-registry,build-ws-registry">
+        <fail message="MUST DEFINE ws-registry.delete.args PROPERTY" unless="ws-registry.delete.args" />
+        <echo message="Deleting Web Service registration..."/>
+        <java fork="true" classname="${ws-registry.main-class}">
+            <arg line="${ws-registry.delete.args}"/>
+            <classpath>
+                <path refid="ws-registry.classpath" />
+            </classpath>
+        </java>
+    </target>
+
+    <target name="ws-query"
+            description="Query registry for Web Services"
+            depends="init-ws-registry,build-ws-registry">
+        <fail message="MUST DEFINE ws-registry.query.args PROPERTY" unless="ws-registry.query.args" />
+        <echo message="Querying Web Service registry..."/>
+        <java fork="true" classname="${ws-registry.main-class}">
+            <arg line="${ws-registry.query.args}"/>
+            <classpath>
+                <path refid="ws-registry.classpath" />
+            </classpath>
+        </java>
+    </target>
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="init-ws-registry"
+            depends="init">
+        <fail message="MUST DEFINE ws-registry.main-class PROPERTY" unless="ws-registry.main-class" />
+        <fail message="MUST DEFINE ws-registry.url PROPERTY" unless="ws-registry.url" />
+        <fail message="MUST DEFINE ws-registry.username PROPERTY" unless="ws-registry.username" />
+        <fail message="MUST DEFINE ws-registry.password PROPERTY" unless="ws-registry.password" />
+    </target>
+
+    <target name="build-ws-registry"
+            depends="init-ws-registry,config,-ws-registry-replaces">
+       <!-- description="Update ws-registry configuration files" -->
+        <!-- copy ws-registry files to build classes -->
+        <copy todir="${build.classes.rel-dir}" overwrite="true">
+            <fileset dir="${build.config.ws-registry.rel-dir}" includes="**/*" />
+        </copy>
+    </target>
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <!-- USER NOTE: override '-ws-registry-replaces' to do more or different replaces in configuration files -->
+    <target name="-ws-registry-replaces">
+        <echo message="Replacing tokens in resource files..." />
+        <property name="ws-registry.custom-tokens.target-name" value="-replace-ws-registry-custom-tokens(dir)" />
+        <antcall target="${ws-registry.custom-tokens.target-name}">
+            <param name="dir" value="${build.config.ws-registry.rel-dir}" />
+        </antcall>
+        <antcall target="-replace-ws-registry-tokens(dir)">
+            <param name="dir" value="${build.config.ws-registry.rel-dir}" />
+        </antcall>
+    </target>
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <target name="-replace-ws-registry-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@ws-registry.url@" value="${ws-registry.url}" />
+            <replacefilter token="@ws-registry.username@" value="${ws-registry.username}" />
+            <replacefilter token="@ws-registry.password@" value="${ws-registry.password}" />
+        </replace>
+    </target>
+
+    <!-- USER NOTE: override '-replace-ws-registry-custom-tokens(dir)' to replace custom tokens -->
+    <target name="-replace-ws-registry-custom-tokens(dir)">
+        <!--
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@token@" value="value" />
+        </replace>
+        -->
+    </target>
+
+    <!--         -->
+    <!-- IMPORTS -->
+    <!--         -->
+    <import file="optional/ws-registry_deployment.xml" optional="true" />
+
+</project>

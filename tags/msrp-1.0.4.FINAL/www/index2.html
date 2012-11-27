@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MSRP - Homepage</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="">
+
+<!-- Le styles -->
+<link href="css/bootstrap.css" rel="stylesheet">
+<style type="text/css">
+body {
+	padding-top: 60px;
+	padding-bottom: 40px;
+}
+
+.sidebar-nav {
+	padding: 9px 0;
+}
+</style>
+<link href="css/bootstrap-responsive.css" rel="stylesheet">
+<link href="css/docs.css" rel="stylesheet">
+
+<!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+<!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+<!-- Le fav and touch icons -->
+<link rel="shortcut icon" href="ico/favicon.ico">
+<link rel="apple-touch-icon-precomposed" sizes="144x144"
+	href="ico/apple-touch-icon-144-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="114x114"
+	href="ico/apple-touch-icon-114-precomposed.png">
+<link rel="apple-touch-icon-precomposed" sizes="72x72"
+	href="ico/apple-touch-icon-72-precomposed.png">
+<link rel="apple-touch-icon-precomposed"
+	href="ico/apple-touch-icon-57-precomposed.png">
+</head>
+
+<body data-spy="scroll" data-target=".bs-docs-sidebar">
+
+	<div class="navbar navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container-fluid">
+				<a class="btn btn-navbar" data-toggle="collapse"
+					data-target=".nav-collapse"> <span class="icon-bar"></span> <span
+					class="icon-bar"></span> <span class="icon-bar"></span>
+				</a> <a class="brand" href="#">MSRP (Java)</a>
+				<div class="nav-collapse collapse">
+					<ul class="nav">
+						<li class="active"><a href="#">Home</a></li>
+						<li><a href="tutorial.html">Tutorial</a></li>
+						<li><a href="issues.html">Issues</a></li>
+						<li><a href="source.html">Source Code</a></li>
+						<li><a href="mailinglists.html">Mailing lists</a></li>
+					</ul>
+				</div>
+				<!--/.nav-collapse -->
+			</div>
+		</div>
+	</div>
+
+	<div class="container-fluid">
+		<div class="row-fluid">
+			<div class="span3 bs-docs-sidebar">
+				<ul class="nav nav-list bs-docs-sidenav" data-spy="affix">
+					<li><a href="#goalsandmission">Project goals and mission <i
+							class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#history">Project history <i
+							class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#participation">Participation <i
+							class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#sponsorsandcontributions">Sponsors and
+							contributors <i class="icon-chevron-right"></i>
+					</a></li>
+					<li><a href="#announcements">Announcements <i
+							class="icon-chevron-right"></i>
+					</a></li>
+				</ul>
+			</div>
+			<!--/span-->
+			<div class="span9">
+
+				<div class="row-fluid">
+					<section id="goalsandmission">
+						<h1>Project goals and mission <sup><a href="#announcements">new release!</a></sup></h1>
+						<p>
+							This project's goal is to develop an open source peer library for
+							the Message Session Relay Protocol (MSRP, <a
+								href="http://tools.ietf.org/html/rfc4975" target="_blank">RFC
+								4975</a>) that also supports the MSRP relay extensions (<a
+								href="http://tools.ietf.org/html/rfc4975" target="_blank">RFC
+								4976</a>), flexible enough so that it can be used by any
+							application.
+						</p>
+						<!-- <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p> -->
+					</section>
+				</div>
+				<!--/goalsandmission-->
+				<div class="row-fluid">
+					<section id="history">
+						<h1>Project history</h1>
+						<h4>Past</h4>
+						<p>
+							This project was born from the marvellous <a
+								href="http://code.google.com/soc" target="_blank">Google
+								Summer of Code (GSoC)</a> in it's 2008 edition, as a project for <a
+								target="_blank" href="http://www.jitsi.org">Jitsi</a>. Initial
+							project abstract can be found <a
+								href="http://code.google.com/soc/2008/sipcomm/about.html"
+								target="_blank">here</a>.
+						</p>
+
+						<h4>Project present and future:</h4>
+						<p>
+							Currently the project is more oriented to the requirements of a
+							general instant messaging file transfer application as specified
+							on <a
+								href="http://tools.ietf.org/html/draft-ietf-mmusic-file-transfer-mech-08"
+								target="_blank">this draft</a>. That meanwhile became <a
+								target="_blank" href="http://tools.ietf.org/html/rfc5547">RFC
+								5547</a>
+						</p>
+						<p>
+							The project's current direction is to solve all of <a
+								href="http://java.net/jira/browse/MSRP">these issues</a>, giving
+							priority to the general requirements of the instant messaging
+							file transfer application and more specifically to the specific
+							requirements of <a href="http://jitsi.org/" target="_blank">Jitsi
+								(Sip Communicator)</a>.
+						</p>
+						<div class="offset1 span3">
+							<script type="text/javascript"
+								src="http://www.ohloh.net/p/596699/widgets/project_basic_stats.js"></script>
+						</div>
+						<div class="offset2 span4">
+							<script type="text/javascript"
+								src="http://www.ohloh.net/p/596699/widgets/project_factoids_stats.js"></script>
+						</div>
+					</section>
+				</div>
+				<!-- history -->
+				<div class="row-fluid">
+					<section id="participation">
+						<h1>Participation</h1>
+						<p>
+							This is an open source project that welcomes new developers. If
+							you are interested in participating, drop us an email at our
+							developer <a href="mailinglists.html">mailing list.</a>
+						</p>
+					</section>
+				</div>
+				<!-- participation -->
+				<div class="row-fluid">
+					<section id="sponsorsandcontributions">
+						<h1>Sponsors and contributors</h1>
+						<h4>Main contributors</h4>
+						<ul>
+							<li><a href="http://web.ist.utl.pt/~joao.a.p.antunes/"
+								target="_blank">João Antunes</a> - founder and early (2008~2010)
+								main developer;</li>
+							<li><a
+								href="http://www.linkedin.com/pub/tom-uijldert/3/962/568"
+								target="_blank">Tom Uijldert</a> - current main developer,
+								sponsored by <a href="http://www.contactmakers.nl"
+								target="_blank"><img src="contactmakers.png" width="200"
+									height="50" alt="ContactMakers"></a>;</li>
+							<li>Arnau Vàzquez - developer responsible for the <a
+								target="_blank" href="http://kenai.com/projects/msrp-for-me">MSRP
+									mobile edition</a> port;
+							</li>
+							<li>Albert Petit - developer responsible for the <a
+								target="_blank" href="http://kenai.com/projects/msrp-for-me">MSRP
+									mobile edition</a> port;
+							</li>
+						</ul>
+
+						<h4>Sponsors</h4>
+						<h5>Early development was sponsored by:</h5>
+						<p>
+							<a href="http://www.nlnet.nl" target="_blank"><img
+								src="banner-nf-160x60.jpg" width="160" height="60"
+								alt="NLNet Foundation"></a>.
+						</p>
+						<p>and</p>
+						<p>
+							<a href="http://code.google.com/soc">Google Summer of Code
+								2008 edition</a> - <a target="_blank" href="http://www.jitsi.org">Jitsi</a>
+							project
+						</p>
+					</section>
+				</div>
+				<!-- sponsorsandcontributions -->
+				<div class="row-fluid">
+					<section id="announcements">
+						<h1>Announcements</h1>
+						<h4>18/10/2012 - 1.0.3.FINAL release</h4>
+						<!-- <blockquote> -->
+							<p>Greetings Java developer,</p>
+							<p>After a flying start within the brilliant Google Summer of
+								Code, having it simmer for a while and finally polishing it up
+								with some actual use-cases, the MSRP project team is proud to
+								announce version 1.0.3 FINAL of its' magnificent library!</p>
+							<p>This is an open source library, implementing the Message
+								Session Relay Protocol (MSRP: RFC 4975), for you to deploy in
+								any application.</p>
+
+							<p>Functionalities include</p>
+
+							<ul>
+								<li>establishing MSRP sessions</li>
+
+								<li>sending and receiving instant messages (chat) using
+									MSRP</li>
+
+								<li>sending and receiving files using MSRP</li>
+
+								<li>message/cpim wrapping to interface with other chat
+									systems</li>
+
+								<li>nicknames (draft-ietf-simple-chat)</li>
+
+								<li>message composition indication (RFC 3994)</li>
+
+							</ul>
+
+
+							<p>
+								For a quick introduction, read the <a href="tutorial.html">tutorial</a>.
+							</p>
+
+							<p>Build versions can be found in the central Maven
+								repository, just include the dependency in your projects'
+								pom.xml buildfile and you're good to go.</p>
+
+							<p>So be our guest, use it, abuse it and send us your
+								patches, comments, issues, wishlists and what have you.</p>
+							<p>Happy coding!</p>
+
+							<p>The MSRP team.</p>
+
+
+
+							<p>Special thanks go to:</p>
+
+							<ul>
+								<li>The Jitsi project for initiating this</li>
+
+								<li>Google summer of code for making it possible</li>
+
+								<li>Nlnet for early development sponsoring</li>
+
+								<li>ContactMakers for sponsoring the polishing.</li>
+							</ul>
+
+	<!-- 					</blockquote> -->
+						<!-- <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+              <p><a class="btn" href="#">View details &raquo;</a></p> -->
+					</section>
+				</div>
+				<!--/announcements-->
+			</div>
+			<!--/span-->
+		</div>
+		<!--/row-->
+
+		<hr>
+
+		<footer class="offset3">
+			<p>
+				&copy; <a href="http://web.ist.utl.pt/~joao.a.p.antunes/"
+					target="_blank">João Antunes 2012</a>
+			</p>
+		</footer>
+
+	</div>
+	<!--/.fluid-container-->
+
+	<!-- Le javascript
+    ================================================== -->
+	<!-- Placed at the end of the document so the pages load faster -->
+	<script src="js/jquery.js"></script>
+	<script src="js/bootstrap.js"></script>
+	<script type="text/javascript">
+		var _gaq = _gaq || [];
+		_gaq.push([ '_setAccount', 'UA-35236086-1' ]);
+		_gaq.push([ '_trackPageview' ]);
+
+		(function() {
+			var ga = document.createElement('script');
+			ga.type = 'text/javascript';
+			ga.async = true;
+			ga.src = ('https:' == document.location.protocol ? 'https://ssl'
+					: 'http://www')
+					+ '.google-analytics.com/ga.js';
+			var s = document.getElementsByTagName('script')[0];
+			s.parentNode.insertBefore(ga, s);
+		})();
+	</script>
+
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the authors at: miguel.pardal@ist.utl.pt
+-->
+<project name="jax-ws-client">
+    <fail message="MUST INCLUDE core BEFORE jax-ws-client" unless="import-ant.module.core" />
+    <fail message="MUST INCLUDE A jax-ws-env BEFORE jax-ws-client" unless="import-ant.module.jax-ws-env" />
+
+    <!-- PARAMETER PROPERTIES (defined in build.xml to customize build) -->
+    <!--
+    <property name="jax-ws-client.wsdl.file-name" value="Hello.wsdl" />
+    OR
+    <property name="jax-ws-client.wsdl.url" value="http://localhost:8080/TestJaxWsWsdlHelloServer/endpoint?wsdl" />
+
+    <property name="jax-ws-client.stubs.package" value="hello.stubs" />
+    -->
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.jax-ws-client" value="true" />
+
+    <property name="jax-ws-client.dir-name" value="jax-ws-client" />
+
+    <property name="config.jax-ws-client.rel-dir" value="${config.rel-dir}/${jax-ws-client.dir-name}" />
+    <property name="build.config.jax-ws-client.rel-dir" value="${build.rel-dir}/${config.jax-ws-client.rel-dir}" />
+
+    <property name="build.jax-ws-client.rel-dir" value="${build.rel-dir}/${jax-ws-client.dir-name}" />
+    <property name="build.jax-ws-client.wsimport.rel-dir" value="${build.jax-ws-client.rel-dir}/wsimport" />
+
+    <property name="jax-ws-client.wsimport.verbose" value="false" />
+    <property name="jax-ws-client.wsimport.debug" value="${compile.debug}" />
+    <property name="jax-ws-client.wsimport.bindings.file-pattern" value="*binding*.xml" />
+
+    <property name="jax-ws-client.security.config.file-pattern" value="*security_config.xml" />
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+    <target name="build-jax-ws-client-stubs"
+            depends="config,-jax-ws-client-init-file-url,-jax-ws-client-replaces,-jax-ws-client-wsimport"
+            description="Build JAX-WS client code">
+    </target>
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+    <target name="build-jax-ws-client"
+            depends="build-jax-ws-client-stubs">
+    </target>
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <target name="-jax-ws-client-init-file-url"
+            depends="-define-file-url-prefix"
+            if="jax-ws-client.wsdl.file-name">
+        <!-- depends on jax-init only when using local file -->
+        <!-- using antcall because target depends are executed regardless of if -->
+        <antcall target="jax-init" />
+
+        <!-- generate a file URL if the a wsdl file name was specified -->
+        <property name="jax-ws-client.wsdl.rel-file" value="${build.jax.rel-dir}/${jax-ws-client.wsdl.file-name}" />
+        <property name="jax-ws-client.wsdl.file" location="${jax-ws-client.wsdl.rel-file}" />
+        <path id="jax-ws-client.wsdl.path">
+            <pathelement location="${jax-ws-client.wsdl.file}"/>
+        </path>
+        <pathconvert property="jax-ws-client.wsdl.file./" refid="jax-ws-client.wsdl.path" pathsep=";" dirsep="/" />
+        <property name="jax-ws-client.wsdl.url" value="${file-url-prefix}${jax-ws-client.wsdl.file./}" />
+    </target>
+
+    <target name="-jax-ws-client-wsimport"
+            depends="-jax-ws-client-wsimport-init,-jax-ws-client-wsimport-exec,-jax-ws-client-wsimport-exec-override,-jax-ws-client-wsimport-finish">
+    </target>
+
+    <target name="-jax-ws-client-wsimport-init" depends="-jax-ws-env.taskdef.init">
+        <!-- check required properties -->
+        <fail message="MUST DEFINE jax-ws-client.wsdl.url PROPERTY" unless="jax-ws-client.wsdl.url" />
+         <!-- delete previous build directory -->
+        <delete dir="${build.jax-ws-client.rel-dir}" />
+        <!-- create working directories -->
+        <mkdir dir="${build.jax-ws-client.rel-dir}" />
+        <mkdir dir="${build.jax-ws-client.wsimport.rel-dir}" />
+    </target>
+
+    <target name="-jax-ws-client-wsimport-exec"
+            unless="jax-ws-client.stubs.package">
+        <echo message="Executing wsimport to generate client-side artifacts..." />
+        <echo message="WSDL: ${jax-ws-client.wsdl.url}" />
+        <echo message="Generated code destination dir: ${build.jax-ws-client.wsimport.rel-dir}" />
+        <wsimport wsdl="${jax-ws-client.wsdl.url}"
+                  debug="${jax-ws-client.wsimport.debug}"
+                  verbose="${jax-ws-client.wsimport.verbose}"
+                  destdir="${build.jax-ws-client.wsimport.rel-dir}"
+                  sourcedestdir="${build.jax-ws-client.wsimport.rel-dir}" >
+            <binding dir="${build.config.jax-ws-client.rel-dir}" includes="${jax-ws-client.wsimport.bindings.file-pattern}"/>
+        </wsimport>
+    </target>
+
+    <target name="-jax-ws-client-wsimport-exec-override"
+            if="jax-ws-client.stubs.package">
+        <echo message="Executing wsimport to generate client-side artifacts..." />
+        <echo message="WSDL: ${jax-ws-client.wsdl.url}" />
+        <echo message="Generated code destination dir: ${build.jax-ws-client.wsimport.rel-dir}" />
+        <echo message="Overriding stubs package to ${jax-ws-client.stubs.package}" />
+        <wsimport wsdl="${jax-ws-client.wsdl.url}"
+                  package="${jax-ws-client.stubs.package}"
+                  debug="${jax-ws-client.wsimport.debug}"
+                  verbose="${jax-ws-client.wsimport.verbose}"
+                  destdir="${build.jax-ws-client.wsimport.rel-dir}"
+                  sourcedestdir="${build.jax-ws-client.wsimport.rel-dir}" >
+            <binding dir="${build.config.jax-ws-client.rel-dir}" includes="${jax-ws-client.wsimport.bindings.file-pattern}"/>
+        </wsimport>
+    </target>
+
+    <target name="-jax-ws-client-wsimport-finish">
+        <echo level="verbose" message="Copying generated classes and descriptors to build classes dir..." />
+        <copy todir="${build.classes.rel-dir}" overwrite="true">
+            <fileset dir="${build.jax-ws-client.wsimport.rel-dir}">
+                <include name="**/*.class"/>
+                <include name="**/*.xml"/>
+            </fileset>
+        </copy>
+        <echo level="verbose" message="Copying security config file..." />
+        <copy todir="${build.classes.rel-dir}">
+            <fileset dir="${build.config.jax-ws-client.rel-dir}">
+                <include name="${jax-ws-client.security.config.file-pattern}"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- USER NOTE: override '-jax-ws-client-replaces' to do more or different replaces in configuration files -->
+    <target name="-jax-ws-client-replaces">
+        <echo message="Replacing tokens in resource files..." />
+        <property name="jax-ws-client.custom-tokens.target-name" value="-replace-jax-ws-client-custom-tokens(dir)" />
+        <antcall target="${jax-ws-client.custom-tokens.target-name}">
+            <param name="dir" value="${build.config.jax-ws-client.rel-dir}" />
+        </antcall>
+        <antcall target="-replace-jax-ws-client-tokens(dir)">
+            <param name="dir" value="${build.config.jax-ws-client.rel-dir}" />
+        </antcall>
+    </target>
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <target name="-replace-jax-ws-client-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <!-- perform simple value token replacements -->
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@jax-ws-client.wsdl.file-name@" value="${jax-ws-client.wsdl.file-name}" />
+            <replacefilter token="@jax-ws-client.wsdl.url@" value="${jax-ws-client.wsdl.url}" />
+            <replacefilter token="@jax-ws-client.stubs.package@" value="${jax-ws-client.stubs.package}" />
+        </replace>
+        <!-- perform multi-line value token replacements -->
+        <replace dir="${dir}" token="@jax-ws-client.handler-chains@">
+            <replacevalue><![CDATA[]]></replacevalue>
+        </replace>
+    </target>
+
+    <!-- USER NOTE: override '-replace-jax-ws-client-custom-tokens(dir)' to replace custom tokens -->
+    <target name="-replace-jax-ws-client-custom-tokens(dir)">
+        <!--
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@token@" value="value" />
+        </replace>
+        -->
+        <!--
+        <replace dir="${dir}" token="@jax-ws-client.handler-chains@">
+            <replacevalue><![CDATA[
+                <jws:handler-chains>
+                    <jws:handler-chain>
+                        <jws:handler>
+                            <jws:handler-class>util.LoggingHandler</jws:handler-class>
+                        </jws:handler>
+                    </jws:handler-chain>
+                </jws:handler-chains>
+            ]]></replacevalue>
+        </replace>
+        -->
+    </target>
+
+
+    <!--         -->
+    <!-- IMPORTS -->
+    <!--         -->
+    <import file="jax.xml" />
+
+</project>

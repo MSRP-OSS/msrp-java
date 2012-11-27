@@ -1,0 +1,332 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the authors at: miguel.pardal@ist.utl.pt
+-->
+<project name="glassfish">
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.glassfish" value="true" />
+    <property name="import-ant.module.glassfish-v2" value="true" />
+
+    <property name="glassfish.name" location="Glassfish" />
+    <property name="glassfish.version" location="V2" />
+
+    <property name="glassfish.dir" location="${env.GLASSFISH_HOME}" />
+
+    <property name="glassfish.password.file-name" value="glassfish-passfile" />
+    <property name="glassfish.password.file" location="${user.home}/${glassfish.password.file-name}" />
+
+
+    <!--       -->
+    <!-- PATHS -->
+    <!--       -->
+
+    <!-- Library subsets -->
+
+    <!-- Java EE -->
+    <path id="glassfish.javaee.jars.path">
+        <fileset dir="${glassfish.dir}/lib">
+            <include name="javaee.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Web Services run-time -->
+    <path id="glassfish.web-services-run-time.jars.path">
+        <fileset dir="${glassfish.dir}/lib">
+            <include name="webservices-rt.jar"/>
+            <include name="activation.jar"/>
+            <include name="mail.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Web Services tools -->
+    <path id="glassfish.web-services-tools.jars.path">
+        <fileset dir="${glassfish.dir}/lib">
+            <include name="webservices-tools.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Ant tasks -->
+    <path id="glassfish.ant-tasks.jars.path">
+        <fileset dir="${glassfish.dir}/lib">
+            <include name="sun-appserv-ant.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Other libraries -->
+    <path id="glassfish.appserv.jars.path">
+        <fileset dir="${glassfish.dir}/lib">
+            <include name="appserv-rt.jar"/>
+            <include name="appserv-jstl.jar"/>
+            <include name="appserv-tags.jar"/>
+        </fileset>
+    </path>
+
+    <!-- Glassfish libraries - same set as Eclipse plug-in Glassfish library -->
+    <path id="glassfish.jars.path">
+        <path refid="glassfish.javaee.jars.path" />
+        <path refid="glassfish.web-services-run-time.jars.path" />
+        <path refid="glassfish.web-services-tools.jars.path" />
+        <path refid="glassfish.appserv.jars.path" />
+    </path>
+
+
+    <!--          -->
+    <!-- TASKDEFS -->
+    <!--          -->
+
+    <!-- Sun App Server tasks -->
+    <taskdef name="sun-appserv-deploy"
+             classname="org.apache.tools.ant.taskdefs.optional.sun.appserv.DeployTask">
+        <classpath refid="glassfish.ant-tasks.jars.path" />
+    </taskdef>
+
+    <taskdef name="sun-appserv-undeploy"
+             classname="org.apache.tools.ant.taskdefs.optional.sun.appserv.UndeployTask">
+        <classpath refid="glassfish.ant-tasks.jars.path" />
+    </taskdef>
+
+    <taskdef name="sun-appserv-instance"
+             classname="org.apache.tools.ant.taskdefs.optional.sun.appserv.InstanceTask">
+        <classpath refid="glassfish.ant-tasks.jars.path"/>
+    </taskdef>
+
+    <taskdef name="sun-appserv-component"
+             classname="org.apache.tools.ant.taskdefs.optional.sun.appserv.ComponentTask">
+        <classpath refid="glassfish.ant-tasks.jars.path"/>
+    </taskdef>
+
+    <taskdef name="sun-appserv-admin" classname="org.apache.tools.ant.taskdefs.optional.sun.appserv.AdminTask">
+        <classpath refid="glassfish.ant-tasks.jars.path"/>
+    </taskdef>
+
+    <taskdef name="sun-appserv-input" classname="org.apache.tools.ant.taskdefs.Input">
+        <classpath refid="glassfish.ant-tasks.jars.path"/>
+    </taskdef>
+
+    <taskdef name="sun-appserv-jspc" classname="org.apache.tools.ant.taskdefs.optional.sun.appserv.SunJspc">
+        <classpath refid="glassfish.ant-tasks.jars.path"/>
+    </taskdef>
+
+    <taskdef name="sun-appserv-update" classname="org.apache.tools.ant.taskdefs.optional.sun.appserv.UpdateTask">
+        <classpath refid="glassfish.ant-tasks.jars.path"/>
+    </taskdef>
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+    <target name="deploy"
+            depends="-check-web-app-user,-check-web-app-context,build,-deploy"
+            description="Deploy Web application">
+    </target>
+
+    <target name="undeploy"
+            depends="-check-web-app-user,-check-web-app-context,-undeploy"
+            description="Undeploy Web application">
+    </target>
+
+    <target name="quick-deploy"
+            depends="-check-web-app-user,-check-web-app-context,-quick-deploy-warning,-deploy"
+            description="Deploy Web application without rebuilding WAR file">
+    </target>
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <target name="-check-web-app-user">
+        <fail message="MUST DEFINE glassfish.password.file PROPERTY" unless="glassfish.password.file" />
+
+        <available file="${glassfish.password.file}" type="file" property="glassfish.password.file.exists"/>
+        <fail message="Glassfish password file ${glassfish.password.file} not found!"
+              unless="glassfish.password.file.exists" />
+    </target>
+
+    <target name="-check-web-app-context">
+        <fail message="MUST DEFINE web-app-env.deploy.context PROPERTY" unless="web-app-env.deploy.context" />
+    </target>
+
+    <target name="-quick-deploy-warning">
+        <echo level="warning" message="Deploying current WAR file. It may be out of date." />
+        <!-- sleep is here to give time for slower machines to undeploy
+             web application before new deploy" -->
+        <sleep seconds="1" />
+    </target>
+
+    <target name="-deploy">
+        <fail message="MUST DEFINE web-app-env.deploy.war.rel-file PROPERTY" unless="web-app-env.deploy.war.rel-file" />
+        <property name="web-app-env.deploy.war.file" location="${web-app-env.deploy.war.rel-file}" />
+        <sun-appserv-deploy
+            file="${web-app-env.deploy.war.file}"
+            passwordfile="${glassfish.password.file}"
+            asinstalldir="${glassfish.dir}"
+        />
+    </target>
+
+    <target name="-undeploy">
+        <sun-appserv-undeploy
+            name="${web-app-env.deploy.context}"
+            passwordfile="${glassfish.password.file}"
+            asinstalldir="${glassfish.dir}"
+        />
+    </target>
+
+    <!-- token replacements -->
+    <target name="-replace-glassfish-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <replace dir="${replace-tokens.build.rel-dir}" summary="yes">
+            <replacefilter token="@glassfish.name@" value="${glassfish.name}" />
+            <replacefilter token="@glassfish.version@" value="${glassfish.version}" />
+            <replacefilter token="@glassfish.dir@" value="${glassfish.dir}" />
+        </replace>
+    </target>
+
+
+<!--
+    ENVIRONMENT IMPLEMENTATIONS ================================================
+-->
+
+<!--
+    BEGIN ENVIRONMENT: web-app-env - web application environment - - - - - - - -
+
+    1 - define web application environment property:
+-->
+    <property name="import-ant.module.web-app-env" value="true" />
+<!--
+    2 - define web application environment properties
+-->
+    <property name="web-app-env.name" value="${glassfish.name}" />
+    <property name="web-app-env.version" value="${glassfish.version}" />
+    <!-- USER NOTE: 'web-app-env.deploy.context' will have to be defined in project's build.xml -->
+    <!-- USER NOTE: 'web-app-env.deploy.war.rel-file' will have to be defined in project's build.xml -->
+<!--
+ 3 - define jar collection for web applications
+-->
+    <path id="web-app.jars.path">
+        <path refid="glassfish.javaee.jars.path" />
+    </path>
+<!--
+    END ENVIRONMENT: web-app-env - web application environment - - - - - - - - -
+-->
+
+
+<!--
+    BEGIN ENVIRONMENT: jax-b-env - jax-b environment - - - - - - - - - - - - - -
+
+    1 - define jax-b application enviroment property:
+-->
+    <property name="import-ant.module.jax-b-env" value="true" />
+<!--
+    2 - define jax-b application environment properties
+-->
+    <property name="jax-b-env.name" value="${glassfish.name}" />
+    <property name="jax-b-env.version" value="${glassfish.version}" />
+<!--
+    3 - define jar collection for jax-b applications
+-->
+    <path id="jax-b.jars.path">
+        <path refid="glassfish.javaee.jars.path" />
+        <path refid="glassfish.web-services-run-time.jars.path" />
+    </path>
+<!--
+    4 - define xjc task and adapter targets
+-->
+    <target name="-jax-b-env.taskdef.init">
+
+        <taskdef name="xjc" classname="com.sun.tools.xjc.XJCTask">
+            <classpath refid="glassfish.web-services-tools.jars.path" />
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+    </target>
+
+    <!-- package override version -->
+    <target name="-xjc-adapter-override()">
+        <!-- dir,extension,package,schema.dir,schema.file-pattern,binding.dir,binding.file-pattern -->
+        <xjc destdir="${dir}" extension="${extension}" package="${package}">
+            <schema dir="${schema.dir}" includes="${schema.file-pattern}"/>
+            <binding dir="${binding.dir}" includes="${binding.file-pattern}"/>
+        </xjc>
+    </target>
+    <!-- namespace-generated package version -->
+    <target name="-xjc-adapter()">
+        <!-- dir,extension,schema.dir,schema.file-pattern,binding.dir,binding.file-pattern -->
+        <xjc destdir="${dir}" extension="${extension}">
+            <schema dir="${schema.dir}" includes="${schema.file-pattern}"/>
+            <binding dir="${binding.dir}" includes="${binding.file-pattern}"/>
+        </xjc>
+    </target>
+<!--
+    END ENVIRONMENT: jax-b-env - jax-b environment - - - - - - - - - - - - - - -
+-->
+
+
+<!--
+    BEGIN ENVIRONMENT: jax-ws-env - jax-ws environment - - - - - - - - - - - - -
+
+    1 - define jax-ws application environment property:
+-->
+    <property name="import-ant.module.jax-ws-env" value="true" />
+<!--
+    2 - define web application environment properties
+-->
+    <property name="jax-ws-env.name" value="${glassfish.name}" />
+    <property name="jax-ws-env.version" value="${glassfish.version}" />
+<!--
+    3 - define jar collection for jax-ws applications
+-->
+    <path id="jax-ws.jars.path">
+        <path refid="glassfish.javaee.jars.path" />
+        <path refid="glassfish.web-services-run-time.jars.path" />
+        <path refid="glassfish.web-services-tools.jars.path" /> <!-- required in jax-ws-apt classpath -->
+    </path>
+<!--
+    4 - define jax-ws-apt, wsgen and wsimport tasks
+-->
+    <target name="-jax-ws-env.taskdef.init">
+        <!-- Annotations processor -
+             task name must not be 'apt' to avoid conflict with Ant 1.7's task -->
+        <taskdef name="jax-ws-apt" classname="com.sun.tools.ws.ant.Apt">
+            <classpath>
+                <!--pathelement location="${java.home}/../lib/tools.jar" /-->
+                <path refid="glassfish.web-services-tools.jars.path" />
+            </classpath>
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+        <taskdef name="wsgen" classname="com.sun.tools.ws.ant.WsGen">
+            <classpath refid="glassfish.web-services-tools.jars.path"/>
+            <classpath refid="compile.classpath" />
+        </taskdef>
+
+        <taskdef name="wsimport" classname="com.sun.tools.ws.ant.WsImport">
+            <classpath refid="glassfish.web-services-tools.jars.path"/>
+            <classpath refid="compile.classpath" />
+        </taskdef>
+    </target>
+<!--
+    END ENVIRONMENT: jax-ws-env - jax-ws environment - - - - - - - - - - - - - -
+-->
+
+</project>
