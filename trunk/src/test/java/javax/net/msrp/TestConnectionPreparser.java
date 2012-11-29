@@ -9,6 +9,7 @@ import java.net.InetAddress;
 
 import javax.net.msrp.Connection;
 import javax.net.msrp.exceptions.ParseException;
+import javax.net.msrp.utils.TextUtils;
 
 
 import org.junit.After;
@@ -72,7 +73,7 @@ public class TestConnectionPreparser {
 
 	@Test
 	public void testPreParser1() {
-		byte[] inbuffer = Receive1InPacket.getBytes();
+		byte[] inbuffer = Receive1InPacket.getBytes(TextUtils.utf8);
 
 		try {
 			in.preParser.preParse(inbuffer, inbuffer.length);
@@ -85,7 +86,7 @@ public class TestConnectionPreparser {
 
 	@Test
 	public void testPreParser2() {
-		byte[] inbuffer = Receive2PerPacket.getBytes();
+		byte[] inbuffer = Receive2PerPacket.getBytes(TextUtils.utf8);
 
 		try {
 			in.preParser.preParse(inbuffer, inbuffer.length);
