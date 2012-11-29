@@ -187,11 +187,11 @@ public class MiscTests
              */
 
             String responseWithComment =
-                ("MSRP " + new String(tid, TextUtils.usascii) + " 200 OK\r\n"
+                ("MSRP " + new String(tid, TextUtils.utf8) + " 200 OK\r\n"
                     + "To-Path: javax.net.msrp://192.168.2.3:1234/asd23asd;tcp\r\n"
                     + "From-Path: javax.net.msrp://192.168.2.3:1324/123asd;tcp\r\n"
-                    + "-------" + new String(tid, TextUtils.usascii) + "$\r\n");
-            byte[] teste = responseWithComment.getBytes(TextUtils.usascii);
+                    + "-------" + new String(tid, TextUtils.utf8) + "$\r\n");
+            byte[] teste = responseWithComment.getBytes(TextUtils.utf8);
             ByteBuffer outByteBuffer = ByteBuffer.wrap(teste);
             outgoing.write(outByteBuffer);
         }
@@ -209,18 +209,18 @@ public class MiscTests
     {
         byte[] randomBytes = new byte[8];
         System.out.println("random bytes uninitialized:"
-            + (new String(randomBytes, TextUtils.usascii)));
+            + (new String(randomBytes, TextUtils.utf8)));
 
         HashSet<URI> uRIs = new HashSet<URI>();
         try
         {
         	TextUtils.generateRandom(randomBytes);
             System.out.println("random bytes:"
-                + (new String(randomBytes, TextUtils.usascii))
+                + (new String(randomBytes, TextUtils.utf8))
                 + ":END of bytes ");
             URI testURI =
                 new URI("javax.net.msrp", null, "localhost", 1234, "/"
-                    + (new String(randomBytes, TextUtils.usascii))
+                    + (new String(randomBytes, TextUtils.utf8))
                     + ";tcp", null, null);
             int i = 0;
             while (!uRIs.contains(testURI))
@@ -232,7 +232,7 @@ public class MiscTests
                 testURI =
                     new URI("javax.net.msrp", null, "localhost", 1234,
                         "/"
-                            + (new String(randomBytes, TextUtils.usascii)) + ";tcp", null, null);
+                            + (new String(randomBytes, TextUtils.utf8)) + ";tcp", null, null);
             }
 
             System.out.println("got to the end, value of i:" + i);
@@ -329,7 +329,7 @@ public class MiscTests
             sessionSend.sendMessage(
                 new OutgoingMessage("plain/text", ("this is just a simple"
 				    + "test to see if this message can get through")
-				    .getBytes(TextUtils.usascii)));
+				    .getBytes(TextUtils.utf8)));
             ArrayList<URI> uris = new ArrayList<URI>();
             uris.add(sessionReceive.getURI());
             // Enable the sessionSend on sessionReceive
@@ -390,7 +390,7 @@ public class MiscTests
                 ByteBuffer byteBuf = dc.get(0, 0);
                 byte[] byteArray = new byte[byteBuf.capacity()];
                 byteBuf.get(byteArray);
-                System.out.println(new String(byteArray, TextUtils.usascii));
+                System.out.println(new String(byteArray, TextUtils.utf8));
             }
             catch (Exception e)
             {
@@ -499,7 +499,7 @@ public class MiscTests
                         while (inByteBuffer.hasRemaining())
                             readBytes[i++] = inByteBuffer.get();
 
-                        String incomingString = new String(readBytes, TextUtils.usascii);
+                        String incomingString = new String(readBytes, TextUtils.utf8);
 
                         // parsing received data if received anything
                         if (incomingString.length() > 0)
@@ -703,7 +703,7 @@ public class MiscTests
                 if (matchEndTransaction.matches())
                 {
                     incomingTransaction.parse(matchEndTransaction.group(1)
-                        .getBytes(TextUtils.usascii), 0, matchEndTransaction.group(1)
+                        .getBytes(TextUtils.utf8), 0, matchEndTransaction.group(1)
                         .length(), false);
                     incomingTransaction.signalizeEnd(matchEndTransaction.group(
                         3).charAt(0));
@@ -777,7 +777,7 @@ public class MiscTests
                         toParse =
                             toParse.substring(0, toParse.lastIndexOf('\r'));
                     }
-                    incomingTransaction.parse(toParse.getBytes(TextUtils.usascii), 0,
+                    incomingTransaction.parse(toParse.getBytes(TextUtils.utf8), 0,
                         toParse.length(), false);
                     complete = true;
                 }

@@ -4,6 +4,7 @@ import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 
 import javax.net.msrp.exceptions.ParseException;
+import javax.net.msrp.utils.TextUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -237,7 +238,7 @@ class PreParser
             	logger.error(String.format(
         			"Error wrapping %d bytes (from[%d] to[%d])\nContent:[%s]",
         			preState, endOfData, data.position(),
-                    new String(data.array()).substring(endOfData, data.position())
+                    new String(data.array(), TextUtils.utf8).substring(endOfData, data.position())
     			));
                 throw e;
             }

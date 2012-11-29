@@ -8,6 +8,7 @@ import static org.junit.Assert.*;
 import java.nio.ByteBuffer;
 
 import javax.net.msrp.WrappedMessage;
+import javax.net.msrp.utils.TextUtils;
 import javax.net.msrp.wrap.Wrap;
 
 import org.junit.Test;
@@ -28,7 +29,7 @@ public class TestWrappedMessage {
 		    "\r\n" +
 		    "Here is the text of my message.";
 
-	private ByteBuffer buffer = ByteBuffer.wrap(cpimMessage.getBytes(), 0, cpimMessage.length());
+	private ByteBuffer buffer = ByteBuffer.wrap(cpimMessage.getBytes(TextUtils.utf8), 0, cpimMessage.length());
 
 	/**
 	 * Test method for {@link javax.net.msrp.wrap.cpim.Message#parse(java.nio.ByteBuffer)}.
@@ -51,7 +52,7 @@ public class TestWrappedMessage {
 	public void testWrap() {
 		WrappedMessage msg = Wrap.getInstance().getWrapper("message/cpim");
 
-		msg.wrap("from", "to", "text/plain", "hello world".getBytes());
+		msg.wrap("from", "to", "text/plain", "hello world".getBytes(TextUtils.utf8));
 
 		String test = msg.toString();
 		assertTrue(test.contains("hello"));

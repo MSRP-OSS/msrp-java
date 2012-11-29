@@ -3,6 +3,8 @@
  */
 package javax.net.msrp;
 
+import javax.net.msrp.utils.TextUtils;
+
 /**
  * An outgoing MSRP message containing an IM message composition indication in XML.
  * @author tuijldert
@@ -34,7 +36,7 @@ public class OutgoingStatusMessage extends OutgoingMessage implements StatusMess
 	protected OutgoingStatusMessage(Session session, ImState state, String contentType, int refresh)
 	{
 		super(Message.IMCOMPOSE_TYPE, String.format(ISCOMPOSING, state.name(),
-							contentType, includeRefresh(refresh)).getBytes());
+							contentType, includeRefresh(refresh)).getBytes(TextUtils.utf8));
 		this.state = state;
 		composeContentType = contentType;
 		this.refresh = refresh;

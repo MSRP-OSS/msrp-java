@@ -353,7 +353,7 @@ public class TransactionManager
         String newTID;
         do {
         	TextUtils.generateRandom(tid);
-            newTID = new String(tid, TextUtils.usascii);
+            newTID = new String(tid, TextUtils.utf8);
         } while (existingTransactions.containsKey(newTID));
         return newTID;
     }

@@ -127,7 +127,7 @@ public class Message implements WrappedMessage {
 //		headers.add(new Header(Header.DATETIME, <SomeFormOfTimestamp>));
 		contentHeaders.add(new Header(Headers.CONTENT_TYPE, contentType));
 		msgContent = content;
-		return this.toString().getBytes();
+		return this.toString().getBytes(TextUtils.utf8);
 	}
 
 	public String toString() {
@@ -138,7 +138,7 @@ public class Message implements WrappedMessage {
 		sb.append(CRLF);
 		for (Header h : contentHeaders) {
 			sb.append(h).append(CRLF);		}
-		sb.append(CRLF).append(new String(msgContent));
+		sb.append(CRLF).append(new String(msgContent, TextUtils.utf8));
 		return sb.toString();
 	}
 }
