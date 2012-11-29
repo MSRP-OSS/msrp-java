@@ -7,6 +7,8 @@ import static org.junit.Assert.*;
 
 import java.net.InetAddress;
 
+import javax.net.msrp.utils.TextUtils;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +57,7 @@ public class TestStatusMessage {
 
 	@Test
 	public final void testIncomingStatusMessage() {
-		dc = new MemoryDataContainer(STATUS_CONTENT.getBytes());
+		dc = new MemoryDataContainer(STATUS_CONTENT.getBytes(TextUtils.utf8));
 		IncomingStatusMessage msg = new IncomingStatusMessage(session, "123",
 				Message.IMCOMPOSE_TYPE, dc.size());
 		msg.setDataContainer(dc);

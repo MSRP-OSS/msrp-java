@@ -156,7 +156,7 @@ public class TestSendingSmallMessages extends TestFrame
     {
         try
         {
-            byte[] smallData = "Hello world".getBytes();
+            byte[] smallData = "Hello world".getBytes(TextUtils.utf8);
 
             ArrayList<URI> toPathSendSession = new ArrayList<URI>();
             toPathSendSession.add(receivingSession.getURI());
@@ -179,7 +179,7 @@ public class TestSendingSmallMessages extends TestFrame
 
     		m = receivingSessionListener.getReceiveMessage();
 
-            assertArrayEquals(smallData, m.getContent().getBytes());
+            assertArrayEquals(smallData, m.getContent().getBytes(TextUtils.utf8));
         }
         catch (Exception e)
         {

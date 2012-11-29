@@ -80,7 +80,7 @@ public class TestCorrectlyBreaksSentData extends TestFrame
              * now let's generate the end-line and put it in the middle of the
              * message data
              */
-            byte[] phonyEndLine = ("-------" + tidString + "$").getBytes();
+            byte[] phonyEndLine = ("-------" + tidString + "$").getBytes(TextUtils.utf8);
             int i, j;
 
             for (i = 0, j = 300; i < phonyEndLine.length; i++, j++)
