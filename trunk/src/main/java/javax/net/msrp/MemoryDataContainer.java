@@ -25,7 +25,6 @@ import javax.net.msrp.exceptions.IllegalUseException;
 import javax.net.msrp.exceptions.NotEnoughDataException;
 import javax.net.msrp.exceptions.NotEnoughStorageException;
 
-
 /**
  * 
  * An implementation of the data container class.
@@ -161,32 +160,29 @@ public class MemoryDataContainer
     public ByteBuffer get(long offsetIndex, long size)
         throws NotEnoughDataException, IllegalUseException, IOException
     {
+        if (size == 0)
+        	size = byteBuffer.limit() - offsetIndex;
+
         if (size < 0 || offsetIndex < 0)
             throw new IllegalUseException("negative size or index");
+
+        if (byteBuffer.limit() < (offsetIndex + size))
+        	throw new NotEnoughDataException();
+
         try
         {
-            byte[] newByteArray;
-            ByteBuffer auxByteBuffer = byteBuffer.duplicate();
-            if (size == 0)
-            {
-                newByteArray = content.clone();
-            }
-            else
-            {
-                newByteArray = new byte[(int) size];
-                auxByteBuffer.position((int) offsetIndex);
-                auxByteBuffer.get(newByteArray);
-            }
-            ByteBuffer newByteBuffer = ByteBuffer.wrap(newByteArray);
-            return newByteBuffer;
-        }
-        catch (IllegalArgumentException e)
-        {
-            throw new NotEnoughDataException(e);
+            int positionSaved = byteBuffer.position();
+	        byte[] newBuffer = new byte[(int) size];
+
+	        byteBuffer.position((int) offsetIndex);
+	        byteBuffer.get(newBuffer);
+	        byteBuffer.position(positionSaved);
+
+	        return ByteBuffer.wrap(newBuffer);
         }
         catch (BufferUnderflowException e)
         {
-            throw new NotEnoughDataException(e);
+        	throw new NotEnoughDataException(e);
         }
     }
 
