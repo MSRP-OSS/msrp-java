@@ -256,20 +256,23 @@ Message sendMsg = activeSession.sendMessage("text/plain", "Hello world\n".getByt
 
 						<p>
 							Receiving a message is somewhat more involved and requires the
-							creation of a SessionListener. This listener will be triggered
+							creation of a <code class="prettyprint">SessionListener</code>
+							that can be hooked into the session:
+                        <pre class="prettyprint">
+mySession.addListener(myListener);</pre>
+							This listener will be triggered
 							when messages are received, or status updates are relevant. The
 							first method to be called on receiving a message is
-							<code class="prettyprint"> acceptHook()</code>
-							. This tells your application that an incoming message has been
+							<code class="prettyprint">acceptHook()</code>.
+							This tells your application that an incoming message has been
 							received. Two things should be done here: A
 							<code class="prettyprint">DataContainer</code>
 							should be attached to the message-object to be able to store any
 							content, and the application should decide whether you want this
 							message in the first place. If so, one should return
-							<code class="prettyprint">true</code>
-							, otherwise return
-							<code class="prettyprint">false</code>
-							. In that case, an error-response is automatically returned.
+							<code class="prettyprint">true</code>, otherwise return
+							<code class="prettyprint">false</code>.
+							In that case, an error-response is automatically returned.
 						</p>
 
 						<pre class="prettyprint">
