@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * received to take action upon, it notifies the TransactionManager and the
  * global Stack classes.
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  */
 public class Transaction
 {
@@ -1523,6 +1523,8 @@ public class Transaction
                 logger.warn(this + " incoming report request for unknown message [" +
                 			getMessageID() + "]");
                 break;
+			default:
+				break;
         	}
         }
         // lets update the reference in the Message to this transaction if this
@@ -1710,6 +1712,8 @@ public class Transaction
         case UNSUPPORTED:
         	/* nothing to do (yet) */
             break;
+		default:
+			break;
         }
     }
 

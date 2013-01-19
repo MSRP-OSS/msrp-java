@@ -43,6 +43,7 @@ public class Message implements WrappedMessage {
      */
 	private static final Header ContentType = new Header(Headers.CONTENT_TYPE, null);
 
+	@Override
 	public String getContentType() {
     	return contentHeaders.get(contentHeaders.indexOf(ContentType)).getValue();
     }
@@ -53,7 +54,8 @@ public class Message implements WrappedMessage {
      * @param name Header name
      * @return Header value
      */
-    public String getHeader(String name) {
+    @Override
+	public String getHeader(String name) {
 		return headers.get(headers.indexOf(new Header(name, null))).getValue();
 	}
 
@@ -63,7 +65,8 @@ public class Message implements WrappedMessage {
      * @param name Header name
      * @return Header value
      */
-    public String getContentHeader(String name) {
+    @Override
+	public String getContentHeader(String name) {
 		return contentHeaders.get(contentHeaders.indexOf(new Header(name, null))).getValue();
 	}
 
@@ -72,7 +75,8 @@ public class Message implements WrappedMessage {
      * 
      * @return Content
      */
-    public String getMessageContent() {
+    @Override
+	public String getMessageContent() {
 		return new String(msgContent);
 	}
 
@@ -84,6 +88,7 @@ public class Message implements WrappedMessage {
      * @param data Input data
      * @throws Exception
      */
+	@Override
 	public void parse(ByteBuffer buffer) {
 		/* CPIM sample:
 	    From: MR SANDERS <im:piglet@100akerwood.com>
@@ -121,6 +126,7 @@ public class Message implements WrappedMessage {
 		buffer.get(msgContent);
 	}
 
+	@Override
 	public byte[] wrap(String from, String to, String contentType, byte[] content) {
 		headers.add(new Header(Headers.FROM, from));
 		headers.add(new Header(Headers.TO, to));
@@ -130,6 +136,7 @@ public class Message implements WrappedMessage {
 		return this.toString().getBytes(TextUtils.utf8);
 	}
 
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(msgContent.length + (headers.size() + contentHeaders.size()) * 20);
 		for (Header h : headers) {

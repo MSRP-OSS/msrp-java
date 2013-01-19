@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This class is used to generate incoming messages
  * 
- * @author João André Pereira Antunes 2008
+ * @author Joï¿½o Andrï¿½ Pereira Antunes 2008
  */
 public class IncomingMessage
     extends Message
@@ -113,7 +113,8 @@ public class IncomingMessage
     /* (non-Javadoc)
      * @see javax.net.msrp.Message#validate()
      */
-    public void validate() throws Exception {
+    @Override
+	public void validate() throws Exception {
     	if (this.getSize() > 0) {
     		if (this.getContentType() == null)
     			throw new InvalidHeaderException("no content type.");

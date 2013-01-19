@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * must somewhat depend on knowing about all of the existing MSRP objects like:
  * sessions, connections, transactions, messages, others(?).
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  * 
  */
 public class Stack implements Observer {
@@ -146,6 +146,7 @@ public class Stack implements Observer {
 		return toReturn;
 	}
 
+	@Override
 	public void update(Observable arg0, Object arg1) {
 		/* empty */;
 	}

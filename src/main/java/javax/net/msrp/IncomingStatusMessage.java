@@ -66,8 +66,12 @@ public class IncomingStatusMessage extends IncomingMessage implements StatusMess
 		return sdf.parse(timestamp).getTime();
 	}
 
+	@Override
 	public ImState	getState() { return state; }
+	@Override
 	public String	getComposeContentType() { return composeContentType; }
+	@Override
 	public long		getLastActive() { return lastActive; }
+	@Override
 	public int		getRefresh() { return refresh; }
 }

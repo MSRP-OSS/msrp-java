@@ -42,8 +42,12 @@ public class OutgoingStatusMessage extends OutgoingMessage implements StatusMess
 		this.refresh = refresh;
 	}
 
+	@Override
 	public ImState	getState() { return state; }
+	@Override
 	public String	getComposeContentType() { return composeContentType; }
+	@Override
 	public long		getLastActive() { return lastActive; }
+	@Override
 	public int		getRefresh() { return refresh; }
 }
