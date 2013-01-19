@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -46,12 +46,13 @@ import org.slf4j.LoggerFactory;
  * 
  * It has one pair of threads associated for writing and reading.
  * 
- * It is also responsible for some parsing, including: Identifying MSRP
- * transaction requests and responses; Pre-parsing - identifying what is the
- * content of the transaction from what isn't; Whenever a transactions is found,
- * parse its data using the Transaction's parse method;
+ * It is also responsible for some parsing, including:
+ * Identifying MSRP transaction requests and responses;
+ * Pre-parsing - identifying what is the content of the transaction from what isn't;
+ * Whenever a transactions is found, parse its data using the Transaction's
+ * parse method;
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  */
 class Connection extends Observable implements Runnable
 {
@@ -308,6 +309,7 @@ class Connection extends Observable implements Runnable
      */
     public void messageInterrupt(Message message)
     {
+    	/* empty */
     }
 
     /**
@@ -315,6 +317,7 @@ class Connection extends Observable implements Runnable
     public void newTransaction(Session session, Message message,
         TransactionManager transactionManager, String transactionCode)
     {
+    	/* empty */
     }
 
     /**
@@ -325,12 +328,14 @@ class Connection extends Observable implements Runnable
      */
     public void read()
     {
+    	/* empty */
     }
 
     /**
      */
     public void sessionClose(Session session)
     {
+    	/* empty */
     }
 
     /**

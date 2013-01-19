@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -376,7 +376,8 @@ public class MiscTests
         testRandomStringGenerator();
     }
 
-    public void receivedMessage(Session session, IncomingMessage message)
+    @Override
+	public void receivedMessage(Session session, IncomingMessage message)
     {
         // TODO print the content of the message
         System.out.println("******Debug: on: " + session.toString()
@@ -403,13 +404,15 @@ public class MiscTests
 
     }
 
-    public void receivedReport(Session session, Transaction report)
+    @Override
+	public void receivedReport(Session session, Transaction report)
     {
         System.out.println("Debug: on: " + session.toString()
             + " Received a response from a message!");
     }
 
-    public void updateSendStatus(Session session, Message message,
+    @Override
+	public void updateSendStatus(Session session, Message message,
         long totalNumberBytesSent)
     {
         System.out.println("Debug: on: " + session.toString()
@@ -801,6 +804,7 @@ public class MiscTests
     @Override
     public void abortedMessageEvent(MessageAbortedEvent abortEvent)
     {
+    	/* empty */
     }
 
 	@Override
@@ -811,10 +815,12 @@ public class MiscTests
 
 	@Override
 	public void receivedNickname(Session session, Transaction request) {
+    	/* empty */
 	}
 
 	@Override
 	public void receivedNickNameResult(Session session, TransactionResponse result) {
+    	/* empty */
 	}
 }
 
