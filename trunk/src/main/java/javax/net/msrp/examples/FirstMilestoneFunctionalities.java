@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -41,7 +41,7 @@ import javax.net.msrp.exceptions.*;
  * programmers to become enlightened in the use of this lib. If you, lib user, feel
  * that I failed to do that here, please let me know.
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  */
 public class FirstMilestoneFunctionalities
 {
@@ -182,7 +182,7 @@ public class FirstMilestoneFunctionalities
      * This is the class that implements the SessionListener which -through
      * the stack- communicates with it's user
      * 
-     * @author João André Pereira Antunes
+     * @author Joï¿½o Andrï¿½ Pereira Antunes
      */
     private class MSRPExampleSessionListener
         implements SessionListener
@@ -196,7 +196,8 @@ public class FirstMilestoneFunctionalities
         /*
          * Called by the stack when we receive an incoming message.
          */
-        public boolean acceptHook(Session session, IncomingMessage message)
+        @Override
+		public boolean acceptHook(Session session, IncomingMessage message)
         {
             boolean weFeelLikeIt = false;
 
@@ -263,7 +264,8 @@ public class FirstMilestoneFunctionalities
         /*
          * This method is called upon successfully receiving a message
          */
-        public void receivedMessage(Session sessionThatReceivedMessage,
+        @Override
+		public void receivedMessage(Session sessionThatReceivedMessage,
             IncomingMessage receivedMessage)
         {
             // here you can do whatever you want with the received message
@@ -272,7 +274,8 @@ public class FirstMilestoneFunctionalities
             // you can do it like this:
             try
             {
-                ByteBuffer receivedContent =
+                @SuppressWarnings("unused")
+				ByteBuffer receivedContent =
                     receivedMessage.getDataContainer().get(0, 0);
             }
             catch (Exception e)
@@ -284,7 +287,8 @@ public class FirstMilestoneFunctionalities
             // that is usually more appropriate usage of a MemoryContainer
             // or you can simply extract the file if we have a FileContainer
             // associated with this message
-            File receivedFile =
+            @SuppressWarnings("unused")
+			File receivedFile =
                 ((FileDataContainer) receivedMessage.getDataContainer())
                     .getFile();
 
@@ -310,7 +314,8 @@ public class FirstMilestoneFunctionalities
          * with it, please see Issue #5 of MSRP Stack and Issue #17 of SC
          * integration project
          */
-        public void receivedReport(Session session, Transaction report)
+        @Override
+		public void receivedReport(Session session, Transaction report)
         {
             // to get more info about on what bytes is this REPORT reporting at:
             report.getByteRange();
@@ -341,7 +346,8 @@ public class FirstMilestoneFunctionalities
          * Customised by implementing a ReportMechanism class and changing this
          * method
          */
-        public void updateSendStatus(Session session, Message message,
+        @Override
+		public void updateSendStatus(Session session, Message message,
             long numberBytesSent)
         {
             System.out.println("This means we sent " + numberBytesSent
@@ -362,10 +368,12 @@ public class FirstMilestoneFunctionalities
 
 		@Override
 		public void receivedNickname(Session session, Transaction request) {
+	    	/* empty */
 		}
 
 		@Override
 		public void receivedNickNameResult(Session session, TransactionResponse result) {
+	    	/* empty */
 		}
     }
 }
