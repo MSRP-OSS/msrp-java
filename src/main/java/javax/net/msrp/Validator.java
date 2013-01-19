@@ -1,4 +1,4 @@
-/* Copyright © João Antunes 2008
+/* Copyright ï¿½ Joï¿½o Antunes 2008
  This file is part of MSRP Java Stack.
 
     MSRP Java Stack is free software: you can redistribute it and/or modify
@@ -20,11 +20,11 @@ package javax.net.msrp;
 /**
  * Used to validate content of a message according to the defined content type
  * 
- * @author João André Pereira Antunes 2008
+ * @author Joï¿½o Andrï¿½ Pereira Antunes 2008
  * 
  */
 // TODO UNIMPLEMENTED CLASS, should act as an abstract one.
 public abstract class Validator
 {
-
+	/* empty */
 }

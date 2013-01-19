@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Generic outgoing MSRP message
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  */
 public class OutgoingMessage
     extends Message
@@ -88,7 +88,8 @@ public class OutgoingMessage
      * 
      * @see SessionListener#abortedMessageEvent(javax.net.msrp.event.MessageAbortedEvent)
      */
-    public void abort(int reason, String extraInfo)
+    @Override
+	public void abort(int reason, String extraInfo)
     		throws InternalErrorException
     {
         logger.debug("Going to abort an OutgoingMessage, reason: " + reason +
@@ -190,9 +191,10 @@ public class OutgoingMessage
         return Direction.OUT;
     }
 
-    public void validate() throws Exception
+    @Override
+	public void validate() throws Exception
     {
-    	;
+    	/* empty */
     }
 
     @Override

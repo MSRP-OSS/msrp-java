@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * The class manages the list of MSRP Messages with which it's currently
  * associated.
  * 
- * @author João Antunes
+ * @author Joï¿½o Antunes
  */
 public class Session
 {
@@ -214,7 +214,8 @@ public class Session
         		toString(), getId(), isSecure, isRelay, toURI, address));
     }
 
-    public String toString()
+    @Override
+	public String toString()
     {
         return "[session:" + getId() + "]";
     }

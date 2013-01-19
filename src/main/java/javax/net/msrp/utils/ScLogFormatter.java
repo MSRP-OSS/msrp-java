@@ -33,7 +33,8 @@ public class ScLogFormatter
      * @param record the log record to be formatted.
      * @return a formatted log record
      */
-    public synchronized String format(LogRecord record)
+    @Override
+	public synchronized String format(LogRecord record)
     {
         StringBuffer sb = new StringBuffer();
 
@@ -94,6 +95,7 @@ public class ScLogFormatter
             }
             catch (Exception ex)
             {
+            	/* empty */
             }
         }
         return sb.toString();
