@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -18,19 +18,8 @@ package javax.net.msrp.testutils;
 
 import java.util.ArrayList;
 
-import javax.net.msrp.DataContainer;
-import javax.net.msrp.Direction;
-import javax.net.msrp.IncomingAliveMessage;
-import javax.net.msrp.IncomingMessage;
-import javax.net.msrp.Message;
-import javax.net.msrp.OutgoingMessage;
-import javax.net.msrp.ResponseCode;
-import javax.net.msrp.SessionListener;
-import javax.net.msrp.MemoryDataContainer;
-import javax.net.msrp.Session;
-import javax.net.msrp.Transaction;
-import javax.net.msrp.TransactionResponse;
-import javax.net.msrp.events.MessageAbortedEvent;
+import javax.net.msrp.*;
+import javax.net.msrp.events.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +28,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Class used to test the callbacks of the Stack
  * 
- * @author João André Pereira Antunes 2008
+ * @author Joï¿½o Andrï¿½ Pereira Antunes 2008
  * 
  */
 public class MockSessionListener
@@ -116,7 +105,6 @@ public class MockSessionListener
     {
     }
 
-    @Override
     public boolean acceptHook(Session session, IncomingMessage message)
     {
         logger.trace("AcceptHook called");
