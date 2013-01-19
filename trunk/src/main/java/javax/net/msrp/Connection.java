@@ -451,7 +451,8 @@ class Connection extends Observable implements Runnable
     /**
      * Constantly receives and sends new transactions
      */
-    public void run()
+    @Override
+	public void run()
     {
         // Sanity checks
         if (!this.isBound() && !this.isEstablished())

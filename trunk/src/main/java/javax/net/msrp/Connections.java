@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * This is the class responsible for accepting incoming TCP connection requests
  * and generating the Connection object.
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  */
 public class Connections
     extends Connection
@@ -157,7 +157,8 @@ public class Connections
         return this;
     }
 
-    public TransactionManager getTransactionManager()
+    @Override
+	public TransactionManager getTransactionManager()
     {
         return transactionManager;
     }

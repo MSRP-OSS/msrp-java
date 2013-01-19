@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * It generates the automatic responses, and also triggers some reporting
  * mechanisms and some of the callbacks on the SessionListener
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  */
 public class TransactionManager
     implements Observer
@@ -358,7 +358,8 @@ public class TransactionManager
         return newTID;
     }
 
-    public void update(Observable connectionObservable, Object transactionObject)
+    @Override
+	public void update(Observable connectionObservable, Object transactionObject)
     {
         // TODO Check to see if the associated transaction belongs to this
         // session
@@ -607,7 +608,7 @@ public class TransactionManager
      * The approach of interrupting the ongoing transaction and create a new one
      * was the one chosen and implemented by this library
      * 
-     * @author João André Pereira Antunes
+     * @author Joï¿½o Andrï¿½ Pereira Antunes
      * 
      */
     class OutgoingDataValidator

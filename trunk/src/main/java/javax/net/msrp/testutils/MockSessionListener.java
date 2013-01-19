@@ -103,9 +103,11 @@ public class MockSessionListener
      */
     public MockSessionListener(String name)
     {
+    	/* empty */
     }
 
-    public boolean acceptHook(Session session, IncomingMessage message)
+    @Override
+	public boolean acceptHook(Session session, IncomingMessage message)
     {
         logger.trace("AcceptHook called");
         while (acceptHookResult == null)
