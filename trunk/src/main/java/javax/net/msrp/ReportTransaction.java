@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2009 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2009 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -26,7 +26,7 @@ import javax.net.msrp.utils.TextUtils;
 /**
  * Represents the transaction for REPORT requests
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  */
 public class ReportTransaction
     extends Transaction
@@ -54,8 +54,7 @@ public class ReportTransaction
             throw new InternalErrorException("Generating report: this session"
             				+ "and associated message session differ!");
 
-        if (transaction == null ||
-    		transaction.getTotalMessageBytes() == Message.UNINTIALIZED)
+        if (transaction.getTotalMessageBytes() == Message.UNINTIALIZED)
             throw new InternalErrorException(
     			"Invalid argument or in generating a report, the total number "
         		+ "of bytes of this message was unintialized");
