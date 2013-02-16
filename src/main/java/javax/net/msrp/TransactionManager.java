@@ -393,7 +393,7 @@ public class TransactionManager
             logger.trace(String.format(
                     "%s %s is an incoming response and has been processed" +
             		" by the transactionManager for connection (localURI): ",
-                    this, transaction, connection.getLocalURI()));
+                    transaction, connection.getLocalURI()));
             processResponse(transactionResponse);
             return;
         }
