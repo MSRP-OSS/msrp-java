@@ -650,8 +650,10 @@ class Connection extends Observable implements Runnable
                             transactionManager.getTransaction(tID);
                         if (incomingTransaction == null)
                         {
-                            logger.error("Received response for unknown transaction");
-                            // TODO: cannot continue without a known transaction, proper abort here
+                        	String reason =
+                        			String.format("No outstanding Tx matches this response[%s]", tID);
+                            logger.error(reason);
+                            throw new ParseException(reason);
                         }
                         logger.debug("Found response to " + incomingTransaction);
                         try
