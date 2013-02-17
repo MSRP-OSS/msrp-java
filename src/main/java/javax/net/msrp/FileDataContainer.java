@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * It uses a file read from/write to the data associated with an MSRP message
  * @see DataContainer
  * 
- * @author João André Pereira Antunes 2008
+ * @author Joï¿½o Andrï¿½ Pereira Antunes 2008
  * 
  */
 public class FileDataContainer
@@ -71,6 +71,7 @@ public class FileDataContainer
      */
     private ByteBuffer auxByteBuffer;
 
+    private final Object readOffsetLock = new Object();
     private Long currentReadOffset = new Long(0);
 
     /**
@@ -128,7 +129,7 @@ public class FileDataContainer
     @Override
     public long currentReadOffset()
     {
-        synchronized (currentReadOffset)
+        synchronized (readOffsetLock)
         {
             return currentReadOffset.longValue();
         }
@@ -140,7 +141,7 @@ public class FileDataContainer
     @Override
     public boolean hasDataToRead()
     {
-        synchronized (currentReadOffset)
+        synchronized (readOffsetLock)
         {
             try
             {
@@ -242,7 +243,7 @@ public class FileDataContainer
          * reader of the file is put into the position specified by that
          * variable prior to reading data from it
          */
-        synchronized (currentReadOffset)
+        synchronized (readOffsetLock)
         {
             currentReadOffset -= nrPositions;
         }
@@ -256,7 +257,7 @@ public class FileDataContainer
     {
         if (offset > dst.length - 1)
             throw new IndexOutOfBoundsException();
-        synchronized (currentReadOffset)
+        synchronized (readOffsetLock)
         {
             int bytesToCopy = 0;
             long remainingDataBytes =
