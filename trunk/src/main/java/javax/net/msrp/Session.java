@@ -197,7 +197,7 @@ public class Session
         try
         {
             connection = Stack.getConnectionsInstance(address);
-            uri = ((Connections) connection).generateNewUri();
+            uri = ((Connections) connection).generateAndStartNewUri();
             stack.addConnection(uri, connection);
         }
         catch (Exception e)				// wrap exceptions to InternalError

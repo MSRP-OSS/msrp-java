@@ -208,12 +208,12 @@ public class Connections
         }
     }
 
-    protected URI generateNewUri()
+    protected URI generateAndStartNewUri()
         throws ImplementationException, URISyntaxException
     {
         if (localURI == null)
             throw new ImplementationException(
-            		"Absurd error, Connections doesn't have the needed socket info");
+            		"Absurd error, Connections don't have the needed socket info");
 
         URI newURI = newUri();
         int i = 0;

@@ -58,7 +58,7 @@ public class IncomingStatusMessage extends IncomingMessage implements StatusMess
 			refresh = Integer.parseInt(list.item(0).getTextContent());
 	}
 
-	private static final SimpleDateFormat sdf =
+	private final SimpleDateFormat sdf =
 			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
 	private long parseTimestamp(String timestamp) throws java.text.ParseException {
