@@ -231,16 +231,12 @@ public abstract class TestFrame {
 		/* message should be transferred or in the process of... */
 
 		/* make MockListener accept the message */
-		synchronized (receivingSessionListener)
-		{
-			if (dc != null)
-				receivingSessionListener.setDataContainer(dc);
-		    receivingSessionListener.setAcceptHookResult(true);
-		    receivingSessionListener.notify();
-		    receivingSessionListener.wait();
-		    receivingSessionListener.wait(3000);
-		}
-		if (receivingSessionListener.getAcceptHookMessage() == null ||
+		if (dc != null)
+			receivingSessionListener.setDataContainer(dc);
+	    receivingSessionListener.setAcceptHookResult(true);
+	    receivingSessionListener.triggerReception();
+
+	    if (receivingSessionListener.getAcceptHookMessage() == null ||
 		    receivingSessionListener.getAcceptHookSession() == null)
 		    fail("The Mock didn't work, message not accepted");
 	}
