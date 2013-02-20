@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -33,7 +33,7 @@ import org.junit.Test;
  * 
  * Simple test used for debugging purposes to send a very small (2KB message)
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  * 
  */
 public class TestSendingSmallMessages extends TestFrame
@@ -108,30 +108,20 @@ public class TestSendingSmallMessages extends TestFrame
              * message should be transferred or in the process of being
              * completely transferred
              */
-            synchronized (receivingSessionListener)
-            {
-                DataContainer dc = new MemoryDataContainer(1);
-                receivingSessionListener.setDataContainer(dc);
-                receivingSessionListener.setAcceptHookResult(new Boolean(true));
-                receivingSessionListener.notify();
-                receivingSessionListener.wait();
-            	receivingSessionListener.wait(500);
-            }
+            DataContainer dc = new MemoryDataContainer(1);
+            receivingSessionListener.setDataContainer(dc);
+            receivingSessionListener.setAcceptHookResult(new Boolean(true));
+            receivingSessionListener.triggerReception();
 
             OutgoingMessage twoKbMessage =
                     new OutgoingMessage("plain/text", smallData);
             twoKbMessage.setSuccessReport(false);
             receivingSession.sendMessage(twoKbMessage);
 
-            synchronized (sendingSessionListener)
-            {
-                DataContainer dc = new MemoryDataContainer(smallData.length);
-                sendingSessionListener.setDataContainer(dc);
-                sendingSessionListener.setAcceptHookResult(true);
-                sendingSessionListener.notify();
-                sendingSessionListener.wait();
-                sendingSessionListener.wait(500);
-            }
+            dc = new MemoryDataContainer(smallData.length);
+            sendingSessionListener.setDataContainer(dc);
+            sendingSessionListener.setAcceptHookResult(true);
+            sendingSessionListener.triggerReception();
 
             if (sendingSessionListener.getAcceptHookMessage() == null ||
                 sendingSessionListener.getAcceptHookSession() == null)
@@ -164,16 +154,12 @@ public class TestSendingSmallMessages extends TestFrame
             		"message/cpim", "from", "to", "text/plain", smallData);
             sendingSession.setToPath(toPathSendSession);
 
-            synchronized (receivingSessionListener)
-            {
-                DataContainer dc = new MemoryDataContainer((int) m.size);
-                receivingSessionListener.setDataContainer(dc);
-                receivingSessionListener.setAcceptHookResult(new Boolean(true));
-                receivingSessionListener.notify();
-                receivingSessionListener.wait();
-            	receivingSessionListener.wait(500);
-            }
-    		if (receivingSessionListener.getAcceptHookMessage() == null ||
+            DataContainer dc = new MemoryDataContainer((int) m.size);
+            receivingSessionListener.setDataContainer(dc);
+            receivingSessionListener.setAcceptHookResult(new Boolean(true));
+            receivingSessionListener.triggerReception();
+
+            if (receivingSessionListener.getAcceptHookMessage() == null ||
 			    receivingSessionListener.getAcceptHookSession() == null)
     			    fail("The Mock didn't work, message not accepted");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -35,7 +35,7 @@ import javax.net.msrp.testutils.*;
  * classes on this class) but on the same session both should be able to receive
  * and send messages
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  */
 public class UsingLibraryByTwoNetworkEndpoints
 {
@@ -58,7 +58,7 @@ public class UsingLibraryByTwoNetworkEndpoints
      * Class representing the message receiver, similar code as this one
      * should be on the receiver endpoint
      * 
-     * @author João André Pereira Antunes
+     * @author Joï¿½o Andrï¿½ Pereira Antunes
      */
     static class MessageReceiver
     {
@@ -111,7 +111,7 @@ public class UsingLibraryByTwoNetworkEndpoints
      * Class representing the message sender, similar code as this one should
      * be on the sender endpoint
      * 
-     * @author João André Pereira Antunes
+     * @author Joï¿½o Andrï¿½ Pereira Antunes
      */
     static class MessageSender
     {
@@ -239,43 +239,32 @@ public class UsingLibraryByTwoNetworkEndpoints
 
                     MessageSender.sendingSession.setToPath(toPathSendSession);
                     /* make the mocklistener accept the message */
-                    synchronized (MessageReceiver.receivingSessionListener)
-                    {
-                        DataContainer dc = new MemoryDataContainer(3000);
-                        MessageReceiver.receivingSessionListener
-                            .setDataContainer(dc);
-                        MessageReceiver.receivingSessionListener
-                            .setAcceptHookResult(new Boolean(true));
-                        MessageReceiver.receivingSessionListener.notify();
-                        MessageReceiver.receivingSessionListener.wait(3000);
-                    }
+                    DataContainer dc = new MemoryDataContainer(3000);
+                    MessageReceiver.receivingSessionListener
+                        .setDataContainer(dc);
+                    MessageReceiver.receivingSessionListener
+                        .setAcceptHookResult(new Boolean(true));
+                    MessageReceiver.receivingSessionListener.triggerReception();
+
                     /*
-                     * message should be transfered or in the process of being
+                     * message should be transferred or in the process of being
                      * completely transfered
                      */
                     if (MessageReceiver.receivingSessionListener
-                        .getAcceptHookMessage() == null
-                        || MessageReceiver.receivingSessionListener
+                    		.getAcceptHookMessage() == null ||
+                        MessageReceiver.receivingSessionListener
                             .getAcceptHookSession() == null)
                     {
                     	System.out.println(
                     			"The Mock didn't work and the message wasn't accepted");
                         System.exit(ERROR);
                     }
-                    synchronized (MessageReceiver.receivingSessionListener)
-                    {
-                        /*
-                         * allow the message to be received
-                         */
-                        MessageReceiver.receivingSessionListener.wait();
-                    }
                     if (MessageReceiver.receivingSessionListener
-                        .getReceiveMessage() != null
-                        && MessageReceiver.receivingSessionListener
+                    		.getReceiveMessage() != null &&
+                        MessageReceiver.receivingSessionListener
                             .getReceiveMessage().getSize() == 3000)
                     {
-                        System.out
-                            .println("Successfully received the message!");
+                        System.out.println("Successfully received the message!");
                         return;
                     }
                 }
@@ -352,44 +341,28 @@ public class UsingLibraryByTwoNetworkEndpoints
                     MessageReceiver.setUpConnection(uriOtherEndPoint);
 
                     /* make the mocklistener accept the message */
-                    synchronized (MessageReceiver.receivingSessionListener)
-                    {
-                        DataContainer dc = new MemoryDataContainer(3000);
-                        MessageReceiver.receivingSessionListener
-                            .setDataContainer(dc);
-                        MessageReceiver.receivingSessionListener
-                            .setAcceptHookResult(new Boolean(true));
-                        MessageReceiver.receivingSessionListener.notify();
-                        /*
-                         * wait indefinitely to give time for the generated URI
-                         * to be typed on the other endpoint
-                         */
-                        MessageReceiver.receivingSessionListener.wait();
-                    }
+                    DataContainer dc = new MemoryDataContainer(3000);
+                    MessageReceiver.receivingSessionListener
+                        .setDataContainer(dc);
+                    MessageReceiver.receivingSessionListener
+                        .setAcceptHookResult(new Boolean(true));
+                    MessageReceiver.receivingSessionListener.triggerReception();
                     /*
-                     * message should be transfered or in the process of being
-                     * completely transfered
+                     * message should be transferred or in the process of being
+                     * completely transferred
                      */
-
                     if (MessageReceiver.receivingSessionListener
-                        .getAcceptHookMessage() == null
-                        || MessageReceiver.receivingSessionListener
+                    		.getAcceptHookMessage() == null ||
+                        MessageReceiver.receivingSessionListener
                             .getAcceptHookSession() == null)
                     {
                         System.out.println(
                         		"The Mock didn't work and the message wasn't accepted");
                         System.exit(ERROR);
                     }
-                    synchronized (MessageReceiver.receivingSessionListener)
-                    {
-                        /*
-                         * allow the message to be received
-                         */
-                        MessageReceiver.receivingSessionListener.wait();
-                    }
                     if (MessageReceiver.receivingSessionListener
-                        .getReceiveMessage() != null
-                        && MessageReceiver.receivingSessionListener
+                    		.getReceiveMessage() != null &&
+                        MessageReceiver.receivingSessionListener
                             .getReceiveMessage().getSize() == 3000)
                     {
                         System.out.println( "Successfully received message!");
