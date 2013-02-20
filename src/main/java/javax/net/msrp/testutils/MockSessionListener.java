@@ -24,12 +24,10 @@ import javax.net.msrp.events.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
  * Class used to test the callbacks of the Stack
  * 
  * @author Jo�o Andr� Pereira Antunes 2008
- * 
  */
 public class MockSessionListener
     implements SessionListener
@@ -66,8 +64,13 @@ public class MockSessionListener
     private String nickname;
 
     /**
-     * The external to be set, or not data container object that is going to be
-     * used on the acceptHook if it exists upon the calling of the trigger
+     * For threading lock-step.
+     */
+    private Object	stopAndWait = new Object();
+
+    /**
+     * The external data container object to be set or not, that is going to be
+     * used by the acceptHook if it exists when called.
      */
     private DataContainer externalDataContainer;
 
@@ -110,9 +113,9 @@ public class MockSessionListener
 	public boolean acceptHook(Session session, IncomingMessage message)
     {
         logger.trace("AcceptHook called");
-        while (acceptHookResult == null)
+        synchronized (stopAndWait)
         {
-            synchronized (this)
+            while (acceptHookResult == null)
             {
                 try
                 {
@@ -120,7 +123,7 @@ public class MockSessionListener
                 }
                 catch (InterruptedException e)
                 {
-                    throw new RuntimeException();
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -141,12 +144,24 @@ public class MockSessionListener
             message.setDataContainer(externalDataContainer);
         }
         acceptHookResult = null;
-        synchronized (this)
-        {
-            this.notifyAll();
-            logger.debug("AcceptHook returns: " + toReturn);
-            return toReturn;
-        }
+        logger.debug("AcceptHook returns: " + toReturn);
+        return toReturn;
+    }
+
+    /**
+     * To be called by the receiver once it is ready to receive data.
+     */
+    public void triggerReception()
+    {
+    	synchronized(stopAndWait)
+    	{
+    		stopAndWait.notifyAll();
+    		try {
+				stopAndWait.wait();
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
+    	}
     }
 
     @Override
@@ -157,15 +172,12 @@ public class MockSessionListener
         	return;
         receiveMessage = message;
         receiveMessageSession = session;
-        /* 
-         * delay this thread to allow the other thread to be scheduled
-         * before acquiring a lock again.
+        /*
+         * Signal that everything has been received.
          */
-        try { Thread.sleep(200); } catch (InterruptedException e) { ; }
-
-        synchronized (this)
+        synchronized (stopAndWait)
         {
-            this.notifyAll();
+            stopAndWait.notifyAll();
         }
     }
 

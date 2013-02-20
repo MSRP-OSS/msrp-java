@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertArrayEquals;
  * to an end point and assuring that all of the correct events were called. The
  * file sent is resources/tests/fileToSend
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  * 
  */
 public class TestSendingExistingFile extends TestFrame
@@ -77,13 +77,9 @@ public class TestSendingExistingFile extends TestFrame
             sendingSession.setToPath(toPathSendSession);
 
             /* make the MockListener accept the message */
-            synchronized (receivingSessionListener)
-            {
-                receivingSessionListener.setAcceptHookResult(new Boolean(true));
-                receivingSessionListener.notify();
-                receivingSessionListener.wait();
-                receivingSessionListener.wait(1000);
-            }
+            receivingSessionListener.setAcceptHookResult(new Boolean(true));
+            receivingSessionListener.triggerReception();
+
             if (receivingSessionListener.getAcceptHookMessage() == null ||
                 receivingSessionListener.getAcceptHookSession() == null)
                 fail("The Mock didn't work, message not accepted");
