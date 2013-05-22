@@ -66,6 +66,10 @@ public interface SessionListener
      */
     public void receivedReport(Session session, Transaction report);
 
+    /** A response to a NICKNAME request has been received. 
+     * @param session	the session on which the request was done
+     * @param result	the response to this request.
+     */
     public void receivedNickNameResult(Session session, TransactionResponse result);
 
     /**
