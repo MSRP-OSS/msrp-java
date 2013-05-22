@@ -337,6 +337,15 @@ public class Session
 		return sendMessage(new OutgoingMessage(contentType, content));
 	}
 
+	/** Request the given nickname to be used with this session.
+	 * The nickname request will be send to the chatroom at the other end of 
+	 * this session.
+	 * 
+	 * A result will be reported in
+	 * {@link SessionListener#receivedNickNameResult(Session, TransactionResponse)
+	 * @param nickname the name to use
+	 * @return the actual msrp request that is sent out.
+	 */
 	public OutgoingMessage requestNickname(String nickname)
 	{
 		return sendMessage(new OutgoingMessage(nickname));
