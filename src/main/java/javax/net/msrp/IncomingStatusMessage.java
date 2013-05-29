@@ -3,14 +3,14 @@
  */
 package javax.net.msrp;
 
-import java.io.ByteArrayInputStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
 
 import javax.net.msrp.exceptions.ParseException;
+import javax.net.msrp.wrap.Headers;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 
 /**
  * An incoming MSRP message containing an IM message composition indication in XML.
@@ -21,6 +21,8 @@ public class IncomingStatusMessage extends IncomingMessage implements StatusMess
 	private String composeContentType;
 	private long lastActive = 0;
 	private int refresh = 0;
+	private String from = null;
+	private String to = null;
 
 	private static final DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 	private Document isComposingXml = null;
@@ -31,13 +33,25 @@ public class IncomingStatusMessage extends IncomingMessage implements StatusMess
         super(session, messageId, contentType, size, null);
     }
 
+    public IncomingStatusMessage(IncomingMessage toCopy)
+    {
+        super(toCopy);
+        this.from = toCopy.wrappedMessage.getHeader(Headers.FROM);
+        this.to = toCopy.wrappedMessage.getHeader(Headers.TO);
+    }
+
 	/* (non-Javadoc)
 	 * @see javax.net.msrp.Message#validate()
 	 */
 	@Override
-	public void validate() throws Exception {
+	public Message validate() throws Exception {
 		try {
-			byte [] content = this.getDataContainer().get(0, this.getSize()).array();
+			byte [] content;
+			if (isWrapped()) {
+				content = this.wrappedMessage.getMessageContent();
+			} else {
+				content = this.getDataContainer().get(0, this.getSize()).array();
+			}
 
 			isComposingXml = docFactory.newDocumentBuilder().parse(new ByteArrayInputStream(content));
 		} catch (Exception e) {
@@ -56,6 +70,8 @@ public class IncomingStatusMessage extends IncomingMessage implements StatusMess
 		list = isComposingXml.getElementsByTagName("refresh");
 		if (list.getLength() > 0)
 			refresh = Integer.parseInt(list.item(0).getTextContent());
+
+		return this;
 	}
 
 	private final SimpleDateFormat sdf =
@@ -74,4 +90,8 @@ public class IncomingStatusMessage extends IncomingMessage implements StatusMess
 	public long		getLastActive() { return lastActive; }
 	@Override
 	public int		getRefresh() { return refresh; }
+	@Override
+	public String	getFrom() { return from; }
+	@Override
+	public String	getTo() { return to; }
 }

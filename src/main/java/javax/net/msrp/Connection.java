@@ -216,8 +216,8 @@ class Connection extends Observable implements Runnable
             		 + ";tcp", localURI.getQuery(), localURI.getFragment());
     }
 
-    // IMPROVE add the rest of the unreserved characters according rfc3986 (-._~)
-    // IMPROVE speed by not doing so much calls to the Random class
+    // TODO: IMPROVE add the rest of the unreserved characters according rfc3986 (-._~)
+    // TODO: IMPROVE speed by not doing so much calls to the Random class
     /**
      * Generates a number of random alpha-numeric codes in US-ASCII
      * 

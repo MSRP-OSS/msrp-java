@@ -60,6 +60,16 @@ public class IncomingMessage
     }
 
     /**
+     * Constructor that derives it's values from the object to clone.
+     * @param toCopy
+     */
+    protected IncomingMessage(IncomingMessage toCopy)
+    {
+    	super(toCopy);
+    	this.result = toCopy.result;
+    }
+
+    /**
      * Method that uses the associated counter of this message to assert if the
      * message is complete or not
      * 
@@ -114,15 +124,21 @@ public class IncomingMessage
      * @see javax.net.msrp.Message#validate()
      */
     @Override
-	public void validate() throws Exception {
+	public Message validate() throws Exception {
     	if (this.getSize() > 0) {
     		if (this.getContentType() == null)
     			throw new InvalidHeaderException("no content type.");
 	    	if (Wrap.getInstance().isWrapperType(this.getContentType())) {
 	    		wrappedMessage = Wrap.getInstance().getWrapper(this.getContentType());
 	    		wrappedMessage.parse(this.getDataContainer().get(0, this.getSize()));
+
+	    		if (wrappedMessage.getContentType().equals(Message.IMCOMPOSE_TYPE)) {
+	    			Message toValidate = new IncomingStatusMessage(this);
+	    			return toValidate.validate();
+	    		}
 	    	}
     	}
+    	return this;
     }
 
     /**
