@@ -76,8 +76,8 @@ public class Message implements WrappedMessage {
      * @return Content
      */
     @Override
-	public String getMessageContent() {
-		return new String(msgContent);
+	public byte[] getMessageContent() {
+		return msgContent;
 	}
 
 	private static final String CRLF = "\r\n";

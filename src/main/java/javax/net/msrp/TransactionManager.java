@@ -253,15 +253,16 @@ public class TransactionManager
                 // maintaining the receivedMessages on Session)
                 try
                 {
-                	message.validate();
+                	IncomingMessage validated =
+                			(IncomingMessage) message.validate();
 
-                	long callCount = message.getCounter().getCount();
-                    message.getReportMechanism()
-                        .triggerSuccessReport(message, transaction,
-                            message.lastCallReportCount, callCount);
-                    message.lastCallReportCount = callCount;
+                	long callCount = validated.getCounter().getCount();
+                    validated.getReportMechanism()
+                        .triggerSuccessReport(validated, transaction,
+                            validated.lastCallReportCount, callCount);
+                    validated.lastCallReportCount = callCount;
 
-                    session.triggerReceiveMessage(message);
+                    session.triggerReceiveMessage(validated);
                 }
                 catch (Exception e)
                 {
@@ -522,13 +523,19 @@ public class TransactionManager
      */
     protected void generateTransactionsToSend(Message messageToSend)
     {
-        if (messageToSend == null ||
-            messageToSend.getDirection() != Direction.OUT)
-            return;
+    	Transaction newTransaction = null;
+    	try {
+	        if (messageToSend == null ||
+	            messageToSend.getDirection() != Direction.OUT)
+	            throw new IllegalArgumentException(
+	            		"No or invalid message to send specified");
 
-        Transaction newTransaction =
-            new Transaction((OutgoingMessage) messageToSend, this);
-
+	        Message validated = messageToSend.validate();
+	        newTransaction = new Transaction((OutgoingMessage) validated, this);
+    	} catch (Exception e) {
+    		logger.error("Error validating message to send, ignoring. Reason: ", e);
+    		return;
+    	}
         synchronized(this)
         {
 	        // TODO: possibly split the message into several transactions

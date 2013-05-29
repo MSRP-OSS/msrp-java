@@ -192,9 +192,9 @@ public class OutgoingMessage
     }
 
     @Override
-	public void validate() throws Exception
+	public Message validate() throws Exception
     {
-    	/* empty */
+    	return this;
     }
 
     @Override
