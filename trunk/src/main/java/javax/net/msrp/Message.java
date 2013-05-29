@@ -137,6 +137,28 @@ public abstract class Message
     }
 
     /**
+     * Construct by copying from existing message.
+     * @param toCopy
+     */
+    protected Message(Message toCopy)
+    {
+    	this.successReport = toCopy.successReport;
+    	this.failureReport = toCopy.failureReport;
+    	this.aborted = toCopy.aborted;
+    	this.dataContainer = toCopy.dataContainer;
+    	this.lastCallSentData = toCopy.lastCallSentData;
+    	this.lastCallReportCount = toCopy.lastCallReportCount;
+    	this.reportMechanism = toCopy.reportMechanism;
+    	this.priority = toCopy.priority;
+    	this.contentType = toCopy.contentType;
+    	this.messageId = toCopy.messageId;
+    	this.session = toCopy.session;
+    	this.wrappedMessage = toCopy.wrappedMessage;
+    	this.nickname = toCopy.nickname;
+    	this.lastSendTransaction = toCopy.lastSendTransaction;
+    }
+
+    /**
      * @return the direction this message is travelling:
      * 		{@link Direction#IN} or {@link Direction#OUT}.
      */
@@ -295,7 +317,7 @@ public abstract class Message
     public String getContent() {
     	if (getDirection() == Direction.OUT || (getDirection() == Direction.IN && isComplete())) {
     		if (isWrapped())
-    			return wrappedMessage.getMessageContent();
+    			return new String(wrappedMessage.getMessageContent(), TextUtils.utf8);
     		else
     			return getRawContent();
     	}
@@ -456,11 +478,12 @@ public abstract class Message
      */
     public abstract boolean isComplete();
 
-    /** Message is complete, see if correct.
+    /** Message is ready to send or completely received, see if correct.
      * Also the cue for any (un-)wrapping.
+     * @return	the validated message
      * @throws Exception
      */
-    public abstract void validate() throws Exception;
+    public abstract Message validate() throws Exception;
 
     /**
      * Aborts the Outgoing or incoming message note, both arguments are

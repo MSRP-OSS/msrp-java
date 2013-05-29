@@ -45,5 +45,5 @@ public interface WrappedMessage {
 	/** Return content of the wrapped message.
 	 * @return	the content.
 	 */
-	public String getMessageContent();
+	public byte[] getMessageContent();
 }

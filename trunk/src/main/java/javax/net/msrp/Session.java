@@ -463,14 +463,6 @@ public class Session
 	}
 
 	/**
-	 *  Same as {@link Session#setActive(String, int)} but with default refresh period.
-	 */
-	public void setActive(String contentType)
-	{
-		setActive(contentType, 120);
-	}
-
-	/**
 	 * Indicate on session that chatter is composing a message.
 	 * An active message indication will be sent when appropriate.
 	 * @param contentType the type of message being composed.
@@ -478,12 +470,20 @@ public class Session
 	 */
 	public void setActive(String contentType, int refresh)
 	{
-		long now = System.currentTimeMillis();
 		if (contentType == null || contentType.length() == 0)
 			throw new IllegalArgumentException("Content-Type must be a valid string");
 
-		isComposing = ImState.active;
 		composeContentType = contentType;
+		if (shouldActiveTransitionBeSent(refresh))
+		{
+			sendMessage(new OutgoingStatusMessage(this, isComposing, composeContentType, refresh));
+		}
+	}
+
+	private boolean shouldActiveTransitionBeSent(int refresh)
+	{
+		long now = System.currentTimeMillis();
+		isComposing = ImState.active;
 		lastActive = now;
 
 		if ((activeEnd < now) || (this.refresh > 0 && (activeEnd - (this.refresh / 2) < now))) {
@@ -491,8 +491,48 @@ public class Session
 				refresh = 60;
 			this.refresh = refresh;
 			activeEnd = lastActive + (refresh * 1000);
-			sendMessage(new OutgoingStatusMessage(this, isComposing, composeContentType, refresh));
+			return true;
 		}
+		return false;
+	}
+
+	/**
+	 *  Same as {@link #setActive(String, int)} but with a
+	 *  default refresh period of 120 sec.
+	 */
+	public void setActive(String contentType)
+	{
+		setActive(contentType, 120);
+	}
+
+	/**
+	 * The conferencing-version of {@link #setActive(String, int)}. The
+	 * indication will be wrapped within message/CPIM to retain conference
+	 * participant information.
+	 * @param contentType
+	 * @param refresh
+	 * @param from	from-field content of the wrapped indication
+	 * @param to	to-field content of the wrapped indication
+	 */
+	public void setActive(String contentType, int refresh, String from, String to) {
+		if (contentType == null || contentType.length() == 0)
+			throw new IllegalArgumentException("Content-Type must be a valid string");
+
+		composeContentType = contentType;
+		if (shouldActiveTransitionBeSent(refresh))
+		{
+			sendMessage(new OutgoingStatusMessage(this, isComposing,
+					composeContentType, refresh, from, to));
+		}
+	}
+
+	/**
+	 *  Same as {@link #setActive(String, int, String, String)} but with a
+	 *  default refresh period of 120 sec.
+	 */
+	public void setActive(String contentType, String from, String to)
+	{
+		setActive(contentType, 120, from, to);
 	}
 
 	/**
@@ -505,6 +545,23 @@ public class Session
 		{
 			endComposing();
 			sendMessage(new OutgoingStatusMessage(this, isComposing, composeContentType, 0));
+		}
+	}
+
+	/**
+	 * The conferencing-version of {@link #setIdle()}.
+	 * The idle indication will be wrapped within message/CPIM to retain
+	 * conference participant information.
+	 * @param from	from-field content of the wrapped indication
+	 * @param to	to-field content of the wrapped indication
+	 */
+	public void setIdle(String from, String to)
+	{
+		if (isComposing == ImState.active)
+		{
+			endComposing();
+			sendMessage(new OutgoingStatusMessage(this, isComposing,
+					composeContentType, 0, from, to));
 		}
 	}
 
