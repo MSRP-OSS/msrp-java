@@ -420,6 +420,16 @@ Session.sendNickResult();</PRE>
                             it will do this only once within a refresh period.
                         </P>
                         <P>
+                            To accomodate connections to a conference (chatroom), these calls
+                            are also available with a <code class="prettyprint">from</CODE> and
+                            <code class="prettyprint">to</CODE> argument. When given, the status
+                            message is automatically wrapped using
+                            <code class="prettyprint">message/CPIM</CODE> so that participant
+                            information can be retained:
+                        </P>
+                        <pre class="prettyprint">Session.setActive(contenttype, from to);</PRE>
+                        <pre class="prettyprint">Session.setIdle(from, to);</PRE>
+                        <P>
                             A received status message can be detected by testing for:
                         </P>
                         <pre class="prettyprint">if (message instanceof StatusMessage)</PRE>
@@ -433,7 +443,10 @@ Session.sendNickResult();</PRE>
                         <pre class="prettyprint">StatusMessage.getState();
 StatusMessage.getComposeContentType();</PRE>
                         <P>
-                            etc.
+                            etc.<br>
+                            Likewise, any incoming messages are auto-scanned for wrapped
+                            status indications. When appropriate, the from and to fields will
+                            be filled with the received information.
                         </P>
 
                         </section>
