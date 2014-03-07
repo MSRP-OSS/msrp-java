@@ -283,26 +283,20 @@ class Connection extends Observable implements Runnable
      * @uml.property name="_transactions"
      */
 
-    /** close this connection/these threads
-     * 
+    /**
+     * close this connection/these threads
      */
     public void close()
     {
     	if (closing)
     		return;						// already closed
     	closing = true;
-    	// writeThread closes itself after timeout...
-//    	if (writeThread != null) {
-//        	synchronized (writeThread) {
-//            	writeThread.notifyAll();
-//        	}
-//    	}
-    	try {
+    	try
+    	{
     		if (socketChannel != null)
     			socketChannel.close();
-		} catch (IOException e) {
-			/* empty */;
 		}
+    	catch (IOException e) { /* empty */; }
     }
 
     /**
@@ -361,7 +355,7 @@ class Connection extends Observable implements Runnable
     {
     }
 
-    protected boolean closing = false;	// connection closing?
+    protected volatile boolean closing = false; // connection closing?
 
     private Thread writeThread = null;
     private Thread readThread = null;
