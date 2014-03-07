@@ -480,13 +480,19 @@ public class Session
 		}
 	}
 
+	/**
+	 * Set composer to active and see if we need to advertise this.
+	 * @param refresh  refresh period to use.
+	 * @return
+	 */
 	private boolean shouldActiveTransitionBeSent(int refresh)
 	{
 		long now = System.currentTimeMillis();
 		isComposing = ImState.active;
 		lastActive = now;
 
-		if ((activeEnd < now) || (this.refresh > 0 && (activeEnd - (this.refresh / 2) < now))) {
+		if ((activeEnd < now) || (this.refresh > 0 && (activeEnd - (this.refresh / 2) < now)))
+		{
 			if (refresh < 60)			/* SHOULD not be allowed	*/
 				refresh = 60;
 			this.refresh = refresh;
