@@ -180,4 +180,14 @@ public abstract class ReportMechanism
      */
     public abstract boolean shouldTriggerSentHook(Message message,
     		Session session, long nrBytesLastCall);
+
+    /**
+     * Removes this message from the reporting mechanism.
+     *
+     * @param message the message to remove.
+     */
+    public void removeMessage(Message message) 
+    {
+    	messageCounters.remove(message);
+    }
 }
