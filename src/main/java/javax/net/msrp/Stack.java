@@ -20,6 +20,7 @@ import java.net.InetAddress;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.UUID;
@@ -237,7 +238,7 @@ public class Stack implements Observer {
 	}
 
 	/**
-	 * adds a connection associated with the session URI
+	 * adds a connection-association with the session URI
 	 * 
 	 * @param uri
 	 *            the URI to add to the existing connections
@@ -259,5 +260,23 @@ public class Stack implements Observer {
 				return conn;
 		}
 		return null;
+	}
+
+	/**
+	 * Removes the connection-association with the session URI.
+     *
+     * @param connection the connection to remove.
+	 */
+	public void removeConnection(Connection connection)
+	{
+	    for (URI uri : sessionConnections.keySet())
+	    {
+            Connection thisConnection = sessionConnections.get(uri);
+	        if (thisConnection == connection)
+	        {
+                sessionConnections.remove(uri);
+                return;
+	        }
+	    }
 	}
 }

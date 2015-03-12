@@ -112,7 +112,7 @@ public class Session
     /**
      * contains the messages (by message-ID) being received
      */
-    private HashMap<String, Message> messagesReceive =
+    private HashMap<String, Message> messagesReceiving =
         new HashMap<String, Message>();
 
     /**
@@ -599,12 +599,21 @@ public class Session
 		if (connection != null)
 		{
 			connection.close();
+			if (stack != null)
+			    stack.removeConnection(connection);
 			connection = null;
 		}
 		if (stack != null)
 		{
 			stack.removeActiveSession(this);
 			stack = null;
+		}
+		if (reportMechanism != null && messagesReceiving != null) 
+		{
+			for (Message message : messagesReceiving.values()) 
+			{
+				reportMechanism.removeMessage(message);
+			}
 		}
     }
 
@@ -623,7 +632,7 @@ public class Session
      */
     public HashMap<String, Message> getMessagesReceive()
     {
-        return messagesReceive;
+        return messagesReceiving;
     }
 
     /**
@@ -797,21 +806,21 @@ public class Session
      */
     protected Message getReceivingMessage(String messageID)
     {
-        return messagesReceive.get(messageID);
+        return messagesReceiving.get(messageID);
     }
 
     /**
      * Put a message on the list of messages being received by this session.
      * 
      * @param message the {@link IncomingMessage} to be put on the receive queue
-     * @see #messagesReceive
+     * @see #messagesReceiving
      */
     /* FIXME: in the future just put the queue of messages being received on
      * the Stack as the Message object isn't necessarily bound to the Session
      */
     protected void putReceivingMessage(IncomingMessage message)
     {
-        messagesReceive.put(message.getMessageID(), message);
+        messagesReceiving.put(message.getMessageID(), message);
     }
 
     /*
@@ -956,7 +965,7 @@ public class Session
      */
     protected void delMessageToReceive(IncomingMessage message)
     {
-        if (messagesReceive.remove(message.getMessageID()) == null)
+        if (messagesReceiving.remove(message.getMessageID()) == null)
         {
         	logger.warn(this + " receiving message to delete [" + message + "] not found");
         }
@@ -986,4 +995,17 @@ public class Session
 	protected Connection getConnection() {
 		return connection;
 	}
+
+    /**
+     * Sets the session listener to null.
+     *
+     * @param listener the session listener to set to null.
+     */
+    public void removeListener(SessionListener listener) 
+    {
+	if (listener != null && listener instanceof SessionListener && myListener == listener) 
+	{
+		myListener = null;
+	}
+    }
 }
