@@ -520,17 +520,17 @@ class Connection extends Observable implements Runnable
     	return null;
     }
 
-    /* Find the MSRP start of the transaction stamp
-     * the TID has to be at least 64bits long = 8chars
-     * given as a reasonable limit of 20 for the transaction id
-     * although non normative. Also the method name will have the same 20 limit
-     *  and has to be a Upper case word like SEND
+    /* Find the MSRP start line.
+     * the TId has to contain at least 64 bits of randomness.
+     * 
+     * req-start = pMSRP SP transact-id SP method CRLF
+     * resp-start= pMSRP SP transact-id SP status-cdoe [SP comment CRLF
      */
     private static Pattern req_start = Pattern.compile(
-                    "(^MSRP) ([\\p{Alnum}]{8,20}) ([\\p{Upper}]{1,20})\r\n(.*)",
+                    "(^MSRP) (\\p{Alnum}[\\p{Alnum}\\-=%+.]{3,31}) ([\\p{Upper}]{1,20})\r\n(.*)",
                     Pattern.DOTALL);
     private static Pattern resp_start = Pattern.compile(
-                    "(^MSRP) ([\\p{Alnum}]{8,20}) ((\\d{3})([^\r\n]*)\r\n)(.*)",
+                    "(^MSRP) (\\p{Alnum}[\\p{Alnum}\\-=%+.]{3,31}) ((\\d{3})([^\r\n]*)\r\n)(.*)",
                     Pattern.DOTALL);
 
     /**
@@ -679,7 +679,7 @@ class Connection extends Observable implements Runnable
                      */
                     tID = incomingTransaction.getTID();
                     Pattern endTransaction = Pattern.compile(
-                        		"(.*)(-------" + tID + ")([$+#])(\r\n)(.*)?",
+                        		"(.*)(-------" + tID.replace("+", "\\+") + ")([$+#])(\r\n)(.*)?",
                         		Pattern.DOTALL);
                     Matcher matcher = endTransaction.matcher(toParse);
                     if (matcher.matches())
@@ -713,7 +713,7 @@ class Connection extends Observable implements Runnable
                     if (incomingTransaction.hasContentStuff) {
                     	// strip 1 CRLF from string to parse...
                         endTransaction = Pattern.compile(
-                    		"(.*)(\r\n)(-------" + tID + ")([$+#])(\r\n)(.*)?",
+                    		"(.*)(\r\n)(-------" + tID.replace("+", "\\+") + ")([$+#])(\r\n)(.*)?",
                             Pattern.DOTALL);
                     }
                     matcher = endTransaction.matcher(toParse);
