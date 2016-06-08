@@ -5,7 +5,7 @@ This is BETA software, a library implementing the MSRP protocol.
 
 Use Maven to build/install as in
 
-$ mvn -DskipTests install
+$ mvn -DskipTests package
 
 This will generate the library jar.
 
