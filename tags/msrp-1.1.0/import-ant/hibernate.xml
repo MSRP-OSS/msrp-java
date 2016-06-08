@@ -1,0 +1,134 @@
+<!--
+    ImportAnt
+    Copyright (C) 2004-2008  Miguel Filipe Leitao Pardal
+
+    This library is free software; you can redistribute it and/or
+    modify it under the terms of the GNU Lesser General Public
+    License as published by the Free Software Foundation; either
+    version 2.1 of the License, or any later version.
+
+    This library is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public
+    License along with this library; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Contact the author at: miguel.pardal@ist.utl.pt
+-->
+<!--
+    Module Maintainer: jorge.martins@ist.utl.pt
+-->
+<project name="hibernate">
+
+    <!--            -->
+    <!-- PROPERTIES -->
+    <!--            -->
+    <property name="import-ant.module.hibernate" value="true" />
+
+    <property name="hibernate.dir-name" value="database" />
+
+    <property name="config.hibernate.rel-dir" value="${config.rel-dir}/${hibernate.dir-name}" />
+    <property name="build.config.hibernate.rel-dir" value="${build.rel-dir}/${config.hibernate.rel-dir}" />
+
+    <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLInnoDBDialect" />
+    <property name="hibernate.auto" value="validate" />
+
+    <property name="hibernate.tool.export" value="true" />
+    <property name="hibernate.tool.update" value="false" />
+    <property name="hibernate.tool.drop" value="true" />
+    <property name="hibernate.tool.create" value="true" />
+    <property name="hibernate.tool.output.file-name" value="application-schema.sql" />
+    <property name="hibernate.tool.format" value="true" />
+    <property name="hibernate.tool.haltonerror" value="false" />
+
+    <property name="config.hibernate.file-name" value="hibernate.cfg.xml" />
+    <property name="config.hibernate.file" value="${build.config.hibernate.rel-dir}/${config.hibernate.file-name}" />
+
+
+    <!--         -->
+    <!-- TARGETS -->
+    <!--         -->
+
+    <!-- MAIN TARGETS (name, description) -->
+    <target name="generate-db-schema"
+            depends="-hibernate-init,compile,config,build-database"
+    	    description="Creates a database schema based on hibernate model.">
+        <!-- create SQL directory if it doesn't already exist -->
+        <mkdir dir="${database.sql.rel-dir}"/>
+        <hibernatetool destdir="${database.sql.rel-dir}">
+            <classpath refid="run.classpath" />
+            <annotationconfiguration configurationfile="${config.hibernate.file}"/>
+            <hbm2ddl export="${hibernate.tool.export}"
+                     update="${hibernate.tool.update}"
+                     drop="${hibernate.tool.drop}"
+                     create="${hibernate.tool.create}"
+                     outputfilename="${hibernate.tool.output.file-name}"
+                     format="${hibernate.tool.format}"
+                     haltonerror="${hibernate.tool.haltonerror}"/>
+        </hibernatetool>
+    </target>
+
+    <!-- PUBLIC AUXILIARY TARGETS (name, no description) -->
+
+    <!-- PRIVATE AUXILIARY TARGETS (-name, no description) -->
+    <target name="-hibernate-init" depends="init">
+        <!-- define Hibernate classpath based on run classpath -->
+        <path id="hibernate-tools.jar.path">
+        	<path refid="run.classpath" />
+        </path>
+        <!-- define Hibernate Tools task -->
+        <taskdef name="hibernatetool" classname="org.hibernate.tool.ant.HibernateToolTask" classpathref="hibernate-tools.jar.path" />
+    </target>
+
+    <!-- FUNCTION TARGETS (-name(args), no description) -->
+    <target name="-replace-database-custom-tokens(dir)">
+        <echo message="Replacing tokens in resource files..." />
+        <property name="hibernate.custom-tokens.target-name" value="-replace-hibernate-custom-tokens(dir)" />
+        <antcall target="${hibernate.custom-tokens.target-name}">
+            <param name="dir" value="${build.config.database.rel-dir}" />
+        </antcall>
+        <antcall target="-replace-hibernate-tokens(dir)">
+            <param name="dir" value="${build.config.database.rel-dir}" />
+        </antcall>
+    </target>
+
+    <target name="-replace-hibernate-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <property name="persistence.factory" value="hibernate" />
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@hibernate.dialect@" value="${hibernate.dialect}" />
+            <replacefilter token="@hibernate.auto@" value="${hibernate.auto}" />
+            <replacefilter token="@persistence.factory@" value="${persistence.factory}" />
+        </replace>
+        <!-- perform multi-line value token replacements -->
+        <replace dir="${dir}" token="@hibernate.mappings@">
+            <replacevalue><![CDATA[]]></replacevalue>
+        </replace>
+    </target>
+
+    <!-- USER NOTE: override '-replace-hibernate-custom-tokens(dir)' to replace custom tokens -->
+    <target name="-replace-hibernate-custom-tokens(dir)">
+        <fail message="MUST DEFINE dir PROPERTY" unless="dir" />
+        <!--
+        <replace dir="${dir}" summary="${config-replaces-summary.option}">
+            <replacefilter token="@token@" value="value" />
+        </replace>
+        -->
+        <!--
+        <replace dir="${dir}" token="@hibernate.handler-chains@">
+            <replacevalue><![CDATA[
+                <mapping class="my.class.Name" />
+            ]]></replacevalue>
+        </replace>
+        -->
+    </target>
+
+    <!--         -->
+    <!-- IMPORTS -->
+    <!--         -->
+    <import file="database.xml" />
+
+</project>
