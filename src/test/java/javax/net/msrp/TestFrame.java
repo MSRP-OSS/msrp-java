@@ -129,7 +129,7 @@ public abstract class TestFrame {
             String addressString = testProperties.getProperty("address");
             /*
              * checks if we want the temp files on a specific directory. if the
-             * propriety doesn't exist the default dir used by the JVM is used
+             * property doesn't exist the default dir used by the JVM is used
              */
             tempFileDir = testProperties.getProperty("tempdirectory");
             address = InetAddress.getByName(addressString);

@@ -1,0 +1,4 @@
+lib/* linguist-vendored
+import-ant/* linguist-vendored
+oldDocs/* linguist-documentation
+www/* linguist-documentation
