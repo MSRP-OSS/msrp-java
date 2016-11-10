@@ -1,7 +1,10 @@
 Release version of the MSRP Java Stack.
-For more information please visit: http://java.net/projects/msrp
+For more information/documentation please visit: https://msrp-oss.github.io/msrp-java/
 
-This is library is currently being used in production several projects. Any bugs should be reported on the Issues page
+For access to sources visit: https://github.com/MSRP-OSS
+
+This library is currently used in several projects.
+Any bugs should be reported on the Issues page.
 
 Use Maven to build/install as in
 
