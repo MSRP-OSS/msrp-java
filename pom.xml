@@ -14,7 +14,7 @@
 
 	<name>MSRP :: ${project.artifactId}</name>
 	<description>A library, implementing the MSRP protocol.</description>
-	<url>http://java.net/projects/msrp</url>
+	<url>https://github.com/MSRP-OSS/msrp-java</url>
 	<licenses>
 	   <license>
 	     <name>GNU LESSER GENERAL PUBLIC LICENSE</name>
@@ -23,9 +23,9 @@
 	   </license>
 	 </licenses>
 	 <scm>
-	   <connection>scm:svn:http://svn.java.net/svn/msrp~svn/trunk</connection>
-	   <developerConnection>scm:svn:https://svn.java.net/svn/msrp~svn/trunk</developerConnection>
-       <url>http://java.net/projects/msrp/sources/svn/show</url>
+	   <connection>scm:git:https://github.com/MSRP-OSS/msrp-java</connection>
+	   <developerConnection>scm:git:https://github.com/MSRP-OSS/msrp-java</developerConnection>
+       <url>https://github.com/MSRP-OSS/msrp-java</url>
 	 </scm>
 	 <developers>
 	   <developer>
@@ -72,8 +72,8 @@
 				</configuration>
 			</plugin>
             <plugin>
-                <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <groupId>org.apache.felix</groupId>
                 <version>2.5.4</version>
                 <extensions>true</extensions>
                 <configuration />
