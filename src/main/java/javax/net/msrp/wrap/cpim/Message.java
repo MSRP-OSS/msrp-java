@@ -1,6 +1,8 @@
 package javax.net.msrp.wrap.cpim;
 
 import java.nio.ByteBuffer;
+import java.text.Format;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 import javax.net.msrp.WrappedMessage;
@@ -126,17 +128,24 @@ public class Message implements WrappedMessage {
 		buffer.get(msgContent);
 	}
 
+    private String getTimeStamp() {
+        Format sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+
+        return sdf.format(Long.valueOf(System.currentTimeMillis()))
+            .replaceAll("(\\d\\d)(\\d\\d)$", "$1:$2");
+    }
+
 	@Override
 	public byte[] wrap(String from, String to, String contentType, byte[] content) {
 		headers.add(new Header(Headers.FROM, from));
 		headers.add(new Header(Headers.TO, to));
-//		headers.add(new Header(Header.DATETIME, <SomeFormOfTimestamp>));
+		headers.add(new Header(Headers.DATETIME, getTimeStamp()));
 		contentHeaders.add(new Header(Headers.CONTENT_TYPE, contentType));
 		msgContent = content;
 		return this.toString().getBytes(TextUtils.utf8);
 	}
 
-	@Override
+    @Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder(msgContent.length + (headers.size() + contentHeaders.size()) * 20);
 		for (Header h : headers) {
