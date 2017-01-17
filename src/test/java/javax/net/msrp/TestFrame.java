@@ -123,15 +123,21 @@ public abstract class TestFrame {
         {
             /* Set the limit to be of 30 MB of messages allowed in memory */
             Stack.setShortMessageBytes(30024 * 1024);
-
-            testProperties.load(TestFrame.class
-            					.getResourceAsStream("/test.properties"));
-            String addressString = testProperties.getProperty("address");
+            try
+            {
+                testProperties.load(TestFrame.class
+                    .getResourceAsStream("/test.properties"));
+            }
+            catch (Exception e1)
+            {
+                System.err.println(
+                    "Test properties have not been defined, reverting to defaults... " +
+                    "Sure you wanna continue?");
+            }
             /*
-             * checks if we want the temp files on a specific directory. if the
-             * property doesn't exist the default dir used by the JVM is used
+             * When not given, address to use defaults to local loopback.
              */
-            tempFileDir = testProperties.getProperty("tempdirectory");
+            String addressString = testProperties.getProperty("address");
             address = InetAddress.getByName(addressString);
             sendingSession = new Session(false, false, address);
             receivingSession =
@@ -139,6 +145,11 @@ public abstract class TestFrame {
 
             sendingSession.addListener(sendingSessionListener);
             receivingSession.addListener(receivingSessionListener);
+            /*
+             * checks if we want the temp files on a specific directory. if the
+             * property doesn't exist the default dir used by the JVM is used
+             */
+            tempFileDir = testProperties.getProperty("tempdirectory");
             if (tempFileDir != null)
             {
                 System.out.println("Using temporary file directory: "
