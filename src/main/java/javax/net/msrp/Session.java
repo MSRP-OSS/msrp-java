@@ -644,6 +644,10 @@ public class Session
 				reportMechanism.removeMessage(message);
 			}
 		}
+		if (myListener != null)
+		{
+		    myListener = null;
+		}
     }
 
     /** Return destination-path of this session
