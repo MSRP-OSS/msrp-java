@@ -119,7 +119,7 @@ public class MockSessionListener
             {
                 try
                 {
-                    wait();
+                    stopAndWait.wait();
                 }
                 catch (InterruptedException e)
                 {

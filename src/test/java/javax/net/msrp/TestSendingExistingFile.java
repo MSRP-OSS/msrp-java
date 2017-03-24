@@ -57,7 +57,7 @@ public class TestSendingExistingFile extends TestFrame
             sendingSession.sendMessage(messageToBeSent);
 	        Long startTime = System.currentTimeMillis();
 
-	        sendingSession.addListener(sendingSessionListener);
+	        sendingSession.setListener(sendingSessionListener);
 
 	        /*
 	         * set up the receiving session handler to receive the data to the
@@ -69,7 +69,7 @@ public class TestSendingExistingFile extends TestFrame
             receivedFDC = new FileDataContainer(receivedFile);
 	        receivingSessionListener.setDataContainer(receivedFDC);
 
-	        receivingSession.addListener(receivingSessionListener);
+	        receivingSession.setListener(receivingSessionListener);
 
 	        /* start transfer by adding the toPath to the sendingSession */
 	        ArrayList<URI> toPathSendSession = new ArrayList<URI>();

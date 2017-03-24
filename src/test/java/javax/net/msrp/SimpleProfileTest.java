@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright ï¿½ Joï¿½o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -31,7 +31,7 @@ import org.junit.*;
  * 
  * Simple tests built for speed and to be used by the eclipse profiler (TPTP)
  * 
- * @author João André Pereira Antunes
+ * @author Joï¿½o Andrï¿½ Pereira Antunes
  * 
  */
 public class SimpleProfileTest extends TestFrame
@@ -83,6 +83,7 @@ public class SimpleProfileTest extends TestFrame
 	        receivingSessionListener.setDataContainer(fdc);
 	
 	        triggerSendReceive(fdc);
+	        wait4Report(true);
         }
         catch (Exception e)
         {

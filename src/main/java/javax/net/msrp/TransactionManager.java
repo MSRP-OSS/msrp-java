@@ -130,6 +130,12 @@ public class TransactionManager
     		throw new InvalidParameterException("null tranaction specified");
         if (!ResponseCode.isValid(responseCode))
             throw new InvalidParameterException("Invalid response code");
+        if (transaction.getTransactionType() == TransactionType.REPORT)
+        {
+            /* 7.1.2. MUST NOT send msrp responses to REPORT requests */
+            logger.warn("Cannot respond to report transaction " + transaction);
+            return;
+        }
         // TODO validate comment based on utf8text
         logger.trace(this + " response being sent for " +
         		transaction + " response code " + responseCode);

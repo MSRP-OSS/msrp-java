@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<packaging>bundle</packaging>
+    <modelVersion>4.0.0</modelVersion>
+    <packaging>bundle</packaging>
 
     <!--parent>
         <artifactId>oss-parent</artifactId>
@@ -8,46 +8,46 @@
         <version>7</version>
     </parent-->
 
-	<artifactId>msrp</artifactId>
-	<groupId>net.java.msrp</groupId>
-	<version>2.0.0-SNAPSHOT</version>
+    <artifactId>msrp</artifactId>
+    <groupId>net.java.msrp</groupId>
+    <version>1.2.0-SNAPSHOT</version>
 
-	<name>MSRP :: ${project.artifactId}</name>
-	<description>A library, implementing the MSRP protocol.</description>
-	<url>https://github.com/MSRP-OSS/msrp-java</url>
-	<licenses>
-	   <license>
-	     <name>GNU LESSER GENERAL PUBLIC LICENSE</name>
-	     <url>http://fsf.org/</url>
-	     <distribution>repo</distribution>
-	   </license>
-	 </licenses>
-	 <scm>
-	   <connection>scm:git:https://github.com/MSRP-OSS/msrp-java</connection>
-	   <developerConnection>scm:git:https://github.com/MSRP-OSS/msrp-java</developerConnection>
+    <name>MSRP :: ${project.artifactId}</name>
+    <description>A library, implementing the MSRP protocol.</description>
+    <url>https://github.com/MSRP-OSS/msrp-java</url>
+    <licenses>
+       <license>
+         <name>GNU LESSER GENERAL PUBLIC LICENSE</name>
+         <url>http://fsf.org/</url>
+         <distribution>repo</distribution>
+       </license>
+     </licenses>
+     <scm>
+       <connection>scm:git:https://github.com/MSRP-OSS/msrp-java</connection>
+       <developerConnection>scm:git:https://github.com/MSRP-OSS/msrp-java</developerConnection>
        <url>https://github.com/MSRP-OSS/msrp-java</url>
-	 </scm>
-	 <developers>
-	   <developer>
-	     <id>dtroit</id>
-	     <name>João André Pereira Antunes</name>
-	     <email>joao.antunes@tagus.ist.utl.pt</email>
-	   </developer>
+     </scm>
+     <developers>
+       <developer>
+         <id>dtroit</id>
+         <name>João André Pereira Antunes</name>
+         <email>joao.antunes@tagus.ist.utl.pt</email>
+       </developer>
        <developer>
          <id>uijltje</id>
          <name>Tom Uijldert</name>
          <email>tom.uijldert@gmail.com</email>
        </developer>
-	 </developers>
+     </developers>
 
-	<properties>
-		<compile.source>1.5</compile.source>
-		<compile.debug>true</compile.debug>
-		<skipTests>true</skipTests>
-		<junit.version>4.8.2</junit.version>
-		<slf4j.version>1.6.4</slf4j.version>
+    <properties>
+        <compile.source>1.5</compile.source>
+        <compile.debug>true</compile.debug>
+        <skipTests>true</skipTests>
+        <junit.version>4.8.2</junit.version>
+        <slf4j.version>1.6.4</slf4j.version>
         <log4j.version>1.2.16</log4j.version>
-	</properties>
+    </properties>
 
     <distributionManagement>
         <snapshotRepository>
@@ -60,17 +60,17 @@
         </repository>
     </distributionManagement>
 
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<groupId>org.apache.maven.plugins</groupId>
-				<configuration>
-					<source>${compile.source}</source>
-					<target>${compile.source}</target>
-					<debug>${compile.debug}</debug>
-				</configuration>
-			</plugin>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <configuration>
+                    <source>${compile.source}</source>
+                    <target>${compile.source}</target>
+                    <debug>${compile.debug}</debug>
+                </configuration>
+            </plugin>
             <plugin>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <groupId>org.apache.felix</groupId>
@@ -86,13 +86,13 @@
                     <configuration>
                       <tasks>
                         <fail message="${basedir}/src/test/resources/test.properties not found, see ${basedir}/config/tests/test.properties.example for more information">
-					      <condition>
-					        <and>
-					          <not> <isset property="skipTests" /> </not>
+                          <condition>
+                            <and>
+                              <not> <isset property="skipTests" /> </not>
                               <not> <available file="${basedir}/src/test/resources/test.properties" /> </not>
-					        </and>
-					      </condition>
-					    </fail>
+                            </and>
+                          </condition>
+                        </fail>
                       </tasks>
                     </configuration>
                     <goals><goal>run</goal></goals>
@@ -117,42 +117,42 @@
               </configuration>
             </plugin>
         </plugins>
-		<pluginManagement>
-			<plugins>
-				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-				<plugin>
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>
-											org.apache.maven.plugins
-										</groupId>
-										<artifactId>
-											maven-antrun-plugin
-										</artifactId>
-										<versionRange>
-											[1.3,)
-										</versionRange>
-										<goals>
-											<goal>run</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore></ignore>
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-	</build>
+        <pluginManagement>
+            <plugins>
+                <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>
+                                            org.apache.maven.plugins
+                                        </groupId>
+                                        <artifactId>
+                                            maven-antrun-plugin
+                                        </artifactId>
+                                        <versionRange>
+                                            [1.3,)
+                                        </versionRange>
+                                        <goals>
+                                            <goal>run</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore></ignore>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <profiles>
       <profile>
@@ -204,12 +204,12 @@
       </profile>
     </profiles>
 
-	<dependencies>
-		<dependency>
+    <dependencies>
+        <dependency>
             <artifactId>slf4j-api</artifactId>
-			<groupId>org.slf4j</groupId>
-			<version>${slf4j.version}</version>
-		</dependency>
+            <groupId>org.slf4j</groupId>
+            <version>${slf4j.version}</version>
+        </dependency>
         <dependency>
             <artifactId>slf4j-log4j12</artifactId>
             <groupId>org.slf4j</groupId>
@@ -225,9 +225,9 @@
         <dependency>
             <artifactId>junit</artifactId>
             <groupId>junit</groupId>
-			<version>${junit.version}</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-	</dependencies>
+    </dependencies>
 
 </project>

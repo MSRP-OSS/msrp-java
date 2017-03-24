@@ -317,8 +317,8 @@ public class MiscTests
         Session sessionReceive = new Session(false, false, uri, address);
         uri = sessionReceive.getURI();
         System.out.println("Received the following URI:" + uri);
-        sessionSend.addListener(instance);
-        sessionReceive.addListener(instance);
+        sessionSend.setListener(instance);
+        sessionReceive.setListener(instance);
 
         // This does what the SIP negotiation should do, get the uris for the
         // MSRP Transaction

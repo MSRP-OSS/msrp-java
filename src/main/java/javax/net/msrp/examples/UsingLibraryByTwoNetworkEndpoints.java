@@ -99,7 +99,7 @@ public class UsingLibraryByTwoNetworkEndpoints
             						receivingBoundAddress);
 
             /* bound the session with the created SessionListener */
-            receivingSession.addListener(receivingSessionListener);
+            receivingSession.setListener(receivingSessionListener);
             System.out.println("Generated URI by the receiver:"
                 + receivingSession.getURI());
             return receivingSession.getURI();
@@ -152,7 +152,7 @@ public class UsingLibraryByTwoNetworkEndpoints
                 + sendingSession.getURI());
 
             /* bound the session with the created SessionListener */
-            sendingSession.addListener(sendingSessionListener);
+            sendingSession.setListener(sendingSessionListener);
             return sendingSession.getURI();
 
         }
@@ -291,7 +291,6 @@ public class UsingLibraryByTwoNetworkEndpoints
                      * is run with the generated URI from this sender, after
                      * that it connects to the receiver
                      */
-                    @SuppressWarnings("unused")
 					URI senderUri = MessageSender.setUpConnection();
 
                     MessageSender.generateRandomMemoryMessage(3000);

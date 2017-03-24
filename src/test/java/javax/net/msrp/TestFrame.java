@@ -114,7 +114,25 @@ public abstract class TestFrame {
         }
 	}
 
-    @Before
+	void wait4Report(boolean wantSuccessReport)
+	{
+	    if (wantSuccessReport)
+	    {
+            synchronized (sendingSessionListener.successReportCounter)
+            {
+                try
+                {
+                    sendingSessionListener.successReportCounter.wait(1000L);
+                }
+                catch (InterruptedException e)
+                {
+                    ; /* ignore, let's just continue processing */
+                }
+            }
+	    }
+	}
+
+	@Before
     public void setUpConnection()
     {
         /* fetch the address to which the sessions are going to be bound: */
@@ -143,8 +161,8 @@ public abstract class TestFrame {
             receivingSession =
                 new Session(false, false, sendingSession.getURI(), address);
 
-            sendingSession.addListener(sendingSessionListener);
-            receivingSession.addListener(receivingSessionListener);
+            sendingSession.setListener(sendingSessionListener);
+            receivingSession.setListener(receivingSessionListener);
             /*
              * checks if we want the temp files on a specific directory. if the
              * property doesn't exist the default dir used by the JVM is used
@@ -204,6 +222,7 @@ public abstract class TestFrame {
 
             startTime = System.currentTimeMillis();
             triggerSendReceive(data);
+            wait4Report(wantSuccessReport);
 
             System.out.println(testName + "() took: " +
                     	(System.currentTimeMillis() - startTime) + " ms");
@@ -266,6 +285,7 @@ public abstract class TestFrame {
 
             startTime = System.currentTimeMillis();
             triggerSendReceive((byte[]) null);
+            wait4Report(wantSuccessReport);
 
             System.out.println(testName + "() took: " +
                     	(System.currentTimeMillis() - startTime) + " ms");
@@ -310,6 +330,7 @@ public abstract class TestFrame {
 
             startTime = System.currentTimeMillis();
             triggerSendReceive(fdc);
+            wait4Report(wantSuccessReport);
 
             System.out.println(testName + "() took: " +
                     	(System.currentTimeMillis() - startTime) + " ms");

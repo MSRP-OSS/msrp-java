@@ -252,30 +252,58 @@ public class Session
         return reportMechanism;
     }
 
-    /** Add a listener to this session to catch any incoming traffic.
-     * 
-     * @param listener	the session listener to add
-     * @throws IllegalArgumentException if no listener specified or of the wrong class.
-     * @see SessionListener
+    /**
+     * @deprecated, use {@link #setListener(SessionListener)} instead.
      */
+    @Deprecated
     public void addListener(SessionListener listener)
     {
-        if (listener != null && listener instanceof SessionListener)
+        if (listener == null)
+            throw new IllegalArgumentException("not a listener");
+        else
+            setListener(listener);
+    }
+
+    /** Set a listener on this session to catch any incoming traffic.
+     * 
+     * @param listener  the session listener to add/remove (when null)
+     * @throws IllegalArgumentException if listener of the wrong class.
+     * @see SessionListener
+     */
+    public void setListener(SessionListener listener)
+    {
+        if (listener == null)
+            myListener = null;
+        else if (listener instanceof SessionListener)
         {
             myListener = listener;
             logger.trace(this + " - Listener added");
-        } else {
-        	String reason = this + " - Listener could not be added. " +
-        					"It didn't match the criteria";
-	        logger.error(reason);
-	        throw new IllegalArgumentException(reason);
+        }
+        else
+        {
+            String reason = this + " - Listener could not be added. " +
+                            "It didn't match the criteria";
+            logger.error(reason);
+            throw new IllegalArgumentException(reason);
         }
     }
 
     /**
-     * @deprecated
-     * Replaced by {@link #setToPath(ArrayList)}
+     * @deprecated, use {@link #setListener(null)} instead
      */
+    @Deprecated
+    public void removeListener(SessionListener listener) 
+    {
+        if (listener != null && listener instanceof SessionListener && myListener == listener) 
+        {
+            myListener = null;
+        }
+    }
+
+    /**
+     * @deprecated, use {@link #setToPath(ArrayList)}, instead
+     */
+    @Deprecated
     public void addToPath(ArrayList<URI> uris) throws IOException
     {
     	setToPath(uris);
@@ -579,6 +607,7 @@ public class Session
      */
     public void tearDown()
     {
+        logger.debug("teardown(" + toString() + ")");
 		// clear local resources
 		toUris = null;
 
@@ -995,17 +1024,4 @@ public class Session
 	protected Connection getConnection() {
 		return connection;
 	}
-
-    /**
-     * Sets the session listener to null.
-     *
-     * @param listener the session listener to set to null.
-     */
-    public void removeListener(SessionListener listener) 
-    {
-	if (listener != null && listener instanceof SessionListener && myListener == listener) 
-	{
-		myListener = null;
-	}
-    }
 }

@@ -527,7 +527,7 @@ public class Transaction
                     {
                         validTransaction = false;
                         logger.warn(this +
-                        		" parse exception, returning without parsing");
+                        		" parse exception, returning without parsing", e);
                         return;
                     }
                 }						// if (!headercomplete)

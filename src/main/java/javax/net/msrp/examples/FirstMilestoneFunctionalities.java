@@ -274,7 +274,6 @@ public class FirstMilestoneFunctionalities
             // you can do it like this:
             try
             {
-                @SuppressWarnings("unused")
 				ByteBuffer receivedContent =
                     receivedMessage.getDataContainer().get(0, 0);
             }
@@ -287,7 +286,6 @@ public class FirstMilestoneFunctionalities
             // that is usually more appropriate usage of a MemoryContainer
             // or you can simply extract the file if we have a FileContainer
             // associated with this message
-            @SuppressWarnings("unused")
 			File receivedFile =
                 ((FileDataContainer) receivedMessage.getDataContainer())
                     .getFile();
