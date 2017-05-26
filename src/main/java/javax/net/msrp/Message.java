@@ -519,8 +519,7 @@ public abstract class Message
     public void gotAborted(Transaction transaction)
     {
         aborted = true;
-        if (dataContainer != null)
-        	dataContainer.dispose();
+        discard();
         session.fireMessageAbortedEvent(this, MessageAbortedEvent.CONTINUATIONFLAG,
         		null, transaction);
     }
@@ -557,6 +556,9 @@ public abstract class Message
     public void discard()
     {
         if (dataContainer != null)
-        	dataContainer.dispose();
+        {
+            dataContainer.dispose();
+            dataContainer = null;
+        }
     }
 }
