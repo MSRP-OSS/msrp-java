@@ -164,7 +164,11 @@ public class OutgoingMessage
     {
         int chunks = 1;
         if (chunkSize > 0 && size > chunkSize)
-            chunks += (size / chunkSize);
+        {
+            chunks = (int) (size / chunkSize);
+            if (size % chunkSize != 0)
+                chunks++;
+        }
         return chunks;
     }
 
