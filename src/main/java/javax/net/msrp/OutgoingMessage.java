@@ -39,6 +39,12 @@ public class OutgoingMessage
     private static final Logger logger =
         LoggerFactory.getLogger(OutgoingMessage.class);
 
+    private long chunkSize = 0;
+    private long nextOffset = 1;
+
+    private int chunksSent;
+    private int chunkOffset;
+
     /**
      * Create a blank message that can be used to send over a session.
      */
@@ -49,19 +55,18 @@ public class OutgoingMessage
 
     public OutgoingMessage(String contentType, byte[] data)
     {
-		if (contentType != null)
-		{
-			this.contentType = contentType;
-			dataContainer = new MemoryDataContainer(data);
-			size = data.length;
-		}
+        if (contentType == null || data == null)
+            throw new InvalidParameterException("Type must be specified with content");
+		this.contentType = contentType;
+		dataContainer = new MemoryDataContainer(data);
+		size = data.length;
     }
 
     public OutgoingMessage(String contentType, File file)
             throws FileNotFoundException, SecurityException
     {
-    	if (contentType == null || contentType.length() < 1)
-    		throw new InvalidParameterException("Content-type must be specified");
+    	if (contentType == null || file == null)
+    		throw new InvalidParameterException("Type must be specified with content");
         this.contentType = contentType;
         dataContainer = new FileDataContainer(file);
         size = dataContainer.size();
@@ -110,6 +115,19 @@ public class OutgoingMessage
         transactionManager.abortMessage(this);
     }
 
+    public int get(byte[] outData, int offset)
+        throws IndexOutOfBoundsException, Exception
+    {
+        if (chunkSize > 0)
+        {
+            long chunkSent = dataContainer.currentReadOffset() % chunkSize;
+            int limit = (int) (chunkSize - chunkSent);
+            return dataContainer.get(outData, offset, limit);
+        }
+        else
+            return dataContainer.get(outData, offset);
+    }
+
     /* (non-Javadoc)
      * @see javax.net.msrp.Message#getMessageID()
      */
@@ -128,7 +146,43 @@ public class OutgoingMessage
      */
     public long getSentBytes()
     {
-        return dataContainer != null ? dataContainer.currentReadOffset() : 0;
+        return dataContainer == null ? 0 : dataContainer.currentReadOffset();
+    }
+
+    protected void setSession(Session session)
+    {
+        super.setSession(session);
+        long csize = session.getChunkSize();
+        if (csize >= 0)
+            this.chunkSize = csize;
+    }
+
+    /**
+     * @return the number of chunks this message will be send in
+     */
+    protected int getChunks()
+    {
+        int chunks = 1;
+        if (chunkSize > 0 && size > chunkSize)
+            chunks += (size / chunkSize);
+        return chunks;
+    }
+
+    /**
+     * @return the offset for the next chunk (byte-range) to send.
+     */
+    protected long nextRange()
+    {
+        if (chunkSize == 0)
+            return nextOffset;
+        else
+        {
+            if (nextOffset + chunkSize > size)
+                return -1;
+            long offset = nextOffset;
+            nextOffset += chunkSize;
+            return offset;
+        }
     }
 
     /* (non-Javadoc)

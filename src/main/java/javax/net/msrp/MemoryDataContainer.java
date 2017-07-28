@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright Â© JoÃ£o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -33,7 +33,7 @@ import javax.net.msrp.exceptions.NotEnoughStorageException;
  * 
  * @see DataContainer 
  * 
- * @author João André Pereira Antunes 2008
+ * @author JoÃ£o AndrÃ© Pereira Antunes 2008
  * 
  */
 public class MemoryDataContainer
@@ -113,6 +113,10 @@ public class MemoryDataContainer
             throw new NotEnoughStorageException("Putting " + dataToPut.length +
                 " bytes of data starting in " + startingIndex +
                 " on a buffer with " + byteBuffer.capacity(), e);
+        }
+        catch (NullPointerException npe)
+        {
+            throw npe;
         }
     }
 
@@ -194,11 +198,24 @@ public class MemoryDataContainer
         throws IndexOutOfBoundsException,
         Exception
     {
+        return get(dst, offset, dst.length - offset);
+    }
+
+    public int get(byte[] dst, int offset, int limit)
+        throws IndexOutOfBoundsException,
+        Exception
+    {
+        if (offset > dst.length - 1)
+            throw new IndexOutOfBoundsException();
+
         int bytesToCopy = 0;
-        if (byteBuffer.remaining() < dst.length - offset)
+        int space = dst.length - offset;
+        if (limit < space)
+            space = limit;
+        if (byteBuffer.remaining() < space)
             bytesToCopy = byteBuffer.remaining();
         else
-            bytesToCopy = dst.length - offset;
+            bytesToCopy = space;
         byteBuffer.get(dst, offset, bytesToCopy);
         return bytesToCopy;
     }

@@ -549,6 +549,8 @@ class Connection extends Observable implements Runnable
     void parser(byte[] incomingBytes, int offset, int length,
         boolean inContentStuff) throws ParseException
     {
+        if (length < 1)                 /* nothing to parse, please move along  */
+            return;
         if (inContentStuff)
         {
             try

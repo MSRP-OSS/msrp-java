@@ -259,7 +259,7 @@ public class Transaction
     private int realChunkSize = 0;
 
     /**
-     * variable that controls if this is an interruptible transaction or not
+     * Is this an interruptible transaction or not
      */
     private boolean interruptible = false;
 
@@ -300,10 +300,10 @@ public class Transaction
         if (message.size > 0 && messageToSend.isComplete())
             throw new IllegalArgumentException(
         		"Transaction constructor called with an already sent message");
-    	if (message.getNickname() != null)
-            makeNickHeader();
+    	if (message.getNickname() == null)
+            makeSendHeader();
     	else
-    		makeSendHeader();
+            makeNickHeader();
 
         /* by default have the continuation flag to be the end of message */
         continuation_flag = FLAG_END;
@@ -362,7 +362,7 @@ public class Transaction
 	         * bytes + 1 because the first field is the number of the first byte
 	         * being sent:
 	         */
-	        long firstByteChunk = ((OutgoingMessage) message).getSentBytes() + 1;
+	        long firstByteChunk = ((OutgoingMessage) message).nextRange();
 	        /*
 	         * Currently all transactions are interruptible, solving Issue #25
 	         * if ((message.getSize() - ((OutgoingMessage)message).getSize()) >
@@ -468,7 +468,7 @@ public class Transaction
      * ReportMechanism
      * 
      * @param incData the data to parse to the transaction
-     * @param offset the starting point to be parsed on the given toParse array
+     * @param offset the starting point to be parsed on the given data array
      * @param length the number of bytes to be considered starting at the offset
      *            position
      * @param inContentStuff tells the parse method if the data in the
@@ -839,13 +839,12 @@ public class Transaction
      *             was no more data or if it was interrupted
      * @throws IndexOutOfBoundsException if the offset is bigger than the length
      *             of the byte buffer to fill
-     * @throws InternalErrorException if something went wrong while trying to
-     *             get this data
+     * @throws Exception if something went wrong while trying to get this data
      */
     public int getData(byte[] outData, int offset)
         throws ImplementationException,
 		        IndexOutOfBoundsException,
-		        InternalErrorException
+		        Exception
     {
         if (interrupted || readIndex[ENDLINE] > 0)
         {
@@ -1282,6 +1281,7 @@ public class Transaction
      * check to see if there is any garbage on the transaction (bytes
      * remaining in the headerBuffer that aren't assigned to any valid field ?!)
      */
+    @SuppressWarnings("static-method")
     private void validate()
     {
         return;

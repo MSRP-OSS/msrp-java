@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright Â© JoÃ£o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -26,7 +26,7 @@ import org.slf4j.*;
 /**
  * Class representing a generic MSRP message.
  * 
- * @author João André Pereira Antunes
+ * @author JoÃ£o AndrÃ© Pereira Antunes
  */
 public abstract class Message
 {
@@ -244,26 +244,14 @@ public abstract class Message
      * @param outData the byte array to fill
      * @param offset the offset index to start filling the outData
      * @return the number of bytes filled
-     * @throws ImplementationException when there was something wrong with the
-     *             written code
-     * @throws InternalErrorException when there was an internal error that lead
+     * 
+     * @throws IndexOutOfBoundsException when the index is wrong
+     * @throws Exception when there was an internal error that lead
      *             this operation to be an unsuccessful one
      */
-    public int get(byte[] outData, int offset)
-    		throws ImplementationException, InternalErrorException
+    public int get(byte[] outData, int offset) throws IndexOutOfBoundsException, Exception
     {
-        try
-        {
             return dataContainer.get(outData, offset);
-        }
-        catch (IndexOutOfBoundsException e)
-        {
-            throw new ImplementationException(e);
-        }
-        catch (Exception e)
-        {
-            throw new InternalErrorException(e);
-        }
     }
 
     /**

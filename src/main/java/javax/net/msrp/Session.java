@@ -82,6 +82,9 @@ public class Session
     /** the refresh period currently in effect	*/
     private int refresh;
 
+    /** the chunk size to use when SENDing data */
+    private long chunkSize = 0;
+
     /** URI identifying this session
      * @uml.property name="_URI"
      */
@@ -162,7 +165,7 @@ public class Session
             		"%s MSRP session %s created: secure?[%b]], relay?[%b] InetAddress: %s",
             		toString(), getId(), isSecure, isRelay, address));
         }
-        catch (Exception e)				// wrap exceptions to InternalError
+        catch (Exception e)
         {
             throw new InternalErrorException(e);
         }
@@ -1002,6 +1005,24 @@ public class Session
         {
         	logger.warn(this + " receiving message to delete [" + message + "] not found");
         }
+    }
+
+    /**
+     * @return the # of octets that will be sent in 1 chunk (0 = no limit)
+     */
+    public long getChunkSize()
+    {
+        return chunkSize;
+    }
+
+    /**
+     * @param chunkSize the chunk size to use when SENDing data (0 = no limit)
+     */
+    public void setChunkSize(long chunkSize)
+    {
+        if (chunkSize < 0)
+            throw new IllegalArgumentException("Chunk sizes cannot be negative");
+        this.chunkSize = chunkSize;
     }
 
 	/**

@@ -139,11 +139,10 @@ public class Stack implements Observer {
 	synchronized protected static Connections getConnectionsInstance(InetAddress address)
 	{
 		Connections toReturn = addressConnections.get(address);
-		if (toReturn != null)
-			return toReturn;
-
-		toReturn = new Connections(address);
-		addressConnections.put(address, toReturn);
+		if (toReturn == null) {
+	        toReturn = new Connections(address);
+	        addressConnections.put(address, toReturn);
+		}
 		return toReturn;
 	}
 

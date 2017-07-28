@@ -247,11 +247,18 @@ public class FileDataContainer
         {
             currentReadOffset -= nrPositions;
         }
-
     }
 
     @Override
     public int get(byte[] dst, int offset)
+        throws IndexOutOfBoundsException,
+        Exception
+    {
+        return get(dst, offset, dst.length - offset);
+    }
+
+    @Override
+    public int get(byte[] dst, int offset, int limit)
         throws IndexOutOfBoundsException,
         Exception
     {
@@ -260,19 +267,22 @@ public class FileDataContainer
         synchronized (readOffsetLock)
         {
             int bytesToCopy = 0;
+            int space = dst.length - offset;
+            if (space < limit)
+                space = limit;
             long remainingDataBytes =
                 fileChannel.size() - currentReadOffset.longValue();
-            if (remainingDataBytes < dst.length - offset)
+            if (remainingDataBytes < space)
                 bytesToCopy = (int) remainingDataBytes;
             else
-                bytesToCopy = dst.length - offset;
+                bytesToCopy = space;
 
             auxByteBuffer = ByteBuffer.allocate(bytesToCopy);
             int result = fileChannel.read(auxByteBuffer);
             if (result == 0 || result == -1)
                 throw new NotEnoughDataException();
             if (result != bytesToCopy)
-                throw new Exception(
+                throw new InternalError(
                     "Something went wrong, it should have copied "
                         + bytesToCopy + " but instead copied " + result);
 
@@ -280,7 +290,6 @@ public class FileDataContainer
             currentReadOffset += result;
             return result;
         }
-
     }
 
     /* (non-Javadoc)

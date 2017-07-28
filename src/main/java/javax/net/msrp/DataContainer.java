@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright Â© JoÃ£o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -28,7 +28,7 @@ import javax.net.msrp.exceptions.NotEnoughStorageException;
  * Includes a mechanism to allow validation of the received data,
  * the validator.
  * 
- * @author João André Pereira Antunes 2008
+ * @author JoÃ£o AndrÃ© Pereira Antunes 2008
  */
 public abstract class DataContainer
 {
@@ -81,6 +81,21 @@ public abstract class DataContainer
      * @throws Exception if there was any other kind of Exception
      */
     public abstract int get(byte[] dst, int offset)
+        throws IndexOutOfBoundsException, Exception;
+
+    /**
+     * Retrieve data and fill the destination buffer or until
+     * there is no more data
+     * 
+     * @param dst the byte array to fill
+     * @param offset the offset to start filling the byte array
+     * @param limit the max limit to fill this array with.
+     * @return the number of bytes that got copied to dst
+     * @throws IndexOutOfBoundsException if the offset is bigger than the length
+     *             of the dst byte array
+     * @throws Exception if there was any other kind of Exception
+     */
+    public abstract int get(byte[] dst, int offset, int limit)
         throws IndexOutOfBoundsException, Exception;
 
     /**

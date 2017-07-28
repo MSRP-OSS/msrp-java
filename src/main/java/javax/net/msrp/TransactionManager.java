@@ -525,37 +525,43 @@ public class TransactionManager
      * Generate transactions to be sent based on the message offered.
      * Also updates the lastSendTransaction-reference in that Message.
      * 
-     * @param messageToSend	the message to queue.
+     * @param toSend	the message to queue.
      */
-    protected void generateTransactionsToSend(Message messageToSend)
+    protected void generateTransactionsToSend(Message toSend)
     {
-    	Transaction newTransaction = null;
-    	try {
-	        if (messageToSend == null ||
-	            messageToSend.getDirection() != Direction.OUT)
-	            throw new IllegalArgumentException(
-	            		"No or invalid message to send specified");
+        if (toSend == null || toSend.getDirection() != Direction.OUT)
+            throw new IllegalArgumentException(
+                    "No or invalid message to send specified");
 
-	        Message validated = messageToSend.validate();
-	        newTransaction = new Transaction((OutgoingMessage) validated, this);
-    	} catch (Exception e) {
+        OutgoingMessage validated = null;
+    	try
+    	{
+	        validated = (OutgoingMessage) toSend.validate();
+    	}
+    	catch (Exception e)
+    	{
     		logger.error("Error validating message to send, ignoring. Reason: ", e);
     		return;
     	}
-        synchronized(this)
+    	int chunks = validated.getChunks();
+        do
         {
-	        // TODO: possibly split the message into several transactions
-	        /* Add transaction to known list of existing transactions,
-	         * used to generate unique TIDs in the connection and to
-	         * be used when a response to a transaction is received.
-	         */
-	        existingTransactions.put(newTransaction.getTID(), newTransaction);
-
-	        // change the reference to the lastSendTransaction of the message
-	        messageToSend.setLastSendTransaction(newTransaction);
-
-	        addTransactionToSend(newTransaction, UNIMPORTANT);
-        }
+            Transaction newTransaction = new Transaction((OutgoingMessage) validated, this);
+            synchronized(this)
+            {
+    	        /* Add transaction to known list of existing transactions,
+    	         * used to generate unique TIDs in the connection and to
+    	         * be used when a response to a transaction is received.
+    	         */
+    	        existingTransactions.put(newTransaction.getTID(), newTransaction);
+    
+    	        // change the reference to the lastSendTransaction of the message
+    	        toSend.setLastSendTransaction(newTransaction);
+    
+    	        addTransactionToSend(newTransaction, UNIMPORTANT);
+            }
+    	}
+    	while (--chunks > 0);
     }
 
     private static final int UNIMPORTANT = -1;
@@ -811,8 +817,8 @@ public class TransactionManager
 	            Transaction t = transactionsToSend.get(0);
 	            outgoingDataValidator.init(t.getTID());
 
-	            boolean stopTransmission = false;
-	            while (byteCounter < outData.length && !stopTransmission)
+	            boolean nextTransaction = false;
+	            while (byteCounter < outData.length && !nextTransaction)
 	            {
 	                if (t.hasData())
 	                {	// when we are still transmitting data
@@ -865,11 +871,11 @@ public class TransactionManager
 	                         */
 	                        outgoingDataValidator.reset();
 
-	                        stopTransmission = true; // get next transaction, if any
+	                        nextTransaction = true; // get next transaction, if any
 	                    }
 	                }
 	            }// end of transaction while
-	            stopTransmission = false;
+//	            nextTransaction = false;
 
 	            /*
 	             * the buffer is full or the transaction has been removed from
