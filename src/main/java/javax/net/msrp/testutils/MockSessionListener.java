@@ -380,7 +380,7 @@ public class MockSessionListener
 
 	@Override
 	public void receivedNickNameResult(Session session, TransactionResponse result) {
-		int code = result.getStatusHeader().getStatusCode(); 
+		int code = result.getResponseCode(); 
 		if (code != ResponseCode.RC200)
 		{
 			logger.warn("Bad nickname result: " + ResponseCode.toString(code));
