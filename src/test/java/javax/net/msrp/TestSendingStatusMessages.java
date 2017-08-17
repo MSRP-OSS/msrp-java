@@ -14,7 +14,7 @@ import org.junit.Test;
 public class TestSendingStatusMessages extends TestFrame {
 
 	@Test
-	public final void testActiveStatus() {
+	public void testActiveStatus() {
 		sendingSession.setActive("text/plain");
         try {
 			triggerSendReceive((byte[]) null);
@@ -29,7 +29,7 @@ public class TestSendingStatusMessages extends TestFrame {
 	}
 
 	@Test
-	public final void testActiveConferenceStatus() {
+	public void testActiveConferenceStatus() {
 		String from = "sip:from@myplace.org";
 		String to	= "sip:to@herplace.org";
 		sendingSession.setActive("text/plain", 666, from, to);

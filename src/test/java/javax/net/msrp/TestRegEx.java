@@ -82,4 +82,27 @@ public class TestRegEx
 			e.printStackTrace();
 		}
     }
+
+    public int getChunks(long size, long chunkSize)
+    {
+        int chunks = 1;
+        if (chunkSize > 0 && size > chunkSize)
+        {
+            chunks = (int) (size / chunkSize);
+            if (size % chunkSize != 0)
+                chunks++;
+        }
+        return chunks;
+    }
+
+    @Test
+    public void testChunks()
+    {
+        int chunks = getChunks(256, 128);
+        assertEquals(chunks, 2);
+        chunks = getChunks(256, 0);
+        assertEquals(chunks, 1);
+        chunks = getChunks(256, 127);
+        assertEquals(chunks, 3);
+    }
 }

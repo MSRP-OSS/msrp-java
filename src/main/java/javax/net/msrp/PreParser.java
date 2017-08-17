@@ -61,6 +61,8 @@ class PreParser
     void preParse(byte[] incomingData, int length)
         throws ParseException
     {
+        if (logger.isTraceEnabled())
+            logger.trace("Received:\r\n'" + new String(incomingData) + "'");
         ByteBuffer data = ByteBuffer.wrap(incomingData, 0, length);
         /*
          * Index of data already processed

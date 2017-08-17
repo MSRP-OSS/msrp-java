@@ -60,6 +60,34 @@ public class TestSendingASCIIMessages extends TestFrame
     }
 
     /**
+     * Tests sending a 1MB Message chunked, with a MemoryDataContainer
+     */
+    @Test
+    public void testSmallTxtMsgMem2MemChunked()
+    {
+        byte[] data = new byte[256];
+        fillText(data);
+
+        byte[] receivedData = memory2Memory(data, false, 128);
+
+        assertArrayEquals(data, receivedData);
+    }
+
+    /**
+     * Tests sending a 1MB Message chunked, with a MemoryDataContainer
+     */
+    @Test
+    public void test1MbTxtMsgMem2MemChunked()
+    {
+        byte[] data = new byte[1024 * 1024];
+        fillText(data);
+
+        byte[] receivedData = memory2Memory(data, false, 10240);
+
+        assertArrayEquals(data, receivedData);
+    }
+
+    /**
      * Tests sending a 20MB Message with a FileDataContainer to a
      * FileDataContainer
      */

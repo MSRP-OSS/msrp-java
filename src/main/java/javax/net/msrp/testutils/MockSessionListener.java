@@ -36,6 +36,8 @@ public class MockSessionListener
     private static final Logger logger =
         LoggerFactory.getLogger(MockSessionListener.class);
 
+    private String name;
+
     /* The field results of the calls: */
     private Session acceptHookSession;
 
@@ -67,6 +69,8 @@ public class MockSessionListener
      * For threading lock-step.
      */
     private Object	stopAndWait = new Object();
+
+    public Object  messageComplete = new Object();
 
     /**
      * The external data container object to be set or not, that is going to be
@@ -106,13 +110,23 @@ public class MockSessionListener
      */
     public MockSessionListener(String name)
     {
-    	/* empty */
+        this.name = name;
+    }
+
+    private void dbg(String msg)
+    {
+        logger.debug(String.format("{%s} %s", name, msg));
+    }
+
+    private void warn(String msg)
+    {
+        logger.warn(String.format("{%s} %s", name, msg));
     }
 
     @Override
 	public boolean acceptHook(Session session, IncomingMessage message)
     {
-        logger.trace("AcceptHook called");
+        dbg("AcceptHook called");
         synchronized (stopAndWait)
         {
             while (acceptHookResult == null)
@@ -129,7 +143,7 @@ public class MockSessionListener
         }
         boolean toReturn = acceptHookResult.booleanValue();
 
-        logger.debug("AcceptHook will return: " + toReturn);
+        dbg("AcceptHook will return: " + toReturn);
 
         acceptHookMessage = message;
         acceptHookSession = session;
@@ -144,7 +158,7 @@ public class MockSessionListener
             message.setDataContainer(externalDataContainer);
         }
         acceptHookResult = null;
-        logger.debug("AcceptHook returns: " + toReturn);
+        dbg("AcceptHook returns: " + toReturn);
         return toReturn;
     }
 
@@ -167,7 +181,7 @@ public class MockSessionListener
     @Override
     public void receivedMessage(Session session, IncomingMessage message)
     {
-        logger.debug("receiveMessage(id=[" + message.getMessageID() + "])");
+        dbg("receiveMessage(id=[" + message.getMessageID() + "])");
         if (message instanceof IncomingAliveMessage)
         	return;
         receiveMessage = message;
@@ -179,6 +193,13 @@ public class MockSessionListener
         {
             stopAndWait.notifyAll();
         }
+        if (message.isComplete())
+        {
+            synchronized (messageComplete)
+            {
+                messageComplete.notifyAll();
+            }
+        }
     }
 
     @Override
@@ -186,12 +207,12 @@ public class MockSessionListener
     {
         if (tReport.getStatusHeader().getStatusCode() != ResponseCode.RC200)
         {
-            logger.debug("Received report with code different from 200"
+            dbg("Received report with code different from 200"
                 + ", with code: " + tReport.getStatusHeader().getStatusCode()
                 + " returning");
             return;
         }
-        logger.debug("Received report, confirming "
+        dbg("Received report, confirming "
             + tReport.getByteRange()[1] + " bytes were sent(== "
             + (tReport.getByteRange()[1] * 100)
             / tReport.getTotalMessageBytes() + "%) Tx-"
@@ -211,8 +232,9 @@ public class MockSessionListener
         long numberBytesSent)
     {
     	final long size = message.getSize();
-        logger.debug("updateSendStatus() bytes sent: " + numberBytesSent
-            + " == " + (size == 0 ? 100 : (numberBytesSent * 100) / size) + "%");
+    	final long sent = ((OutgoingMessage) message).getSentBytes();
+    	dbg("updateSendStatus(bytes sent[" + numberBytesSent
+            + "], msgtotal[" + sent + "]) == " + (size == 0 ? 100 : (sent * 100) / size) + "%");
         updateSendStatusSession = session;
         updateSendStatusMessage = message;
         synchronized (updateSendStatusCounter)
@@ -234,7 +256,7 @@ public class MockSessionListener
 
             IncomingMessage message = (IncomingMessage) abortEvent.getMessage();
         	size = message.getSize();
-            logger.debug("abortedMessageEvent() bytes received: "
+        	dbg("abortedMessageEvent() bytes received: "
                 + message.getReceivedBytes() + " == "
                 + (size == 0 ? 100 : (message.getReceivedBytes() * 100) / size) + "%");
         }
@@ -242,7 +264,7 @@ public class MockSessionListener
         {
             OutgoingMessage message = (OutgoingMessage) abortEvent.getMessage();
         	size = message.getSize();
-            logger.debug("abortedMessageEvent() bytes sent: "
+        	dbg("abortedMessageEvent() bytes sent: "
                 + message.getSentBytes() + " == "
                 + (size == 0 ? 100 : (message.getSentBytes() * 100) / size) + "%");
         }
@@ -363,7 +385,7 @@ public class MockSessionListener
 
 	@Override
 	public void connectionLost(Session session, Throwable cause) {
-		logger.warn("Connection broke, reason: " + cause.getMessage());
+		warn("Connection broke, reason: " + cause.getMessage());
 		cause.printStackTrace();
 		session.tearDown();
 	}
@@ -383,7 +405,7 @@ public class MockSessionListener
 		int code = result.getResponseCode(); 
 		if (code != ResponseCode.RC200)
 		{
-			logger.warn("Bad nickname result: " + ResponseCode.toString(code));
+			warn("Bad nickname result: " + ResponseCode.toString(code));
 		}
 	}
 

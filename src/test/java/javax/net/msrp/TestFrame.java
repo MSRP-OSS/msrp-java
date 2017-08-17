@@ -49,10 +49,10 @@ public abstract class TestFrame {
     Session receivingSession;
 
     MockSessionListener sendingSessionListener =
-        new MockSessionListener("sendinSessionListener");
+        new MockSessionListener("Tx");
 
     MockSessionListener receivingSessionListener =
-            new MockSessionListener("receivingSessionListener");
+            new MockSessionListener("Rx");
 
     String tempFileDir;
     File tempFile;
@@ -95,22 +95,25 @@ public abstract class TestFrame {
 	 * @throws FileNotFoundException
 	 * @throws IOException
 	 */
-	void fillTempFile(byte[] data, boolean withBinary) {
-		FileOutputStream stream = null;
-		try {
+	void fillTempFile(byte[] data, boolean withBinary)
+	{
+		@SuppressWarnings("resource")
+        FileOutputStream stream = null;
+		try
+		{
 			fill(data, withBinary);
 			stream = new FileOutputStream(tempFile);
 			stream.write(data);
-		} catch (Exception e) {
+            stream.flush();
+		}
+		catch (Exception e)
+		{
             e.printStackTrace();
             fail(e.getMessage());
-        } finally {
-    		try {
-    			if (stream != null) {
-	    			stream.flush();
-	    			stream.close();
-    			}
-    		} catch (Exception e2) { ; }
+        }
+		finally
+		{
+    		try { if (stream != null) stream.close(); } catch (Exception e2) { ; }
         }
 	}
 
@@ -129,6 +132,21 @@ public abstract class TestFrame {
                     ; /* ignore, let's just continue processing */
                 }
             }
+	    }
+	}
+
+	void wait4ComleteMessage()
+	{
+	    synchronized (receivingSessionListener.messageComplete)
+	    {
+	        try
+	        {
+	            receivingSessionListener.messageComplete.wait(2000L);
+	        }
+	        catch(InterruptedException e)
+	        {
+	            ;
+	        }
 	    }
 	}
 
@@ -192,8 +210,11 @@ public abstract class TestFrame {
     @After
     public void tearDownConnection()
     {
-        // TODO needs: (?!) timer to maintain connection active even though
-        // sessions are over (?!)
+        /*
+         * write thread could be long done while reading still continues,
+         * allow for some delay before wrapping up 
+         */
+//        delay(500);
         Message m = receivingSessionListener.getReceiveMessage();
         if (m != null)
         	m.discard();
@@ -210,6 +231,11 @@ public abstract class TestFrame {
 
     public byte[] memory2Memory(byte[] data, boolean wantSuccessReport)
     {
+        return memory2Memory(data, wantSuccessReport, 0);
+    }
+
+    public byte[] memory2Memory(byte[] data, boolean wantSuccessReport, long chunkSize)
+    {
         String testName =
         		Thread.currentThread().getStackTrace()[2].getMethodName();
     	Long startTime;
@@ -218,11 +244,14 @@ public abstract class TestFrame {
             outMessage =
                 new OutgoingMessage("plain/text", data);
             outMessage.setSuccessReport(wantSuccessReport);
+            if (chunkSize > 0)
+                sendingSession.setChunkSize(chunkSize);
             sendingSession.sendMessage(outMessage);
 
             startTime = System.currentTimeMillis();
             triggerSendReceive(data);
             wait4Report(wantSuccessReport);
+            wait4ComleteMessage();
 
             System.out.println(testName + "() took: " +
                     	(System.currentTimeMillis() - startTime) + " ms");
@@ -385,7 +414,18 @@ public abstract class TestFrame {
 		}
 	}
 
+    /**
+     * Wait a given bit without interruption
+     * @param millis the given milliseconds to wait 
+     */
 	protected void delay(long millis) {
-	    try { Thread.sleep(millis); } catch (InterruptedException e) { ; }
+        boolean interrupted = true;
+        while (interrupted) {
+            try {
+                Thread.sleep(millis);
+                interrupted = false;
+            }
+            catch (InterruptedException e) { ; }
+        }
 	}
 }
