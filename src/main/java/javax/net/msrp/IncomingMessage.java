@@ -78,11 +78,12 @@ public class IncomingMessage
     @Override
     public boolean isComplete()
     {
-        boolean toReturn = getCounter().isComplete();
+        boolean toReturn = 
+                getCounter().isComplete() && getCounter().getCount() >= this.getSize();
         if (logger.isTraceEnabled())
             logger.trace(String.format(
             		"isComplete(%s: received %d of %d)? %b",
-            		this.toString(), getCounter().getCount(), size, toReturn));
+            		this.toString(), getCounter().getCount(), this.getSize(), toReturn));
         return toReturn;
     }
 
