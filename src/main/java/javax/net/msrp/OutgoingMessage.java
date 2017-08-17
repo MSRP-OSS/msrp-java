@@ -178,13 +178,13 @@ public class OutgoingMessage
     protected long nextRange()
     {
         if (chunkSize == 0)
-            return nextOffset;
+            return getSentBytes() + 1;
         else
         {
-            if (nextOffset + chunkSize > size)
-                return -1;
             long offset = nextOffset;
             nextOffset += chunkSize;
+            if (offset > size)
+                return -1;
             return offset;
         }
     }
@@ -198,7 +198,7 @@ public class OutgoingMessage
     	long sentBytes = getSentBytes();
     	if (logger.isTraceEnabled())
             logger.trace(String.format(
-            		"isOutgoingComplete(%s, sent[%d])? %b",
+            		"isComplete(%s, sent[%d])? %b",
             		this.toString(), sentBytes, sentBytes == size));
         return sentBytes == size;
     }
