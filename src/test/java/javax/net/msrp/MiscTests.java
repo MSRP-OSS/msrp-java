@@ -125,9 +125,10 @@ public class MiscTests
         test = new Random();
         // Creating the new SocketChannel and checking if it has a port and an
         // address associated
+        SocketChannel outgoing = null;
         try
         {
-            SocketChannel outgoing = SocketChannel.open();
+            outgoing = SocketChannel.open();
             Socket testOutgoing = outgoing.socket();
             System.out.println("Port of the outgoing socket:"
                 + testOutgoing.getLocalPort() + " is it bound?:"
@@ -202,6 +203,11 @@ public class MiscTests
         catch (InterruptedException e)
         {
             e.printStackTrace();
+        }
+        finally
+        {
+            if (outgoing != null)
+                try { outgoing.close(); } catch (IOException e) { ; }
         }
     }
 
@@ -431,7 +437,7 @@ public class MiscTests
     {
         // Generate a new socketChannel and just bind it
 
-        ServerSocketChannel incoming;
+        ServerSocketChannel incoming = null;
         try
         {
             incoming = ServerSocketChannel.open();
@@ -517,10 +523,20 @@ public class MiscTests
                 // processing
                 e.printStackTrace();
             }
+            finally
+            {
+                if (incomingInstance != null)
+                    try { incomingInstance.close(); } catch (IOException ie1) { ; }
+            }
         }
         catch (IOException e1)
         {
             e1.printStackTrace();
+        }
+        finally
+        {
+            if (incoming != null)
+                try { incoming.close(); } catch (IOException ie2) { ; }
         }
     }
 

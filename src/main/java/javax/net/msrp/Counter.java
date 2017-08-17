@@ -66,7 +66,6 @@ public class Counter
     protected Counter(Message message)
     {
         counter = new ArrayList<long[]>();
-
     }
 
     /**
