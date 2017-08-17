@@ -264,6 +264,11 @@ public class Transaction
     private boolean interruptible = false;
 
     /**
+     * How many data bytes were copied already in this transaction?
+     */
+    private int dataCopied = 0;
+
+    /**
      * Generic constructor for (possibly incoming) transactions
      * 
      * @param tid
@@ -315,7 +320,7 @@ public class Transaction
     {
         transactionType = TransactionType.NICKNAME;
 
-        Session session = message.getSession();
+        this.session = message.getSession();
         ArrayList<URI> uris = session.getToPath();
         URI toPathUri = uris.get(0);
         URI fromPathUri = session.getURI();
@@ -333,7 +338,7 @@ public class Transaction
     {
 		transactionType = TransactionType.SEND;
 
-		Session session = message.getSession();
+		this.session = message.getSession();
         ArrayList<URI> uris = session.getToPath();
         URI toPathUri = uris.get(0);
         URI fromPathUri = session.getURI();
@@ -816,6 +821,8 @@ public class Transaction
             return false;
         if (readIndex[HEADER] >= headerBytes.length && !message.hasData())
             return false;
+        if (session.getChunkSize() > 0 && dataCopied >= session.getChunkSize())
+            return false;
         return true;
     }
 
@@ -884,14 +891,12 @@ public class Transaction
                 hasContentStuff = true;
 
                 int chunk = message.get(outData, offset);
+                dataCopied += chunk;
                 bytesCopied += chunk;
                 offset += chunk;
-                continue;
-
             }
-            if (!interrupted && !message.hasData() &&
-                (readIndex[HEADER] >= headerBytes.length))
-                stopCopying = true;		// header done, no data to send.
+            if (! hasData())
+                stopCopying = true;		// header/chunks done, no data to send.
         }
         return bytesCopied;
     }
@@ -1160,13 +1165,20 @@ public class Transaction
             ByteBuffer auxByteBuffer;
             try
             {
-                if (byteRange[0] == UNINTIALIZED || byteRange[0] == UNKNOWN)
+                if (byteRange[0] == UNINTIALIZED || byteRange[0] == UNKNOWN
+                        || byteRange[1] == UNINTIALIZED)
                     throw new InternalErrorException("the limits of this "
                         + "transaction are unknown/unintialized, "
                         + "can't satisfy request.");
                 long start = byteRange[0] - 1;
                 if (size == ALLBYTES)
-                    auxByteBuffer = dc.get(start, byteRange[1] - (start));
+                    if (byteRange[1] == UNKNOWN)
+                        if (session.getChunkSize() == 0)
+                            auxByteBuffer = dc.get(start, dc.size() - (start));
+                        else
+                            auxByteBuffer = dc.get(start, session.getChunkSize() - (start));
+                    else
+                        auxByteBuffer = dc.get(start, byteRange[1] - (start));
                 else
                     auxByteBuffer = dc.get(start, size);
             }
