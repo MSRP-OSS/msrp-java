@@ -98,8 +98,8 @@ code {
 					<li><a href="#sessionestablishment">Establishing a
 							session <i class="icon-chevron-right"></i>
 					</a></li>
-					<li><a href="#sendingandreceivingmessages">Sending and
-							receiving messages <i class="icon-chevron-right"></i>
+					<li><a href="#sendingandreceiving">Sending and
+							receiving <i class="icon-chevron-right"></i>
 					</a></li>
 					<li><a href="#reports">Reports <i
 							class="icon-chevron-right"></i></a></li>
@@ -111,6 +111,8 @@ code {
 							class="icon-chevron-right"></i></a></li>
 					<li><a href="#keepalive">Keepalive <i
 							class="icon-chevron-right"></i></a></li>
+                    <li><a href="#logging">Log integration <i
+                            class="icon-chevron-right"></i></a></li>
 				</ul>
 			</div>
 			<!--/span-->
@@ -241,8 +243,8 @@ Session passiveSession = Session.create(false, false, hisMsrpUri, myAddress);</P
 				</div>
 				<!--sessionestablishment -->
 				<div class="row-fluid">
-					<section id="sendingandreceivingmessages">
-						<h1>Sending and receiving messages</h1>
+					<section id="sendingandreceiving">
+						<h1>Sending and receiving</h1>
 						<p>
 							Using a session, one is now able to send and receive messages
 							using MSRP. Sending is easy, using the
@@ -260,8 +262,10 @@ Message sendMsg = activeSession.sendMessage("text/plain", "Hello world\n".getByt
 							Receiving a message is somewhat more involved and requires the
 							creation of a <code class="prettyprint">SessionListener</code>
 							that can be hooked into the session:
-                        <pre class="prettyprint">
+                        </p>
+                        <pre class="prettyprint lang-java">
 mySession.addListener(myListener);</pre>
+                        <p>
 							This listener will be triggered
 							when messages are received, or status updates are relevant. The
 							first method to be called on receiving a message is
@@ -275,8 +279,7 @@ mySession.addListener(myListener);</pre>
 							<code class="prettyprint">true</code>, otherwise return
 							<code class="prettyprint">false</code>.
 							In that case, an error-response is automatically returned.
-						</p>
-
+                        </p>
 						<pre class="prettyprint">
 import javax.net.msrp.SessionListener;
 import javax.net.msrp.IncomingMessage;
@@ -305,9 +308,22 @@ public void receivedMessage(Session session, IncomingMessage message) {
 							<code class="prettyprint">"message/cpim"</code>
 							content that might have been sent.
 						</p>
+						<p>
+						    For sending large messages and more efficient use of existing
+						    connections, MSRP defines a <em>chunking</em> mechanism that allows messages
+						    to be sent in multiple chunks.<br>
+						    A chunk size can be set in the session you just set up, as in:
+                        </p>
+                        <pre class="prettyprint lang-java">
+mySession.setChunkSize(20480);</pre>
+                        <p>
+                            This will avtivate the chunking of all outgoing data messages
+                            into the specified size.<br>
+                            The default value of 0 will deactivate chunking.
+                        </p>
 					</section>
 				</div>
-				<!-- sendingandreceivingmessages -->
+				<!-- sendingandreceiving -->
 				<div class="row-fluid">
 					<section id="reports">
 						<h1>Reports</h1>
@@ -353,7 +369,7 @@ import javax.net.msrp.ResponseCode;
 					<section id="wrappingmessages">
 						<H1 CLASS="western">Wrapping messages</H1>
 						<P>
-							The library also supports a message-wrapping mechanism. By
+							The library supports a message-wrapping mechanism. By
 							default, a wrapping mechanism for
 							<code class="prettyprint">message/CPIM</CODE>
 							is installed. Thus
@@ -388,7 +404,7 @@ import javax.net.msrp.ResponseCode;
 							<code class="prettyprint">NICKNAME</CODE>
 							request as specified in <A target="_blank"
 								HREF="http://tools.ietf.org/html/draft-ietf-simple-chat-15">draft-ietf-simple-chat</A>
-							is also built in. See:
+							is built in. See:
 						</P>
 						<pre class="prettyprint" STYLE="margin-bottom: 0.5cm">Session.requestNickname();
 SessionListener.receivedNickNameResult();</PRE>
@@ -475,6 +491,25 @@ OutgoingAliveMessage</PRE>
                         </section>
 				</div>
 				<!-- keepalive -->
+                <div class="row-fluid">
+                    <section id="logging">
+                        <H1 CLASS="western">Log integration</H1>
+                        <P>
+                            This library uses the <A HREF="https://www.slf4j.org">SLF4J</A> <em>logging facade</em>
+                            for logging messages. Simply put the <code>slf4j</code> log binding
+                            of your choice in your class path to immediately have the library
+                            use that logging system.<br>
+                            When building and testing the library from source, it by default uses
+                            the <em>slf4j-log4j12.jar</em> binding.
+                        </P>
+                        <p>
+                            Use the settings in <code>src/test/resources/log4j.properties</code>
+                            to change settings like log output, format, log-level, etc.
+                        </p>
+
+                        </section>
+                </div>
+                <!-- logging -->
 
 			</div>
 			<!-- span9 -->
