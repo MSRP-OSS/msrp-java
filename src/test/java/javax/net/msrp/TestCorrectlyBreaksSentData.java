@@ -1,5 +1,5 @@
-/*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+/* Copyright Â© JoÃ£o Antunes 2008
+ * This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -33,7 +33,7 @@ import org.junit.*;
  * splits the message in one or more transactions if the end-of-line is
  * contained by the data to transmit.
  * 
- * @author João André Pereira Antunes
+ * @author JoÃ£o AndrÃ© Pereira Antunes 2008
  * 
  */
 public class TestCorrectlyBreaksSentData extends TestFrame

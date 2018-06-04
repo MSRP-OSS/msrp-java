@@ -1,5 +1,5 @@
 /*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+ * Copyright Â© JoÃ£o Antunes 2008 This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * <p>
  * All of the regex patterns used by the parsers must come from this class.
  * 
- * @author João André Pereira Antunes
+ * @author JoÃ£o AndrÃ© Pereira Antunes
  */
 // TODO the majority of the formal syntax of the MSRP rfc should be represented
 // here, which isn't done yet.

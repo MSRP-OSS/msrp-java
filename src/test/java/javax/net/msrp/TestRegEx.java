@@ -1,5 +1,5 @@
-/*
- * Copyright © João Antunes 2009 This file is part of MSRP Java Stack.
+/* Copyright Â© JoÃ£o Antunes 2009
+ * This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -29,7 +29,7 @@ import org.junit.*;
  * Class that tests the RegEx class thoroughly
  * 
  * @see RegEx
- * @author João André Pereira Antunes
+ * @author JoÃ£o AndrÃ© Pereira Antunes
  */
 public class TestRegEx
 {

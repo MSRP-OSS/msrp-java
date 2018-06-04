@@ -9,7 +9,7 @@ import javax.net.msrp.utils.TextUtils;
  * A response to a Transaction, which is considered a transaction as well
  * TODO use the parser to validate the response ?!
  * 
- * @author Jo„o AndrÈ Pereira Antunes
+ * @author Jo√£o Andr√© Pereira Antunes 2008
  */
 public class TransactionResponse
     extends Transaction

@@ -1,5 +1,5 @@
-/*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+/* Copyright Â© JoÃ£o Antunes 2008
+ * This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -31,7 +31,7 @@ package javax.net.msrp;
  * 
  * TODO change the shouldGenerateReport method
  * 
- * @author João André Pereira Antunes 2008
+ * @author JoÃ£o AndrÃ© Pereira Antunes 2008
  * 
  */
 public class DefaultReportMechanism

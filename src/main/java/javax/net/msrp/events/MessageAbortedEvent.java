@@ -1,5 +1,5 @@
-/*
- * Copyright © João Antunes 2009 This file is part of MSRP Java Stack.
+/* Copyright Â© JoÃ£o Antunes 2008
+ * This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -28,7 +28,7 @@ import javax.net.msrp.*;
  * This class captures all the cases where an MSRP can be seen as being aborted.
  * Depending on the reasons, different actions should be performed
  * 
- * @author João André Pereira Antunes
+ * @author JoÃ£o AndrÃ© Pereira Antunes 2008
  */
 public class MessageAbortedEvent
     extends EventObject

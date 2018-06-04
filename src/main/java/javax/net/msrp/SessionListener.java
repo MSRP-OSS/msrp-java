@@ -1,5 +1,5 @@
-/*
- * Copyright © João Antunes 2008 This file is part of MSRP Java Stack.
+/* Copyright Â© JoÃ£o Antunes 2008
+ * This file is part of MSRP Java Stack.
  * 
  * MSRP Java Stack is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License as published by the
@@ -27,7 +27,7 @@ import javax.net.msrp.events.*;
  * action regarding a message) in the session that is associated with the class
  * that implements this interface.
  * 
- * @author João André Pereira Antunes
+ * @author JoÃ£o AndrÃ© Pereira Antunes 2008
  */
 public interface SessionListener
     extends EventListener
