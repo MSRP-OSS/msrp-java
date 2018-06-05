@@ -264,7 +264,7 @@ Message sendMsg = activeSession.sendMessage("text/plain", "Hello world\n".getByt
 							that can be hooked into the session:
                         </p>
                         <pre class="prettyprint lang-java">
-mySession.addListener(myListener);</pre>
+mySession.setListener(myListener);</pre>
                         <p>
 							This listener will be triggered
 							when messages are received, or status updates are relevant. The
