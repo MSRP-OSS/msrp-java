@@ -10,7 +10,7 @@
 
     <artifactId>msrp</artifactId>
     <groupId>net.java.msrp</groupId>
-    <version>1.3.0-SNAPSHOT</version>
+    <version>1.3.0</version>
 
     <name>MSRP :: ${project.artifactId}</name>
     <description>A library, implementing the MSRP protocol.</description>
@@ -192,7 +192,7 @@
             <plugin>
               <artifactId>maven-gpg-plugin</artifactId>
               <groupId>org.apache.maven.plugins</groupId>
-              <version>1.5</version>
+              <version>1.6</version>
               <executions>
                 <execution>
                   <id>sign-artifacts</id>
