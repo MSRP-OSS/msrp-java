@@ -8,6 +8,6 @@ package javax.net.msrp;
  * @author tuijldert
  */
 public enum Direction {
-	IN,		/**< incoming	*/
-	OUT		/**< outgoing	*/
+	IN,		/** incoming	*/
+	OUT		/** outgoing	*/
 }

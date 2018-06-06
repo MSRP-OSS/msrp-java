@@ -83,7 +83,7 @@ public interface SessionListener
     /**
      * Signal updates on the sending status of a message.
      * The granularity of such updates can be set by
-     * implementing {@link ReportMechanism#shouldTriggerSentHook(Message, Session, long)
+     * implementing {@link ReportMechanism#shouldTriggerSentHook(Message, Session, long)}
      * 
      * @param session	the session used
      * @param message	the message it pertains to

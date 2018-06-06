@@ -25,41 +25,26 @@ package javax.net.msrp.exceptions;
 public class NonValidSessionSuccessReportException
     extends Exception
 {
-
-    /**
-     * 
-     */
     public NonValidSessionSuccessReportException()
     {
         // TODO Auto-generated constructor stub
     }
 
-    /**
-     * @param arg0
-     */
     public NonValidSessionSuccessReportException(String arg0)
     {
         super(arg0);
         // TODO Auto-generated constructor stub
     }
 
-    /**
-     * @param arg0
-     */
     public NonValidSessionSuccessReportException(Throwable arg0)
     {
         super(arg0);
         // TODO Auto-generated constructor stub
     }
 
-    /**
-     * @param arg0
-     * @param arg1
-     */
     public NonValidSessionSuccessReportException(String arg0, Throwable arg1)
     {
         super(arg0, arg1);
         // TODO Auto-generated constructor stub
     }
-
 }

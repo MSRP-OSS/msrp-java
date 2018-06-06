@@ -49,12 +49,12 @@ public abstract class Message
      */
     public long size = UNINTIALIZED;
 
-    /**
+    /*
      * @uml.property name="successReport"
      */
     private boolean successReport = false;
 
-    /**
+    /*
      * @uml.property name="failureReport"
      */
     private String failureReport = YES;
@@ -103,17 +103,17 @@ public abstract class Message
      */
     protected short priority = 0;
 
-    /**
+    /*
      * @uml.property name="contentType"
      */
     protected String contentType = null;
 
-    /**
+    /*
      * @uml.property name="messageId"
      */
     protected String messageId;
 
-    /**
+    /*
      * @uml.property name="session"
      */
     protected Session session = null;
@@ -138,7 +138,7 @@ public abstract class Message
 
     /**
      * Construct by copying from existing message.
-     * @param toCopy
+     * @param toCopy clone this
      */
     protected Message(Message toCopy)
     {
@@ -190,10 +190,9 @@ public abstract class Message
     }
 
     /**
-     * Convenience method to associate the given reportMechanism (or a default)
-     * to this message.
+     * @param   reportMechanism Associate the given reportMechanism
+     *          (or a default) to this message.
      * 
-     * @param reportMechanism
      */
     public void setReportMechanism(ReportMechanism reportMechanism)
     {
@@ -265,7 +264,7 @@ public abstract class Message
     }
 
     /**
-     * Setter of property {@code contentType}
+     * @param contentType Setter of property {@code contentType}
      */
     public void setContentType(String contentType)
     {
@@ -276,7 +275,7 @@ public abstract class Message
      * Getter of property {@code contentType}
      * 
      * @return the content type.
-     * @uml.property name="contentType"
+     * uml.property name="contentType"
      */
     public String getContentType()
     {
@@ -364,7 +363,7 @@ public abstract class Message
 
 	/**
      * @return failure report setting of this message ('partial', 'yes', 'no').
-     * @uml.property name="_failureReport"
+     * uml.property name="_failureReport"
      */
     public String getFailureReport()
     {
@@ -373,7 +372,7 @@ public abstract class Message
 
     /**
      * @return the id of this message.
-     * @uml.property name="_messageID"
+     * uml.property name="_messageID"
      */
     public String getMessageID()
     {
@@ -419,7 +418,7 @@ public abstract class Message
 
     /**
      * @return session this message is currently associated with.
-     * @uml.property name="_session"
+     * uml.property name="_session"
      */
     public Session getSession()
     {
@@ -430,7 +429,7 @@ public abstract class Message
      * Associate given session with this message
      * 
      * @param session The session to associate with this message.
-     * @uml.property name="_session"
+     * uml.property name="_session"
      */
     protected void setSession(Session session)
     {
@@ -469,7 +468,7 @@ public abstract class Message
     /** Message is ready to send or completely received, see if correct.
      * Also the cue for any (un-)wrapping.
      * @return	the validated message
-     * @throws Exception
+     * @throws Exception any
      */
     public abstract Message validate() throws Exception;
 
@@ -530,6 +529,7 @@ public abstract class Message
      * @param reason the reason for the Abort
      * @param extraInfo the String that was carried in the
      *            REPORT request triggering this event (null if empty).
+     * @param transaction the Tx
      * @see MessageAbortedEvent
      */
     public void fireMessageAbortedEvent(int reason, String extraInfo, Transaction transaction)

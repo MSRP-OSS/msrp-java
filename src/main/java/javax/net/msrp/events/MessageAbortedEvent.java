@@ -61,9 +61,11 @@ public class MessageAbortedEvent
      * Constructor used to create the abort event
      * 
      * @param message the message that got aborted
+     * @param session on session...
      * @param reason the reason, one of: CONTINUATIONFLAG; RC4XX
      * @param extraReasonInfo additional info-string as body of a REPORT or
      * 							null if it doesn't exist
+     * @param transaction the Tx involved.
      * @see #CONTINUATIONFLAG
      */
     public MessageAbortedEvent(Message message, Session session, int reason,

@@ -130,7 +130,7 @@ class Connection extends Observable implements Runnable
 
     protected URI localURI = null;
 
-    /**
+    /*
      * @uml.property name="_connections"
      * @uml.associationEnd inverse="connection1:javax.net.msrp.Connections"
      */
@@ -173,8 +173,9 @@ class Connection extends Observable implements Runnable
      * Generates the new URI and validates it against the existing URIs of the
      * sessions that this connection handles
      * 
-     * @throws URISyntaxException If there is a problem with the generation of
-     *             the new URI
+     * @return  the URI
+     * @throws  URISyntaxException If there is a problem with the generation of
+     *          the new URI
      */
     protected synchronized URI generateNewURI() throws URISyntaxException
     {
@@ -248,9 +249,7 @@ class Connection extends Observable implements Runnable
     }
 
     /**
-     * Returns if the socket associated with the connection is bound
-     * 
-     * @return
+     * @return if the socket associated with the connection is bound
      */
     protected boolean isBound()
     {
@@ -259,7 +258,7 @@ class Connection extends Observable implements Runnable
         return socketChannel.socket().isBound();
     }
 
-    /**
+    /*
      * @uml.property name="_session"
      * @uml.associationEnd inverse="_connectoin:javax.net.msrp.Session"
      */
@@ -269,7 +268,7 @@ class Connection extends Observable implements Runnable
      * Getter of the property <tt>_session</tt>
      * 
      * @return Returns the _session.
-     * @uml.property name="_session"
+     * uml.property name="_session"
      */
     public javax.net.msrp.Session get_session()
     {
@@ -280,7 +279,7 @@ class Connection extends Observable implements Runnable
      * Getter of the property <tt>_transactions</tt>
      * 
      * @return Returns the _transactions.
-     * @uml.property name="_transactions"
+     * uml.property name="_transactions"
      */
 
     /**
@@ -299,22 +298,18 @@ class Connection extends Observable implements Runnable
     	catch (IOException e) { /* empty */; }
     }
 
-    /**
-     */
     public void messageInterrupt(Message message)
     {
     	/* empty */
     }
 
-    /**
-     */
     public void newTransaction(Session session, Message message,
         TransactionManager transactionManager, String transactionCode)
     {
     	/* empty */
     }
 
-    /**
+    /*
      * @desc - Read (reads from the stream of the socket)
      * @desc - Validation of what is being read
      * @desc - Misc. Interrupts due to read errors (mem, buffers etc)
@@ -325,8 +320,6 @@ class Connection extends Observable implements Runnable
     	/* empty */
     }
 
-    /**
-     */
     public void sessionClose(Session session)
     {
     	/* empty */
@@ -336,7 +329,7 @@ class Connection extends Observable implements Runnable
      * Setter of the property <tt>_session</tt>
      * 
      * @param _session The _session to set.
-     * @uml.property name="_session"
+     * uml.property name="_session"
      */
     public void set_session(javax.net.msrp.Session _session)
     {

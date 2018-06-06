@@ -91,7 +91,7 @@ public class OutgoingMessage
      * 
      * @throws InternalErrorException If we have a failure on the sanity checks
      * 
-     * @see SessionListener#abortedMessageEvent(javax.net.msrp.event.MessageAbortedEvent)
+     * @see SessionListener#abortedMessageEvent(javax.net.msrp.events.MessageAbortedEvent)
      */
     @Override
 	public void abort(int reason, String extraInfo)

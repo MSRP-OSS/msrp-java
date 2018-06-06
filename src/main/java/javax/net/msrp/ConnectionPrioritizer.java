@@ -100,9 +100,13 @@ public abstract class ConnectionPrioritizer
     /**
      * Method that decides if the session should be swapped or not
      * 
+     * @param sessions  which ones
+     * @param session   the one
+     * @param message   to swap
      * @return true if the message should be swapped by another of another
-     *         session false otherwise Note: it must return true only if there
-     *         is another session with messages to be sent
+     *         session false otherwise
+     * Note:    it must return true only if there
+     *          is another session with messages to be sent
      */
     protected abstract boolean shouldSwap(Collection<Session> sessions,
         Session session, Message message);

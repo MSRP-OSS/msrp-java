@@ -166,8 +166,8 @@ public class NetworkUtils
     }*/
 
     /** strip a given uri to only the parts: "scheme://authority/" and return that.
-     * @param uri
-     * @return
+     * @param uri to strip
+     * @return stripped URI
      */
     public static URI getCompleteAuthority(URI uri) {
     	try {

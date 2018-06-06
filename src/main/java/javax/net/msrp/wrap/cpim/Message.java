@@ -87,8 +87,7 @@ public class Message implements WrappedMessage {
     /**
      * Parse message/CPIM document
      * 
-     * @param data Input data
-     * @throws Exception
+     * @param buffer Input data
      */
 	@Override
 	public void parse(ByteBuffer buffer) {
