@@ -138,14 +138,17 @@ public class Session
      * 
      * @param isSecure	Is it a secure connection or not (use TLS - not implemented yet)?
      * @param isRelay	is this a relaying session?
-     * @param address	the address to use as local endpoint.
+     * @param address	the address to use as local end-point.
      * @return the created session
-     * @throws InternalErrorException if any error ocurred. More info about the
+     * @throws InternalErrorException if any error occurred. More info about the
      *             error in the accompanying Throwable.
      * @see #setToPath(ArrayList)
      */
     public static Session create(boolean isSecure, boolean isRelay, InetAddress address)
-            throws InternalErrorException {
+            throws InternalErrorException
+    {
+        if (address == null)
+            throw new IllegalArgumentException("Address must have a value");
     	return new Session(isSecure, isRelay, address);
     }
 
@@ -182,14 +185,16 @@ public class Session
      * @param isSecure	Is it a secure connection or not (use TLS - not implemented yet)?
      * @param isRelay	is this a relaying session?
      * @param toURI		the destination URI that will contact this session.
-     * @param address	the address to use as local endpoint.
+     * @param address	the address to use as local end-point.
      * @return a passive session
-     * @throws InternalErrorException if any error ocurred. More info about the
+     * @throws InternalErrorException if any error occurred. More info about the
      *             error in the accompanying Throwable.
      */
     public static Session create(boolean isSecure, boolean isRelay, URI toURI, InetAddress address)
             throws InternalErrorException
     {
+        if (address == null)
+            throw new IllegalArgumentException("Address must have a value");
     	return new Session(isSecure, isRelay, toURI, address);
     }
 
