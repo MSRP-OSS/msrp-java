@@ -178,7 +178,7 @@ public class FileDataContainer
         IOException
     {
         byte[] auxByteArray = new byte[1];
-        auxByteArray[1] = byteToPut;
+        auxByteArray[0] = byteToPut;
         auxByteBuffer = ByteBuffer.wrap(auxByteArray);
         int result = fileChannel.write(auxByteBuffer);
         if (result == 0 || result == -1)
@@ -195,7 +195,7 @@ public class FileDataContainer
         throws NotEnoughStorageException, IOException
     {
         byte[] auxByteArray = new byte[1];
-        auxByteArray[1] = byteToPut;
+        auxByteArray[0] = byteToPut;
         auxByteBuffer = ByteBuffer.wrap(auxByteArray);
         int result = fileChannel.write(auxByteBuffer, startingIndex);
         if (result == 0 || result == -1)
