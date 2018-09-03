@@ -553,7 +553,7 @@ class Connection extends Observable implements Runnable
             }
             catch (Exception e)
             {
-                e.printStackTrace();
+                logger.error("Error parsing - ", e);
             }
         }
         else
@@ -724,7 +724,7 @@ class Connection extends Observable implements Runnable
                         }
                         catch (Exception e)
                         {
-                            e.printStackTrace();
+                            logger.error("Weird transaction? - ", e);
                         }
                         if (incomingTransaction.hasContentStuff)
                             incomingTransaction

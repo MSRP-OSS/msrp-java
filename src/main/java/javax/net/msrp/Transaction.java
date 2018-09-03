@@ -665,7 +665,7 @@ public class Transaction
             catch (InvalidHeaderException e)
             {
                 validTransaction = false;
-                e.printStackTrace();
+                logger.error("Unrecognized header - ", e);
             }
         }
         if (headerComplete)
@@ -1354,7 +1354,7 @@ public class Transaction
             }
             catch (IllegalUseException e)
             {
-                e.printStackTrace();
+                logger.error("Cannot generate response - ", e);
             }
         }
         Session relatedSession =
@@ -1484,7 +1484,7 @@ public class Transaction
                 }
                 catch (IllegalUseException e1)
                 {		// TODO invalidate Tx & trigger appropriate response.
-                    e1.printStackTrace();
+                    logger.error("cannot set failure report - ", e1);
                 }
 
                 boolean result = in instanceof IncomingAliveMessage ||
