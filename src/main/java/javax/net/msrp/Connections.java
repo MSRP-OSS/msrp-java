@@ -103,7 +103,7 @@ public class Connections
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            logger.error("Error creating connection listener - ", e);
         }
     }
 
@@ -200,11 +200,11 @@ public class Connections
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            logger.error("Problem accepting connection - ", e);
         }
         catch (URISyntaxException e)
         {
-            e.printStackTrace();
+            logger.error("Cannot form msrp address, weird socket? ", e);
         }
     }
 
