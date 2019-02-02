@@ -171,7 +171,7 @@ public class NetworkUtils
      */
     public static URI getCompleteAuthority(URI uri) {
     	try {
-			return new URI(String.format("%s://%s/", uri.getScheme(), uri.getAuthority()));
+			return new URI(String.format("%s://%s", uri.getScheme(), uri.getAuthority()));
 		} catch (URISyntaxException e) {
 			return null;
 		}
