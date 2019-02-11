@@ -269,7 +269,7 @@ public class FileDataContainer
         {
             int bytesToCopy = 0;
             int space = dst.length - offset;
-            if (space < limit)
+            if (space > limit)
                 space = limit;
             long remainingDataBytes =
                 fileChannel.size() - currentReadOffset.longValue();
