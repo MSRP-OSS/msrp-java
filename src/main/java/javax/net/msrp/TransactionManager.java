@@ -810,7 +810,7 @@ public class TransactionManager
     {
         int byteCounter = 0;
         int bytesToAccount = 0;		/* Number of bytes per transaction sent */
-
+	int overCounter = 0;
         synchronized (this) {
 	        while (byteCounter < outData.length && hasDataToSend())
 	        {
@@ -856,6 +856,13 @@ public class TransactionManager
 	                        int nrBytes = t.getEndLine(outData, byteCounter);
 	                        byteCounter += nrBytes;
 	                        bytesToAccount += nrBytes;
+				//233 is my estimate of the length of the next head, if less than the length of the jump
+				overCounter = byteCounter;
+	                        if(outData.length - overCounter < 233){
+                                    removeTransactionToSend(t);
+                                    outgoingDataValidator.reset();
+                                    nextTransaction = true;
+                                }
 	                    }
 	                    else
 	                    {
@@ -921,6 +928,10 @@ public class TransactionManager
 	                    bytesToAccount = 0;
 	                }
 	            }
+		    //If there is not enough space, simply return the length of the bytes read
+		    if(outData.length - overCounter < 233){
+	                    return byteCounter;
+                    }
 	        }	// end of main while, the one that goes across transactions
         }
         return byteCounter;
