@@ -82,5 +82,16 @@ public class TextUtils
         }
         return new String(c);
     }
-
+    //Determine if it is MSRP header information
+    public static boolean checkMsrpHeader(String str){
+        if(str.contains("MSRP") &&
+                str.contains("SEND") &&
+                str.contains("To-Path") &&
+                str.contains("From-Path") &&
+                str.contains("Message-ID") &&
+                str.contains("Byte-Range") &&
+                str.contains("Content-Type"))
+            return true;
+        return false;
+    }
 }
