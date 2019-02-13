@@ -686,7 +686,7 @@ class Connection extends Observable implements Runnable
                          * add any remaining data to restTransactions
                          */
                         if ((matcher.group(5) != null) &&
-                    		(matcher.group(5).length() > 0)) {
+                    		(matcher.group(5).length() > 0) && TextUtils.checkMsrpHeader(matcher.group(5))) {
                             txRest.add(matcher.group(5));
                         }
                     }
