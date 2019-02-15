@@ -82,7 +82,6 @@ public class TextUtils
         }
         return new String(c);
     }
-    //Determine if it is MSRP header information
     public static boolean checkMsrpHeader(String str){
         if(str.contains("MSRP") &&
                 str.contains("SEND") &&
