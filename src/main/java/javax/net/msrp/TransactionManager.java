@@ -810,11 +810,13 @@ public class TransactionManager
     {
         int byteCounter = 0;
         int bytesToAccount = 0;		/* Number of bytes per transaction sent */
-
+	int overCounter = 0;            /* Number of over position */
+	int headerLength = 0;           /* length of header */
         synchronized (this) {
 	        while (byteCounter < outData.length && hasDataToSend())
 	        {
 	            Transaction t = transactionsToSend.get(0);
+		    headerLength = t.headerBytes.length;
 	            outgoingDataValidator.init(t.getTID());
 
 	            boolean nextTransaction = false;
@@ -856,6 +858,8 @@ public class TransactionManager
 	                        int nrBytes = t.getEndLine(outData, byteCounter);
 	                        byteCounter += nrBytes;
 	                        bytesToAccount += nrBytes;
+				//Record the position of the terminator after it has been read
+				overCounter = byteCounter;
 	                    }
 	                    else
 	                    {
@@ -921,6 +925,10 @@ public class TransactionManager
 	                    bytesToAccount = 0;
 	                }
 	            }
+		    //When there is not enough space left, it exits and returns the whole length. The extra and useless data are ignored when the receiver parses
+		    if(outData.length - overCounter <= headerLength){
+	                return outData.length;
+                    }
 	        }	// end of main while, the one that goes across transactions
         }
         return byteCounter;
