@@ -49,17 +49,17 @@ public class TransactionManager
     private static final Logger logger =
         LoggerFactory.getLogger(TransactionManager.class);
 
-    /**
+    /*
      * @uml.property name="_connections"
      */
     private Connection connection = null;
 
-    /**
+    /*
      * @uml.property name="_transactionCounter"
      */
     private byte counter = 0;
 
-    /**
+    /*
      * @uml.property name="_transactions"
      * @uml.associationEnd multiplicity="(0 -1)"
      *                     inverse="_transactionManager:javax.net.msrp.Transaction"
@@ -184,7 +184,7 @@ public class TransactionManager
      * Getter of the property <tt>_connections</tt>
      * 
      * @return Returns the _connections.
-     * @uml.property name="_connections"
+     * uml.property name="_connections"
      */
     protected Connection getConnection()
     {
@@ -195,7 +195,7 @@ public class TransactionManager
      * Getter of the property <tt>_transactionCounter</tt>
      * 
      * @return Returns the counter.
-     * @uml.property name="_transactionCounter"
+     * uml.property name="_transactionCounter"
      */
     protected byte get_transactionCounter()
     {
@@ -205,8 +205,8 @@ public class TransactionManager
     /**
      * Setter of the property <tt>_transactionCounter</tt>
      * 
-     * @param _transactionCounter The counter to set.
-     * @uml.property name="_transactionCounter"
+     * @param counter The counter to set.
+     * uml.property name="_transactionCounter"
      */
     protected void set_transactionCounter(byte counter)
     {
@@ -221,7 +221,7 @@ public class TransactionManager
      * awaiting to be processed (although the misleading name of the function
      * this function may not generate any kind of response)
      * 
-     * @param transaction
+     * @param transaction the Tx
      */
     protected void r200ProcessRequest(Transaction transaction)
     {
@@ -326,7 +326,7 @@ public class TransactionManager
      * Constructor used by the stack the TransactionManager always has a
      * connection associated with it
      * 
-     * @param the connection associated with the new TransactionManager
+     * @param connection associated with the new TransactionManager
      */
     protected TransactionManager(Connection connection)
     {
@@ -467,7 +467,7 @@ public class TransactionManager
      * Method used by an incoming Transaction to retrieve the session associated
      * with it
      * 
-     * @param uriSession
+     * @param uriSession from
      * @return the session associated with uriSession or null if there is no
      *         such session by that uri associated with this object
      */

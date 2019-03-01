@@ -53,7 +53,6 @@ public class Header {
 	 * 
 	 * @param data Input data
 	 * @return Header
-	 * @throws Exception
 	 */
 	public static Header parseHeader(String data) {
 		int index = data.indexOf(":");

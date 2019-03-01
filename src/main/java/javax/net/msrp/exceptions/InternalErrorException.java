@@ -25,37 +25,23 @@ package javax.net.msrp.exceptions;
 public class InternalErrorException
     extends Exception
 {
-
-    /**
-     * 
-     */
     public InternalErrorException()
     {
         // TODO Auto-generated constructor stub
     }
 
-    /**
-     * @param arg0
-     */
     public InternalErrorException(String arg0)
     {
         super(arg0);
         // TODO Auto-generated constructor stub
     }
 
-    /**
-     * @param arg0
-     */
     public InternalErrorException(Throwable arg0)
     {
         super(arg0);
         // TODO Auto-generated constructor stub
     }
 
-    /**
-     * @param arg0
-     * @param arg1
-     */
     public InternalErrorException(String arg0, Throwable arg1)
     {
         super(arg0, arg1);

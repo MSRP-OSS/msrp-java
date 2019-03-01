@@ -117,8 +117,9 @@ public abstract class ReportMechanism
      * 
      * @param message the message that triggered this call
      * @param transaction the transaction that triggered this call
-     * @param callCount
-     * @param l
+     * @param lastCallCount last call count
+     * @param callCount current call count
+     * 
      */
     protected void triggerSuccessReport(Message message,
         Transaction transaction, long lastCallCount, long callCount)

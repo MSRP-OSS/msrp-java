@@ -27,24 +27,14 @@ public class ConnectionLostException extends Exception {
 	public ConnectionLostException() {
 	}
 
-	/**
-	 * @param message
-	 */
 	public ConnectionLostException(String message) {
 		super(message);
 	}
 
-	/**
-	 * @param cause
-	 */
 	public ConnectionLostException(Throwable cause) {
 		super(cause);
 	}
 
-	/**
-	 * @param message
-	 * @param cause
-	 */
 	public ConnectionLostException(String message, Throwable cause) {
 		super(message, cause);
 	}

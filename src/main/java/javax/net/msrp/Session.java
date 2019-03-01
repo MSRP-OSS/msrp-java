@@ -138,13 +138,17 @@ public class Session
      * 
      * @param isSecure	Is it a secure connection or not (use TLS - not implemented yet)?
      * @param isRelay	is this a relaying session?
-     * @param address	the address to use as local endpoint.
-     * @throws InternalErrorException if any error ocurred. More info about the
+     * @param address	the address to use as local end-point.
+     * @return the created session
+     * @throws InternalErrorException if any error occurred. More info about the
      *             error in the accompanying Throwable.
      * @see #setToPath(ArrayList)
      */
     public static Session create(boolean isSecure, boolean isRelay, InetAddress address)
-            throws InternalErrorException {
+            throws InternalErrorException
+    {
+        if (address == null)
+            throw new IllegalArgumentException("Address must have a value");
     	return new Session(isSecure, isRelay, address);
     }
 
@@ -180,14 +184,17 @@ public class Session
      * 
      * @param isSecure	Is it a secure connection or not (use TLS - not implemented yet)?
      * @param isRelay	is this a relaying session?
-     * @param toUri		the destination URI that will contact this session.
-     * @param address	the address to use as local endpoint.
-     * @throws InternalErrorException if any error ocurred. More info about the
+     * @param toURI		the destination URI that will contact this session.
+     * @param address	the address to use as local end-point.
+     * @return a passive session
+     * @throws InternalErrorException if any error occurred. More info about the
      *             error in the accompanying Throwable.
      */
     public static Session create(boolean isSecure, boolean isRelay, URI toURI, InetAddress address)
             throws InternalErrorException
     {
+        if (address == null)
+            throw new IllegalArgumentException("Address must have a value");
     	return new Session(isSecure, isRelay, toURI, address);
     }
 
@@ -255,7 +262,7 @@ public class Session
         return reportMechanism;
     }
 
-    /**
+    /*
      * @deprecated, use {@link #setListener(SessionListener)} instead.
      */
     @Deprecated
@@ -291,7 +298,7 @@ public class Session
         }
     }
 
-    /**
+    /*
      * @deprecated, use {@link #setListener(null)} instead
      */
     @Deprecated
@@ -303,7 +310,7 @@ public class Session
         }
     }
 
-    /**
+    /*
      * @deprecated, use {@link #setToPath(ArrayList)}, instead
      */
     @Deprecated
@@ -373,7 +380,7 @@ public class Session
 	 * this session.
 	 * 
 	 * A result will be reported in
-	 * {@link SessionListener#receivedNickNameResult(Session, TransactionResponse)
+	 * {@link SessionListener#receivedNickNameResult(Session, TransactionResponse)}
 	 * @param nickname the name to use
 	 * @return the actual msrp request that is sent out.
 	 */
@@ -533,7 +540,7 @@ public class Session
 		return false;
 	}
 
-	/**
+	/*
 	 *  Same as {@link #setActive(String, int)} but with a
 	 *  default refresh period of 120 sec.
 	 */
@@ -546,8 +553,8 @@ public class Session
 	 * The conferencing-version of {@link #setActive(String, int)}. The
 	 * indication will be wrapped within message/CPIM to retain conference
 	 * participant information.
-	 * @param contentType
-	 * @param refresh
+	 * @param contentType what's in it?
+	 * @param refresh period
 	 * @param from	from-field content of the wrapped indication
 	 * @param to	to-field content of the wrapped indication
 	 */
@@ -563,7 +570,7 @@ public class Session
 		}
 	}
 
-	/**
+	/*
 	 *  Same as {@link #setActive(String, int, String, String)} but with a
 	 *  default refresh period of 120 sec.
 	 */
@@ -674,8 +681,8 @@ public class Session
     /**
      * Getter of the property <tt>_relays</tt>
      * 
-     * @return Returns the _relays.
-     * @uml.property name="_relays"
+     * @return Is it a relay?.
+     * uml.property name="_relays"
      */
     public boolean isRelay()
     {
@@ -685,8 +692,8 @@ public class Session
     /**
      * Setter of the property <tt>_relays</tt>
      * 
-     * @param _relays The _relays to set.
-     * @uml.property name="_relays"
+     * @param isRelay The _relays to set.
+     * uml.property name="_relays"
      */
     public void setRelay(boolean isRelay)
     {
@@ -696,8 +703,8 @@ public class Session
     /**
      * Setter of the property {@code connection}
      * 
-     * @param _connection The _connection to set.
-     * @uml.property name="_connection"
+     * @param connection The _connection to set.
+     * uml.property name="_connection"
      */
     protected void setConnection(Connection connection)
     {
@@ -791,7 +798,7 @@ public class Session
      * Delete message from the send-queue.
      * To be used only by {@link Message#abort(int, String)}
      * 
-     * @param message
+     * @param message to delete
      * @see Message#abort(int, String)
      */
     protected void delMessageToSend(Message message)
@@ -809,9 +816,9 @@ public class Session
     }
 
     /**
-     * Method that should only be called by {@link TransactionManager#addSession(Session)
+     * Method that should only be called by {@link TransactionManager#addSession(Session)}
      * 
-     * @param txManager the txManager to set
+     * @param transactionManager the txManager to set
      */
     protected void setTransactionManager(TransactionManager transactionManager)
     {
@@ -885,7 +892,7 @@ public class Session
 
     /**
      * trigger for the registered
-     * {@link SessionListener#receivedMessage(Session, Message)} callback.
+     * {@link SessionListener#receivedMessage(Session, IncomingMessage)} callback.
      * 
      * @param message the received message
      * @see SessionListener
@@ -922,6 +929,9 @@ public class Session
      * trigger for the registered
      * {@link SessionListener#updateSendStatus(Session, Message, long)} callback.
      * 
+     * @param session to update
+     * @param outgoingMessage to send
+     * 
      * @see SessionListener
      */
     protected void triggerUpdateSendStatus(Session session,
@@ -932,10 +942,8 @@ public class Session
             outgoingMessage.getSentBytes());
     }
 
-	/**
-	 * 
-	 */
-	private void traceCall(String call) {
+	private void traceCall(String call)
+	{
 		if (logger.isTraceEnabled())
 			logger.trace(String.format("%s %s() called", toString(), call));
 	}

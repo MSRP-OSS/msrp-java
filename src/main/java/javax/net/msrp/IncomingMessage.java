@@ -41,9 +41,9 @@ public class IncomingMessage
     /**
      * Constructor called internally when receiving an incoming message.
      * 
-     * @param session
-     * @param messageId
-     * @param contentType
+     * @param session   session
+     * @param messageId msgId
+     * @param contentType what;s's in it?
      * @param size size of incoming message (should be bigger than -2
      *            and -1 for unknown (*) total size
      * @param reportMechanism report mechanism to use for this message
@@ -61,7 +61,7 @@ public class IncomingMessage
 
     /**
      * Constructor that derives it's values from the object to clone.
-     * @param toCopy
+     * @param toCopy clone this
      */
     protected IncomingMessage(IncomingMessage toCopy)
     {

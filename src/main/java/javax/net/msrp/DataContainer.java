@@ -62,7 +62,7 @@ public abstract class DataContainer
     /**
      * Set the validator to be used in order to validate this message content
      * 
-     * @param validator
+     * @param validator the validator to use
      */
     public final void setValidator(Validator validator)
     {
@@ -182,10 +182,6 @@ public abstract class DataContainer
 
     /**
      * Rewind the read buffer by the given number of positions.
-     * <p>
-     * Example: a call to the {@link #get()} followed by a call to this function
-     * with nrPositions = 1 followed by another call to {@link #get()} will
-     * return the same value
      * 
      * @param nrPositions number of positions to rewind.
      */

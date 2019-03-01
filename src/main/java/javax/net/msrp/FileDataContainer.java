@@ -80,6 +80,7 @@ public class FileDataContainer
      * <p>
      * Note: if the file exists it's content will be overwritten
      * 
+     * @param  file the given file 
      * @throws FileNotFoundException if the file was not found
      * @throws SecurityException if a security manager exists and its checkRead
      *             method denies read access to the file or the mode is "rw" and
@@ -177,7 +178,7 @@ public class FileDataContainer
         IOException
     {
         byte[] auxByteArray = new byte[1];
-        auxByteArray[1] = byteToPut;
+        auxByteArray[0] = byteToPut;
         auxByteBuffer = ByteBuffer.wrap(auxByteArray);
         int result = fileChannel.write(auxByteBuffer);
         if (result == 0 || result == -1)
@@ -194,7 +195,7 @@ public class FileDataContainer
         throws NotEnoughStorageException, IOException
     {
         byte[] auxByteArray = new byte[1];
-        auxByteArray[1] = byteToPut;
+        auxByteArray[0] = byteToPut;
         auxByteBuffer = ByteBuffer.wrap(auxByteArray);
         int result = fileChannel.write(auxByteBuffer, startingIndex);
         if (result == 0 || result == -1)
@@ -268,7 +269,7 @@ public class FileDataContainer
         {
             int bytesToCopy = 0;
             int space = dst.length - offset;
-            if (space < limit)
+            if (space > limit)
                 space = limit;
             long remainingDataBytes =
                 fileChannel.size() - currentReadOffset.longValue();

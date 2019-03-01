@@ -24,9 +24,6 @@ package javax.net.msrp.exceptions;
 @SuppressWarnings("serial")
 public class ConnectionWriteException extends ConnectionLostException
 {
-    /**
-     * @param cause
-     */
     public ConnectionWriteException(Throwable cause)
     {
         super(cause);

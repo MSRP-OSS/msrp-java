@@ -25,41 +25,26 @@ package javax.net.msrp.exceptions;
 public class ProtocolViolationException
     extends Exception
 {
-
-    /**
-     * 
-     */
     public ProtocolViolationException()
     {
         // TODO Auto-generated constructor stub
     }
 
-    /**
-     * @param arg0
-     */
     public ProtocolViolationException(String arg0)
     {
         super(arg0);
         // TODO Auto-generated constructor stub
     }
 
-    /**
-     * @param arg0
-     */
     public ProtocolViolationException(Throwable arg0)
     {
         super(arg0);
         // TODO Auto-generated constructor stub
     }
 
-    /**
-     * @param arg0
-     * @param arg1
-     */
     public ProtocolViolationException(String arg0, Throwable arg1)
     {
         super(arg0, arg1);
         // TODO Auto-generated constructor stub
     }
-
 }

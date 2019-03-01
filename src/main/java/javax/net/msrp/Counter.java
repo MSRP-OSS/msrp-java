@@ -61,7 +61,7 @@ public class Counter
     /**
      * Creates the counter structure based on the message size
      * 
-     * @param message
+     * @param message the message
      */
     protected Counter(Message message)
     {

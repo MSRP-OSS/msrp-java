@@ -92,7 +92,7 @@ public class Transaction
      */
     protected String tID;
 
-    /**
+    /*
      * @uml.property name="_transactionManager"
      * @uml.associationEnd multiplicity="(1 1)"
      *                     inverse="_transactions:javax.net.msrp.TransactionManager"
@@ -199,7 +199,7 @@ public class Transaction
      */
     private long totalMessageBytes = -1;
 
-    /**
+    /*
      * @uml.property name="_connection"
      * @uml.associationEnd multiplicity="(1 1)"
      *                     inverse="_transactions:javax.net.msrp.Connection"
@@ -271,8 +271,11 @@ public class Transaction
     /**
      * Generic constructor for (possibly incoming) transactions
      * 
-     * @param tid
-     * @param method
+     * @param tid   id
+     * @param method which method
+     * @param manager to use
+     * @param direction of message
+     * @throws IllegalUseException tsktsk...
      */
     protected Transaction(String tid, TransactionType method,
         TransactionManager manager, Direction direction)
@@ -293,8 +296,8 @@ public class Transaction
      * Constructor used to send new simple short transactions used for single
      * transaction messages
      * 
-     * @param messageToSend
-     * @param manager
+     * @param messageToSend send in Tx
+     * @param manager use this manager
      */
     public Transaction(OutgoingMessage messageToSend, TransactionManager manager)
     {
@@ -423,7 +426,7 @@ public class Transaction
      * Getter of the property <tt>_connection</tt>
      * 
      * @return Returns the _connection.
-     * @uml.property name="_connection"
+     * uml.property name="_connection"
      */
     public Connection get_connection()
     {
@@ -434,7 +437,7 @@ public class Transaction
      * Setter of the property <tt>_connection</tt>
      * 
      * @param _connection The _connection to set.
-     * @uml.property name="_connection"
+     * uml.property name="_connection"
      */
     public void set_connection(javax.net.msrp.Connection _connection)
     {
@@ -662,7 +665,7 @@ public class Transaction
             catch (InvalidHeaderException e)
             {
                 validTransaction = false;
-                e.printStackTrace();
+                logger.error("Unrecognized header - ", e);
             }
         }
         if (headerComplete)
@@ -798,7 +801,7 @@ public class Transaction
     /**
      * 
      * @return true = all data has been read, except the end-line.
-     * @note Returns false for responses because they have
+     *  Note Returns false for responses because they have
      *       their own end-line inside their content.
      */
     public boolean hasEndLine()
@@ -1071,8 +1074,8 @@ public class Transaction
     }
 
     /**
-     * Method used by the TransactionManager to assert if this is or not an
-     * incoming response
+     * @return  Used by TransactionManager to assert if this is an
+     *          incoming response
      */
     protected boolean isIncomingResponse()
     {
@@ -1194,7 +1197,7 @@ public class Transaction
      * Getter of the property <tt>_transactionManager</tt>
      * 
      * @return Returns the manager.
-     * @uml.property name="_transactionManager"
+     * uml.property name="_transactionManager"
      */
     public TransactionManager getTransactionManager()
     {
@@ -1204,8 +1207,8 @@ public class Transaction
     /**
      * Setter of the property <tt>_transactionManager</tt>
      * 
-     * @param _transactionManager The manager to set.
-     * @uml.property name="_transactionManager"
+     * @param manager The manager to set.
+     * uml.property name="_transactionManager"
      */
     protected void setTransactionManager(TransactionManager manager)
     {
@@ -1351,7 +1354,7 @@ public class Transaction
             }
             catch (IllegalUseException e)
             {
-                e.printStackTrace();
+                logger.error("Cannot generate response - ", e);
             }
         }
         Session relatedSession =
@@ -1481,7 +1484,7 @@ public class Transaction
                 }
                 catch (IllegalUseException e1)
                 {		// TODO invalidate Tx & trigger appropriate response.
-                    e1.printStackTrace();
+                    logger.error("cannot set failure report - ", e1);
                 }
 
                 boolean result = in instanceof IncomingAliveMessage ||
