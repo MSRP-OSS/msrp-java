@@ -362,7 +362,12 @@ public class Transaction
         			.append(message.getFailureReport()).append("\r\n");
 
         String ct = message.getContentType();
-        if (ct != null)
+        if (ct == null)
+        {
+            /* Empty SEND, add empty byte range */
+            header.append("Byte-Range: 1-0/0\r\n");
+        }
+        else
         {
 	        /*
 	         * first value of the Byte-Range header field is the
