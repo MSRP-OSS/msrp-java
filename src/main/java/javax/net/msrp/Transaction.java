@@ -293,8 +293,7 @@ public class Transaction
     }
 
     /**
-     * Constructor used to send new simple short transactions used for single
-     * transaction messages
+     * Constructor used to send chunks
      * 
      * @param messageToSend send in Tx
      * @param manager use this manager
@@ -313,8 +312,8 @@ public class Transaction
     	else
             makeNickHeader();
 
-        /* by default have the continuation flag to be the end of message */
-        continuation_flag = FLAG_END;
+        /* by default have the continuation flag to be a chunk */
+        continuation_flag = FLAG_IRQ;
         initializeDataStructures();
         logger.info(toString() + " transaction created for message " + message);
     }
@@ -803,6 +802,15 @@ public class Transaction
     {
     	return nickname;
     }
+
+    /**
+     * This is the end chunk of the complete message.
+     */
+    public void setEndChunk()
+    {
+        this.continuation_flag = FLAG_END;
+    }
+
     /**
      * 
      * @return true = all data has been read, except the end-line.
