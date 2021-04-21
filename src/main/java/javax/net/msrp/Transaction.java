@@ -583,6 +583,8 @@ public class Transaction
                      */
                     long start =
                     		(byteRange[CHUNKSTARTBYTEINDEX] - 1) + realChunkSize;
+                    if (start < 0)      /* uninitialised or unknown...  */
+                        start = 0;
                     int blockSize =
                     		message.getReportMechanism().getTriggerGranularity();
                     data = new byte[blockSize];
