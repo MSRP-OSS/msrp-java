@@ -534,7 +534,8 @@ public class TransactionManager
                     "No or invalid message to send specified");
 
         OutgoingMessage validated = null;
-    	try
+        Transaction newTransaction = null;
+        try
     	{
 	        validated = (OutgoingMessage) toSend.validate();
     	}
@@ -546,10 +547,13 @@ public class TransactionManager
     	int chunks = validated.getChunks();
         do
         {
-            Transaction newTransaction = new Transaction((OutgoingMessage) validated, this);
+            newTransaction = new Transaction((OutgoingMessage) validated, this);
             synchronized(this)
             {
-    	        /* Add transaction to known list of existing transactions,
+                if (chunks == 1)
+                    newTransaction.setEndChunk();
+
+                /* Add transaction to known list of existing transactions,
     	         * used to generate unique TIDs in the connection and to
     	         * be used when a response to a transaction is received.
     	         */
