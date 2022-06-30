@@ -293,7 +293,8 @@ public class Transaction
     }
 
     /**
-     * Constructor used to send chunks
+     * Constructor used to send new simple short transactions used for single
+     * transaction messages
      * 
      * @param messageToSend send in Tx
      * @param manager use this manager
@@ -312,8 +313,8 @@ public class Transaction
     	else
             makeNickHeader();
 
-        /* by default have the continuation flag to be a chunk */
-        continuation_flag = FLAG_IRQ;
+        /* by default have the continuation flag to be the end of message */
+        continuation_flag = FLAG_END;
         initializeDataStructures();
         logger.info(toString() + " transaction created for message " + message);
     }
@@ -361,12 +362,7 @@ public class Transaction
         			.append(message.getFailureReport()).append("\r\n");
 
         String ct = message.getContentType();
-        if (ct == null)
-        {
-            /* Empty SEND, add empty byte range */
-            header.append("Byte-Range: 1-0/0\r\n");
-        }
-        else
+        if (ct != null)
         {
 	        /*
 	         * first value of the Byte-Range header field is the
@@ -583,8 +579,6 @@ public class Transaction
                      */
                     long start =
                     		(byteRange[CHUNKSTARTBYTEINDEX] - 1) + realChunkSize;
-                    if (start < 0)      /* uninitialised or unknown...  */
-                        start = 0;
                     int blockSize =
                     		message.getReportMechanism().getTriggerGranularity();
                     data = new byte[blockSize];
@@ -804,15 +798,6 @@ public class Transaction
     {
     	return nickname;
     }
-
-    /**
-     * This is the end chunk of the complete message.
-     */
-    public void setEndChunk()
-    {
-        this.continuation_flag = FLAG_END;
-    }
-
     /**
      * 
      * @return true = all data has been read, except the end-line.

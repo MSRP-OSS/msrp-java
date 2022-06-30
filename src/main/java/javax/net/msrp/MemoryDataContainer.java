@@ -164,7 +164,7 @@ public class MemoryDataContainer
     public ByteBuffer get(long offsetIndex, long size)
         throws NotEnoughDataException, IllegalUseException, IOException
     {
-        if (size <= 0)
+        if (size == 0)
         	size = byteBuffer.limit() - offsetIndex;
 
         if (size < 0 || offsetIndex < 0)
