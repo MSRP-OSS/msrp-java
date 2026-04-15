@@ -47,7 +47,7 @@
         <skipTests>true</skipTests>
         <junit.version>4.13.1</junit.version>
         <slf4j.version>2.0.7</slf4j.version>
-        <log4j.version>2.25.3</log4j.version>
+        <log4j.version>2.25.4</log4j.version>
     </properties>
 
     <distributionManagement>
